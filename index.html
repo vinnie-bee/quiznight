@@ -40,7 +40,7 @@ width:300px;
 text-align:center;
 }
 
-/* GAME WRAPPER (CENTERED MMO PANEL) */
+/* GAME */
 #game {
 display:none;
 width:900px;
@@ -113,12 +113,12 @@ z-index:2;
 100%{transform:scale(1)}
 }
 
-/* INPUT (CENTERED SMALL BOX) */
+/* INPUT */
 .inputBox {
 display:flex;
 flex-direction:column;
 align-items:center;
-margin-top:20px;
+margin-top:15px;
 }
 
 input {
@@ -140,7 +140,7 @@ border:none;
 cursor:pointer;
 }
 
-/* QUEST LOG */
+/* LOG */
 .log {
 margin-top:10px;
 font-size:12px;
@@ -159,15 +159,19 @@ text-decoration:line-through;
 opacity:0.5;
 }
 
-/* QUEST TITLE */
-.logHeader {
-font-size:14px;
-margin-bottom:10px;
-border-bottom:1px solid #3a2f1d;
-padding-bottom:6px;
+/* MUTE BUTTON */
+#muteBtn {
+position:fixed;
+top:10px;
+right:10px;
+background:#c9a227;
+border:none;
+padding:8px 12px;
+cursor:pointer;
+border-radius:8px;
 }
 
-/* QUEST DIALOG */
+/* DIALOG */
 #dialog {
 position:fixed;
 inset:0;
@@ -186,12 +190,35 @@ text-align:center;
 border-radius:12px;
 }
 
-/* MUSIC */
-audio { display:none; }
+/* SCREEN SHAKE */
+.shake {
+animation:shake 0.3s;
+}
+
+@keyframes shake {
+0%{transform:translate(0,0)}
+25%{transform:translate(5px,0)}
+50%{transform:translate(-5px,0)}
+75%{transform:translate(5px,0)}
+100%{transform:translate(0,0)}
+}
+
+/* SPELL FX */
+.flash {
+animation:flash 0.5s;
+}
+
+@keyframes flash {
+0%{box-shadow:0 0 0px #c9a227}
+50%{box-shadow:0 0 40px #c9a227}
+100%{box-shadow:0 0 0px #c9a227}
+}
 </style>
 </head>
 
 <body>
+
+<button id="muteBtn" onclick="toggleMute()">🔊</button>
 
 <!-- LOGIN -->
 <div id="login">
@@ -207,7 +234,8 @@ audio { display:none; }
 <div class="dialogBox">
 <h3 id="dTitle"></h3>
 <p id="dText"></p>
-<button onclick="closeDialog()">Accept Quest</button>
+<button onclick="acceptChoice()">Accept</button>
+<button onclick="acceptChoice()">Refuse (forced anyway 😄)</button>
 </div>
 </div>
 
@@ -234,84 +262,102 @@ audio { display:none; }
 <p id="player"></p>
 
 <h3>📜 Quest Log</h3>
-<div class="logHeader" id="progressText"></div>
-
+<div id="progressText"></div>
 <div class="log" id="log"></div>
 
 </div>
 
 </div>
 
-<!-- MUSIC -->
 <audio id="music" loop></audio>
 
 <script>
 
-/* WORLD DATA */
+/* 5 WORLDS × 5 QUESTIONS */
 const zones = [
 {
+name:"Goonsquad History",
+music:"Overwatch.mp3",
+bpm:90,
+travel:"Entering Goonsquad archives...",
+puzzles:Array.from({length:5},(_,i)=>({
+q:`gq${i}`,
+clue:`Goonsquad clue ${i+1}`,
+hint:`Hidden Goonsquad hint ${i+1}`
+}))
+},
+{
 name:"Overwatch",
-bg:"https://blz-contentstack-images.akamaized.net/v3/assets/blt2477dcaf4ebd440c/bltdabc3782553659f1/6785b50a1970a9f14eb5ccd7/xboxshowcase.png",
 music:"Overwatch.mp3",
-travel:"Entering Overwatch Watchpoint...",
-puzzles:[
-{q:"tracer", clue:"Fastest hero.", hint:"Time user."},
-{q:"reaper", clue:"Death walks again.", hint:"Shadow assassin."},
-{q:"overwatch", clue:"Organization reborn.", hint:"Hero force."}
-],
-item:"Pulse Badge"
+bpm:100,
+travel:"Deploying to Overwatch...",
+puzzles:Array.from({length:5},(_,i)=>({
+q:`ow${i}`,
+clue:`Overwatch clue ${i+1}`,
+hint:`Overwatch hint ${i+1}`
+}))
 },
 {
-name:"League of Legends",
-bg:"https://www.allkeyshop.com/blog/wp-content/uploads/LoL-Champions-resized.webp",
+name:"The War Within",
 music:"Overwatch.mp3",
-travel:"Crossing into the Rift...",
-puzzles:[
-{q:"yasuo", clue:"Wind never stops.", hint:"Wind swordsman."},
-{q:"jinx", clue:"Chaos follows.", hint:"Explosive chaos."},
-{q:"nexus", clue:"Core of battle.", hint:"Main structure."}
-],
-item:"Hex Core"
+bpm:85,
+travel:"Entering Azeroth depths...",
+puzzles:Array.from({length:5},(_,i)=>({
+q:`tww${i}`,
+clue:`War Within clue ${i+1}`,
+hint:`TWW hint ${i+1}`
+}))
 },
 {
-name:"World of Warcraft",
-bg:"https://bnetcmsus-a.akamaihd.net/cms/blog_header/wn/WNVJRL5YVDSB1764095280016.png",
+name:"Jackbox Realm",
 music:"Overwatch.mp3",
-travel:"Entering Azeroth...",
-puzzles:[
-{q:"arthas", clue:"Fallen king.", hint:"Lich King."},
-{q:"horde", clue:"For the Horde.", hint:"Faction warcry."},
-{q:"azeroth", clue:"The world itself.", hint:"Planet name."}
-],
-item:"Frost Relic"
+bpm:120,
+travel:"Entering party chaos...",
+puzzles:Array.from({length:5},(_,i)=>({
+q:`jb${i}`,
+clue:`Jackbox clue ${i+1}`,
+hint:`Jackbox hint ${i+1}`
+}))
+},
+{
+name:"WoW Midnight",
+music:"Overwatch.mp3",
+bpm:95,
+travel:"Entering Midnight...",
+puzzles:Array.from({length:5},(_,i)=>({
+q:`mid${i}`,
+clue:`Midnight clue ${i+1}`,
+hint:`Midnight hint ${i+1}`
+}))
 }
 ];
 
 let player="", z=0, p=0;
-let inv=[];
 let journal=[];
+let muted=false;
+let beatInterval;
 
 /* START */
 function start(){
 player=document.getElementById("name").value||"Traveler";
 document.getElementById("login").style.display="none";
 document.getElementById("game").style.display="flex";
-
 document.getElementById("player").innerText=player;
 
 openDialog();
 playMusic();
+startBeatFX();
 render();
 }
 
-/* QUEST DIALOG */
+/* DIALOG */
 function openDialog(){
 document.getElementById("dialog").style.display="flex";
 document.getElementById("dTitle").innerText=zones[z].name;
 document.getElementById("dText").innerText=zones[z].travel;
 }
 
-function closeDialog(){
+function acceptChoice(){
 document.getElementById("dialog").style.display="none";
 }
 
@@ -321,6 +367,26 @@ let m=document.getElementById("music");
 m.src=zones[z].music;
 m.volume=1;
 m.play();
+}
+
+/* MUTE */
+function toggleMute(){
+let m=document.getElementById("music");
+muted=!muted;
+m.muted=muted;
+document.getElementById("muteBtn").innerText = muted ? "🔇" : "🔊";
+}
+
+/* BEAT VFX */
+function startBeatFX(){
+clearInterval(beatInterval);
+let bpm = zones[z].bpm;
+let interval = 60000 / bpm;
+
+beatInterval = setInterval(()=>{
+document.body.classList.add("flash");
+setTimeout(()=>document.body.classList.remove("flash"),200);
+}, interval);
 }
 
 /* ROAD */
@@ -340,7 +406,7 @@ r.appendChild(d);
 function render(){
 if(z>=zones.length){ end(); return; }
 
-document.body.style.background=`url('${zones[z].bg}') center/cover`;
+document.body.style.background=`url('https://images.unsplash.com/photo-1446776811953-b23d57bd21aa') center/cover`;
 
 document.getElementById("zone").innerText=zones[z].name;
 document.getElementById("clue").innerText=zones[z].puzzles[p].clue;
@@ -358,9 +424,10 @@ let v=document.getElementById("input").value.toLowerCase();
 
 if(v===zones[z].puzzles[p].q){
 
-document.getElementById("input").value="";
+document.body.classList.add("flash");
+setTimeout(()=>document.body.classList.remove("flash"),300);
 
-log(`✔ ${zones[z].puzzles[p].q}`,true);
+log("✔ "+v,true);
 
 p++;
 
@@ -368,15 +435,19 @@ if(p>=zones[z].puzzles.length){
 z++; p=0;
 
 if(z<zones.length){
-openDialog();
 playMusic();
+startBeatFX();
+openDialog();
 }
 }
 
 render();
 
 } else {
-log("✖ Wrong answer");
+document.body.classList.add("shake");
+setTimeout(()=>document.body.classList.remove("shake"),300);
+
+log("✖ wrong attempt");
 }
 }
 
@@ -395,7 +466,6 @@ journal.map(j=>
 /* END */
 function end(){
 document.getElementById("game").style.display="none";
-document.getElementById("dialog").style.display="none";
 alert("🏆 Journey Complete");
 }
 
