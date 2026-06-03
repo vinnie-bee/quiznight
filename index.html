@@ -3,142 +3,140 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>World of Echoes</title>
+<title>World Journey RPG</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
 body {
-    margin: 0;
-    font-family: "Cinzel", serif;
-    color: #f5e6c8;
-    background-size: cover;
-    background-position: center;
-    transition: 1s;
+    margin:0;
+    font-family:Cinzel, serif;
+    color:#f5e6c8;
+    background-size:cover;
+    background-position:center;
+    transition:1s;
+    overflow:hidden;
 }
 
 /* LOGIN */
 #login {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: black;
+    position:fixed;
+    inset:0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:black;
 }
 
-.loginBox {
-    background: rgba(20,14,8,0.95);
-    padding: 30px;
-    border: 2px solid #c9a227;
-    border-radius: 15px;
-    width: 300px;
+.box {
+    background:rgba(20,14,8,0.95);
+    padding:25px;
+    border:2px solid #c9a227;
+    border-radius:12px;
+    width:300px;
 }
 
-input, button {
-    width: 100%;
-    padding: 12px;
-    margin-top: 10px;
-    border-radius: 10px;
-    border: none;
-}
-
-/* GAME LAYOUT */
+/* GAME */
 #game {
-    display: none;
-    height: 100vh;
-    display: flex;
+    display:none;
+    height:100vh;
 }
 
 .left {
-    flex: 3;
-    padding: 20px;
+    flex:3;
+    padding:20px;
 }
 
 .right {
-    flex: 1;
-    background: rgba(0,0,0,0.7);
-    padding: 20px;
-    border-left: 2px solid #c9a227;
+    flex:1;
+    background:rgba(0,0,0,0.7);
+    padding:20px;
+    border-left:2px solid #c9a227;
 }
 
-/* ROAD MAP */
+/* ROAD */
 .road {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
+    display:flex;
+    gap:8px;
+    margin-bottom:20px;
 }
 
 .node {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    border: 2px solid #c9a227;
-    background: transparent;
-    opacity: 0.4;
+    width:16px;
+    height:16px;
+    border-radius:50%;
+    border:2px solid #c9a227;
+    opacity:0.3;
 }
 
-.node.active {
-    background: #c9a227;
-    opacity: 1;
-}
-
-.node.current {
-    box-shadow: 0 0 10px #ffd36a;
-    animation: pulse 1s infinite;
-}
+.node.done { background:#c9a227; opacity:1; }
+.node.current { animation:pulse 1s infinite; }
 
 @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.3); }
-    100% { transform: scale(1); }
+    0%{transform:scale(1)}
+    50%{transform:scale(1.4)}
+    100%{transform:scale(1)}
 }
 
-/* UI */
-#clue {
-    font-size: 20px;
-    margin-top: 20px;
+/* INPUT */
+input, button {
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    border-radius:10px;
+    border:none;
 }
-
-.msg { margin-top: 10px; min-height: 20px; }
-
-.success { color: #7CFC90; }
-.error { color: #ff6b6b; }
 
 /* INVENTORY */
 .item {
-    display: inline-block;
-    padding: 5px 8px;
-    margin: 3px;
-    border: 1px solid #c9a227;
-    border-radius: 6px;
-    font-size: 12px;
+    padding:6px;
+    border:1px solid #c9a227;
+    margin:4px;
+    display:inline-block;
+    cursor:pointer;
 }
 
-/* LOADING SCREEN */
+/* LOADING */
 #loading {
-    position: fixed;
-    inset: 0;
-    background: black;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    text-align: center;
+    position:fixed;
+    inset:0;
+    display:none;
+    background:black;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+}
+
+video {
+    width:100%;
+    max-width:600px;
 }
 
 .fact {
-    margin-top: 20px;
-    color: #ffd36a;
-    max-width: 500px;
+    margin-top:15px;
+    color:#ffd36a;
 }
 
-/* VICTORY */
+/* PARTICLES */
+.particle {
+    position:fixed;
+    width:4px;
+    height:4px;
+    background:#ffd36a;
+    border-radius:50%;
+    pointer-events:none;
+    animation:float 3s linear forwards;
+}
+
+@keyframes float {
+    from {transform:translateY(0); opacity:1;}
+    to {transform:translateY(-200px); opacity:0;}
+}
+
 #victory {
-    display: none;
-    text-align: center;
-    padding: 50px;
+    display:none;
+    text-align:center;
+    padding:50px;
 }
 </style>
 </head>
@@ -147,208 +145,206 @@ input, button {
 
 <!-- LOGIN -->
 <div id="login">
-  <div class="loginBox">
-    <h2>Enter your name</h2>
-    <input id="name" placeholder="Username">
-    <button onclick="start()">Enter World</button>
+  <div class="box">
+    <h2>Enter Name</h2>
+    <input id="name">
+    <button onclick="start()">Begin Journey</button>
   </div>
 </div>
 
 <!-- LOADING -->
 <div id="loading">
-  <h2>Travelling...</h2>
-  <p id="zoneName"></p>
+  <video id="vid" autoplay muted></video>
   <div class="fact" id="fact"></div>
 </div>
 
 <!-- GAME -->
 <div id="game">
+  <div class="left">
 
-<div class="left">
+    <div class="road" id="road"></div>
 
-<div class="road" id="road"></div>
+    <h2 id="zone"></h2>
+    <p id="clue"></p>
 
-<h2 id="zoneTitle"></h2>
-<p id="clue"></p>
+    <input id="input">
+    <button onclick="submit()">Submit</button>
 
-<input id="input" placeholder="Enter rune..." />
-<button onclick="submit()">Submit</button>
+    <div id="msg"></div>
 
-<div class="msg" id="msg"></div>
+  </div>
 
+  <div class="right">
+    <h3>👤 Player</h3>
+    <p id="player"></p>
+
+    <h3>🎒 Inventory</h3>
+    <div id="inv"></div>
+  </div>
 </div>
 
-<div class="right">
-
-<h3>👤 Player</h3>
-<p id="player"></p>
-
-<h3>🎒 Inventory</h3>
-<div id="inv"></div>
-
-</div>
-
-</div>
-
-<!-- VICTORY -->
 <div id="victory">
-<h1>🏆 WORLD COMPLETED</h1>
-<p id="finalText"></p>
+<h1>🏆 Journey Complete</h1>
+<p id="title"></p>
 </div>
 
 <script>
 
-/* 10 ZONES, 3 PUZZLES EACH */
+/* WORLD DATA */
 const zones = [
 {
-name:"Elwynn Crossing",
-theme:"WoW",
-bg:"https://images.unsplash.com/photo-1503264116251-35a269479413",
+name:"Overwatch Watchpoint",
+bg:"https://blz-contentstack-images.akamaized.net/v3/assets/blt2477dcaf4ebd440c/bltdabc3782553659f1/6785b50a1970a9f14eb5ccd7/xboxshowcase.png",
+video:"https://blz-contentstack-assets.akamaized.net/v3/assets/blt2477dcaf4ebd440c/blt2034b940dd314c20/68c0bb29c7462e7b39889792/F2P_Trailer_bug.mp4",
+audio:"",
 puzzles:[
-{q:"dragon", clue:"Fire sleeps beneath stone."},
-{q:"ember", clue:"The first spark remains."},
-{q:"lion", clue:"King of the early lands."}
+{q:"tracer", clue:"Fastest hero."},
+{q:"reaper", clue:"Death walks again."},
+{q:"overwatch", clue:"Organization reborn."}
 ],
-item:"Lion Crest"
+item:"Pulse Badge"
 },
+
 {
-name:"Piltover Gate",
-theme:"LoL",
-bg:"https://images.unsplash.com/photo-1519681393784-d120267933ba",
+name:"League of Legends Rift",
+bg:"https://www.allkeyshop.com/blog/wp-content/uploads/LoL-Champions-resized.webp",
+video:"https://www.youtube.com/embed/yWEvUZjL7oM",
+audio:"",
 puzzles:[
-{q:"hextech", clue:"Magic meets machine."},
-{q:"jinx", clue:"Chaos leaves clues."},
-{q:"arcane", clue:"Knowledge forbidden."}
+{q:"yasuo", clue:"Wind never stops."},
+{q:"jinx", clue:"Chaos follows."},
+{q:"nexus", clue:"Heart of the game."}
 ],
-item:"Hex Crystal"
+item:"Hex Core"
 },
+
 {
-name:"Dreamlight Valley",
-theme:"Disney",
-bg:"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
+name:"World of Warcraft Azeroth",
+bg:"https://bnetcmsus-a.akamaihd.net/cms/blog_header/wn/WNVJRL5YVDSB1764095280016.png",
+video:"https://www.youtube.com/embed/JYmokeNtRd0",
+audio:"",
 puzzles:[
-{q:"stitch", clue:"Experiment hides here."},
-{q:"magic", clue:"Wishes become real."},
-{q:"castle", clue:"Dreams begin here."}
+{q:"arthas", clue:"The fallen king."},
+{q:"horde", clue:"For the Horde."},
+{q:"azeroth", clue:"The world itself."}
 ],
-item:"Dream Shard"
+item:"Frost Relic"
 }
 ];
 
-let player = "";
-let z = parseInt(localStorage.getItem("z")) || 0;
-let p = parseInt(localStorage.getItem("p")) || 0;
-let inv = JSON.parse(localStorage.getItem("inv") || "[]");
+let player="";
+let z=0, p=0;
+let inv=[];
+let hintsUsed=0;
 
-const facts = [
-"Tip: Every zone has 3 secrets.",
-"Hint: Inventory items may be used later.",
-"Some answers are hidden in plain sight.",
-"The road is longer than it looks."
-];
-
+/* START */
 function start(){
-player = document.getElementById("name").value || "Traveler";
+player=document.getElementById("name").value||"Traveler";
 document.getElementById("login").style.display="none";
 document.getElementById("game").style.display="flex";
-document.body.style.background = zones[z].bg;
-document.getElementById("player").innerText = player;
+document.getElementById("player").innerText=player;
+load();
 render();
+particles();
 }
 
-function renderRoad(){
-let road = document.getElementById("road");
-road.innerHTML = "";
-
+/* ROAD */
+function road(){
+let r=document.getElementById("road");
+r.innerHTML="";
 zones.forEach((_,i)=>{
-let node = document.createElement("div");
-node.className = "node";
-if(i < z) node.classList.add("active");
-if(i === z) node.classList.add("current");
-road.appendChild(node);
+let d=document.createElement("div");
+d.className="node";
+if(i<z) d.classList.add("done");
+if(i===z) d.classList.add("current");
+r.appendChild(d);
 });
 }
 
-function render(){
-renderRoad();
-
-if(z >= zones.length){
-end();
-return;
-}
-
-let zone = zones[z];
-
-document.body.style.background = zone.bg;
-
-document.getElementById("zoneTitle").innerText =
-zone.name + " (" + zone.theme + ")";
-
-document.getElementById("clue").innerText =
-zone.puzzles[p].clue;
-
-document.getElementById("inv").innerHTML =
-inv.map(i=>`<span class="item">${i}</span>`).join("");
-}
-
-function submit(){
-
-let val = document.getElementById("input").value.toLowerCase().trim();
-let msg = document.getElementById("msg");
-
-let zone = zones[z];
-
-if(val === zone.puzzles[p].q){
-
-msg.textContent = "✔ Correct";
-
-p++;
-
-if(p >= zone.puzzles.length){
-inv.push(zone.item);
-z++;
-p = 0;
-showLoading();
-} else {
-msg.textContent = "✔ Next clue unlocked";
-}
-
-save();
-
-render();
-
-} else {
-msg.textContent = "✖ Wrong";
-}
-}
-
-function showLoading(){
+/* LOAD SCREEN */
+function load(){
 document.getElementById("loading").style.display="flex";
-
-document.getElementById("zoneName").innerText =
-zones[z]?.name || "Unknown";
+document.getElementById("vid").src=zones[z].video;
 
 document.getElementById("fact").innerText =
-facts[Math.floor(Math.random()*facts.length)];
+["Magic flows through all worlds.","Every hero starts somewhere.","Hints cost destiny."][Math.floor(Math.random()*3)];
 
 setTimeout(()=>{
 document.getElementById("loading").style.display="none";
-render();
 },2500);
 }
 
-function save(){
-localStorage.setItem("z",z);
-localStorage.setItem("p",p);
-localStorage.setItem("inv",JSON.stringify(inv));
+/* RENDER */
+function render(){
+if(z>=zones.length){ end(); return; }
+
+document.body.style.background=`url('${zones[z].bg}') center/cover`;
+
+document.getElementById("zone").innerText=zones[z].name;
+document.getElementById("clue").innerText=zones[z].puzzles[p].clue;
+
+road();
+
+document.getElementById("inv").innerHTML=
+inv.map((i,idx)=>`<div class="item" onclick="use(${idx})">${i}</div>`).join("");
 }
 
+/* INVENTORY USE */
+function use(i){
+if(!confirm("Use this item? It will be consumed and reveal a hint.")) return;
+
+alert("HINT: " + zones[z].puzzles[p].clue);
+
+inv.splice(i,1);
+hintsUsed++;
+render();
+}
+
+/* SUBMIT */
+function submit(){
+let v=document.getElementById("input").value.toLowerCase();
+
+if(v===zones[z].puzzles[p].q){
+
+p++;
+if(p>=zones[z].puzzles.length){
+inv.push(zones[z].item);
+z++; p=0;
+load();
+}
+
+render();
+
+} else {
+document.getElementById("msg").innerText="✖ Wrong rune";
+}
+}
+
+/* PARTICLES */
+function particles(){
+setInterval(()=>{
+let p=document.createElement("div");
+p.className="particle";
+p.style.left=Math.random()*window.innerWidth+"px";
+p.style.top=Math.random()*window.innerHeight+"px";
+document.body.appendChild(p);
+setTimeout(()=>p.remove(),3000);
+},200);
+}
+
+/* TITLE SYSTEM */
+function title(){
+if(hintsUsed<=0) return "🏆 Mythic Explorer";
+if(hintsUsed<=2) return "⭐ Skilled Traveler";
+return "🪶 Casual Wanderer";
+}
+
+/* END */
 function end(){
 document.getElementById("game").style.display="none";
 document.getElementById("victory").style.display="block";
-
-document.getElementById("finalText").innerText =
-player + ", you have completed the world journey.";
+document.getElementById("title").innerText=
+player+" → "+title();
 }
 
 </script>
