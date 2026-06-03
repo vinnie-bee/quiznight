@@ -1,282 +1,306 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Quest of Shadows</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quest of Shadows - World Map</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
 body {
     margin: 0;
-    min-height: 100vh;
     font-family: "Cinzel", serif;
     color: #f5e6c8;
     background: url("https://images.unsplash.com/photo-1503264116251-35a269479413") center/cover fixed;
-    transition: 0.6s;
 }
 
 .overlay {
     min-height: 100vh;
-    background: rgba(0,0,0,0.65);
+    background: rgba(0,0,0,0.7);
     display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 30px;
 }
 
-.card {
-    width: min(900px, 95%);
-    background: rgba(20, 14, 8, 0.92);
+/* LEFT PANEL = MAP */
+.map {
+    flex: 2;
+    padding: 20px;
+}
+
+.world {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.zone {
     border: 2px solid #c9a227;
-    border-radius: 18px;
-    padding: 30px;
-    box-shadow: 0 0 40px rgba(255, 200, 80, 0.15);
+    border-radius: 12px;
+    height: 160px;
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: 0.3s;
 }
 
-h1 {
-    text-align: center;
+.zone.locked {
+    filter: grayscale(1) brightness(0.3);
+    cursor: not-allowed;
+}
+
+.zone:hover:not(.locked) {
+    transform: scale(1.03);
+}
+
+.zone span {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.6);
+    padding: 5px 10px;
+    border-radius: 8px;
+}
+
+/* RIGHT PANEL = UI */
+.ui {
+    flex: 1;
+    padding: 20px;
+    background: rgba(20,14,8,0.95);
+    border-left: 2px solid #c9a227;
+}
+
+h2 {
     margin-top: 0;
     color: #ffd36a;
 }
 
-.progress {
-    height: 10px;
-    background: #2b2115;
-    border-radius: 20px;
-    overflow: hidden;
-    margin-bottom: 15px;
-}
-
-.progress-bar {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg,#c9a227,#ffda77);
-    transition: 0.4s;
-}
-
-.zone {
-    font-size: 14px;
-    color: #ffdf9a;
-    margin-bottom: 10px;
-    opacity: 0.9;
-}
-
-.clue {
-    font-size: 20px;
-    margin: 20px 0;
-    min-height: 60px;
+.questbox {
+    margin-top: 15px;
+    padding: 10px;
+    border: 1px solid #3a2f1d;
+    border-radius: 10px;
 }
 
 input {
     width: 100%;
-    padding: 14px;
+    padding: 12px;
     border-radius: 10px;
     border: none;
-    font-size: 16px;
-    margin-bottom: 10px;
+    margin-top: 10px;
 }
 
 button {
     width: 100%;
-    padding: 14px;
-    background: #c9a227;
+    margin-top: 10px;
+    padding: 12px;
     border: none;
     border-radius: 10px;
-    font-size: 16px;
+    background: #c9a227;
     cursor: pointer;
 }
 
-button:hover {
-    filter: brightness(1.1);
-}
+button:hover { filter: brightness(1.1); }
 
 .msg {
-    margin-top: 15px;
-    min-height: 30px;
+    margin-top: 10px;
+    min-height: 20px;
 }
 
 .success { color: #7CFC90; }
 .error { color: #ff6b6b; }
 
-.inventory {
-    margin-top: 20px;
-    font-size: 14px;
-    border-top: 1px solid #3a2f1d;
-    padding-top: 10px;
-}
-
 .badge {
-    display: inline-block;
-    background: #2b2115;
-    border: 1px solid #c9a227;
-    padding: 5px 10px;
-    margin: 5px;
-    border-radius: 8px;
+    display:inline-block;
+    padding:5px 8px;
+    margin:3px;
+    border:1px solid #c9a227;
+    border-radius:6px;
+    font-size:12px;
+}
+
+.lockNotice {
     font-size: 12px;
+    opacity: 0.7;
 }
 
-.victory {
-    text-align: center;
-    display: none;
-}
-
-.glow {
-    animation: glow 0.6s ease;
-}
-
-@keyframes glow {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.02); }
-    100% { transform: scale(1); }
+.boss {
+    display:none;
+    text-align:center;
+    padding:40px;
 }
 </style>
 </head>
 
 <body>
+
 <div class="overlay">
-<div class="card">
 
-<h1>⚔️ Quest of Shadows</h1>
+<!-- WORLD MAP -->
+<div class="map">
 
-<div class="progress">
-    <div class="progress-bar" id="bar"></div>
+<h1>🗺️ World of Shadows</h1>
+<p>Select a zone you have unlocked</p>
+
+<div class="world" id="world"></div>
+
 </div>
 
-<div id="game">
+<!-- UI PANEL -->
+<div class="ui">
 
-<div class="zone" id="zone"></div>
+<h2>📜 Quest Log</h2>
 
-<div class="clue" id="clue"></div>
+<div id="quest"></div>
 
-<input id="input" placeholder="Enter ancient password..." />
-
-<button onclick="submit()">Submit Rune</button>
-
+<div class="questbox">
+<input id="input" placeholder="Enter rune..." />
+<button onclick="submit()">Submit</button>
 <div class="msg" id="msg"></div>
+</div>
 
-<div class="inventory">
-🧳 Inventory:
+<h3>🧳 Inventory</h3>
 <div id="inv"></div>
-</div>
 
 </div>
 
-<div class="victory" id="victory">
-    <h2>🏆 LEGENDARY COMPLETED</h2>
-    <p>You have finished the Quest of Shadows.</p>
-    <p style="color:#ffd36a;">Only a few are worthy.</p>
-    <button onclick="reset()">Restart Journey</button>
 </div>
 
-</div>
+<!-- BOSS SCREEN -->
+<div class="boss" id="boss">
+<h1>🏆 THE FINAL CHAMBER</h1>
+<p>You have conquered the realm of shadows.</p>
+<p style="color:#ffd36a;">Only legends reach this point.</p>
 </div>
 
 <script>
-const stages = [
+
+const zones = [
 {
-zone:"The Forgotten Gate",
+name:"Forgotten Gate",
 password:"dragon",
-clue:"Where fire once slept, the first truth is hidden.",
+clue:"Where fire once slept.",
 bg:"https://images.unsplash.com/photo-1503264116251-35a269479413",
 item:"Ember Sigil"
 },
 {
-zone:"Hall of Echoes",
+name:"Hall of Echoes",
 password:"phoenix",
-clue:"What dies returns, but never the same.",
+clue:"Death is never the end.",
 bg:"https://images.unsplash.com/photo-1519681393784-d120267933ba",
 item:"Echo Fragment"
 },
 {
-zone:"Vault of Stars",
+name:"Vault of Stars",
 password:"nebula",
-clue:"Look to the endless sea above.",
+clue:"The sky hides truth.",
 bg:"https://images.unsplash.com/photo-1446776811953-b23d57bd21aa",
 item:"Star Dust"
 },
 {
-zone:"Final Chamber",
+name:"Final Chamber",
 password:"treasure",
-clue:"Speak the name of what you seek.",
+clue:"Speak the final name.",
 bg:"https://images.unsplash.com/photo-1470770841072-f978cf4d019e",
 item:"Crown of Completion"
 }
 ];
 
-let index = parseInt(localStorage.getItem("quest_index")) || 0;
-let inventory = JSON.parse(localStorage.getItem("quest_inv") || "[]");
+let index = parseInt(localStorage.getItem("mmo_index")) || 0;
+let inv = JSON.parse(localStorage.getItem("mmo_inv") || "[]");
 
 function save(){
-localStorage.setItem("quest_index", index);
-localStorage.setItem("quest_inv", JSON.stringify(inventory));
+localStorage.setItem("mmo_index", index);
+localStorage.setItem("mmo_inv", JSON.stringify(inv));
 }
 
-function update(){
-if(index >= stages.length){
-document.getElementById("game").style.display="none";
-document.getElementById("victory").style.display="block";
-document.getElementById("bar").style.width="100%";
-return;
+function renderWorld(){
+
+let world = document.getElementById("world");
+world.innerHTML = "";
+
+zones.forEach((z,i)=>{
+
+let locked = i > index;
+
+let div = document.createElement("div");
+div.className = "zone" + (locked ? " locked":"");
+div.style.backgroundImage = `url(${z.bg})`;
+
+div.innerHTML = `<span>${z.name}</span>`;
+
+div.onclick = () => {
+if(locked) return;
+showQuest(i);
+};
+
+world.appendChild(div);
+
+});
 }
 
-let s = stages[index];
+let currentZone = index;
 
-document.body.style.background = `url('${s.bg}') center/cover fixed`;
+function showQuest(i){
+currentZone = i;
 
-document.getElementById("zone").innerText =
-"Zone: " + s.zone;
-
-document.getElementById("clue").innerText =
-s.clue;
-
-document.getElementById("bar").style.width =
-(index/stages.length)*100 + "%";
-
-document.getElementById("inv").innerHTML =
-inventory.map(i => `<span class="badge">${i}</span>`).join("");
+document.getElementById("quest").innerHTML =
+`
+<h3>${zones[i].name}</h3>
+<p>${zones[i].clue}</p>
+<p class="lockNotice">Zone ${i+1}/${zones.length}</p>
+`;
 }
 
 function submit(){
+
 let val = document.getElementById("input").value.toLowerCase().trim();
 let msg = document.getElementById("msg");
 
 if(val === "azeroth"){
-msg.innerText = "👁 You should not know this...";
+msg.textContent = "👁 You whisper forbidden knowledge...";
+msg.className="msg error";
 return;
 }
 
-if(val === stages[index].password){
+if(val === zones[currentZone].password){
 
-inventory.push(stages[index].item);
+if(currentZone === index){
 index++;
-
+inv.push(zones[currentZone].item);
 save();
+}
 
+msg.textContent = "✔ Quest completed!";
 msg.className="msg success";
-msg.innerText="✔ Rune accepted...";
 
-document.querySelector(".card").classList.add("glow");
-setTimeout(()=>{
-document.querySelector(".card").classList.remove("glow");
-msg.innerText="";
 document.getElementById("input").value="";
-update();
-},700);
+
+renderWorld();
+showQuest(Math.min(currentZone,index));
+
+if(index >= zones.length){
+document.getElementById("world").style.display="none";
+document.querySelector(".ui").style.display="none";
+document.getElementById("boss").style.display="block";
+}
 
 } else {
+msg.textContent = "✖ The rune fails.";
 msg.className="msg error";
-msg.innerText="✖ The runes reject you.";
 }
 }
 
-function reset(){
-localStorage.clear();
-location.reload();
+function renderInv(){
+document.getElementById("inv").innerHTML =
+inv.map(i=>`<span class="badge">${i}</span>`).join("");
 }
 
-update();
+renderWorld();
+showQuest(index);
+renderInv();
+
 </script>
 
 </body>
