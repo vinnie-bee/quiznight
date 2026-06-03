@@ -14,8 +14,7 @@ body {
     color:#f5e6c8;
     background-size:cover;
     background-position:center;
-    transition:10s;
-    overflow:hidden;
+    transition:1s;
 }
 
 /* LOGIN */
@@ -36,10 +35,11 @@ body {
     width:300px;
 }
 
-/* GAME */
+/* GAME LAYOUT */
 #game {
     display:none;
     height:100vh;
+    display:flex;
 }
 
 .left {
@@ -49,28 +49,49 @@ body {
 
 .right {
     flex:1;
-    background:rgba(0,0,0,0.7);
+    background:rgba(0,0,0,0.75);
     padding:20px;
     border-left:2px solid #c9a227;
 }
 
-/* ROAD */
+/* ROAD (zeppelin style) */
 .road {
+    position:relative;
     display:flex;
-    gap:8px;
+    align-items:center;
     margin-bottom:20px;
 }
 
-.node {
-    width:16px;
-    height:16px;
-    border-radius:50%;
-    border:2px solid #c9a227;
-    opacity:0.3;
+.road::before {
+    content:"";
+    position:absolute;
+    width:100%;
+    height:2px;
+    background:#c9a227;
+    opacity:0.4;
+    top:50%;
 }
 
-.node.done { background:#c9a227; opacity:1; }
-.node.current { animation:pulse 1s infinite; }
+.node {
+    width:14px;
+    height:14px;
+    border-radius:50%;
+    border:2px solid #c9a227;
+    background:black;
+    margin-right:60px;
+    z-index:2;
+    opacity:0.4;
+    transition:0.5s;
+}
+
+.node.done {
+    background:#c9a227;
+    opacity:1;
+}
+
+.node.current {
+    animation:pulse 1s infinite;
+}
 
 @keyframes pulse {
     0%{transform:scale(1)}
@@ -87,6 +108,27 @@ input, button {
     border:none;
 }
 
+input {
+    background:rgba(0,0,0,0.5);
+    color:#f5e6c8;
+    border:1px solid #c9a227;
+}
+
+/* QUEST LOG */
+.log {
+    margin-top:15px;
+    font-size:12px;
+    max-height:200px;
+    overflow:auto;
+    border-top:1px solid #3a2f1d;
+    padding-top:10px;
+}
+
+.logEntry {
+    margin-bottom:6px;
+    opacity:0.85;
+}
+
 /* INVENTORY */
 .item {
     padding:6px;
@@ -96,7 +138,7 @@ input, button {
     cursor:pointer;
 }
 
-/* LOADING */
+/* TRAVEL SCREEN */
 #loading {
     position:fixed;
     inset:0;
@@ -105,34 +147,14 @@ input, button {
     justify-content:center;
     align-items:center;
     flex-direction:column;
+    text-align:center;
 }
 
-video {
-    width:100%;
-    max-width:600px;
-}
-
-.fact {
-    margin-top:15px;
+#loading p {
     color:#ffd36a;
 }
 
-/* PARTICLES */
-.particle {
-    position:fixed;
-    width:4px;
-    height:4px;
-    background:#ffd36a;
-    border-radius:50%;
-    pointer-events:none;
-    animation:float 3s linear forwards;
-}
-
-@keyframes float {
-    from {transform:translateY(0); opacity:1;}
-    to {transform:translateY(-200px); opacity:0;}
-}
-
+/* VICTORY */
 #victory {
     display:none;
     text-align:center;
@@ -152,35 +174,42 @@ video {
   </div>
 </div>
 
-<!-- LOADING -->
+<!-- TRAVEL -->
 <div id="loading">
-  <video id="vid" autoplay muted></video>
-  <div class="fact" id="fact"></div>
+  <h2>Traveling...</h2>
+  <p id="travelText"></p>
 </div>
 
 <!-- GAME -->
 <div id="game">
-  <div class="left">
 
-    <div class="road" id="road"></div>
+<div class="left">
 
-    <h2 id="zone"></h2>
-    <p id="clue"></p>
+<div class="road" id="road"></div>
 
-    <input id="input">
-    <button onclick="submit()">Submit</button>
+<h2 id="zone"></h2>
+<p id="clue"></p>
 
-    <div id="msg"></div>
+<input id="input">
+<button onclick="submit()">Submit</button>
 
-  </div>
+<div id="msg"></div>
 
-  <div class="right">
-    <h3>👤 Player</h3>
-    <p id="player"></p>
+</div>
 
-    <h3>🎒 Inventory</h3>
-    <div id="inv"></div>
-  </div>
+<div class="right">
+
+<h3>👤 Player</h3>
+<p id="player"></p>
+
+<h3>🎒 Inventory</h3>
+<div id="inv"></div>
+
+<h3>📜 Quest Journal</h3>
+<div class="log" id="log"></div>
+
+</div>
+
 </div>
 
 <div id="victory">
@@ -190,17 +219,16 @@ video {
 
 <script>
 
-/* WORLD DATA */
+/* WORLD */
 const zones = [
 {
 name:"Overwatch Watchpoint",
 bg:"https://blz-contentstack-images.akamaized.net/v3/assets/blt2477dcaf4ebd440c/bltdabc3782553659f1/6785b50a1970a9f14eb5ccd7/xboxshowcase.png",
-video:"https://blz-contentstack-assets.akamaized.net/v3/assets/blt2477dcaf4ebd440c/blt2034b940dd314c20/68c0bb29c7462e7b39889792/F2P_Trailer_bug.mp4",
-audio:"",
+travel:"Arriving at Watchpoint Gibraltar...",
 puzzles:[
-{q:"tracer", clue:"Fastest hero."},
-{q:"reaper", clue:"Death walks again."},
-{q:"overwatch", clue:"Organization reborn."}
+{q:"tracer", clue:"Fastest hero.", hint:"Time manipulation user."},
+{q:"reaper", clue:"Death walks again.", hint:"Shadow and shotguns."},
+{q:"overwatch", clue:"Organization reborn.", hint:"Global hero task force."}
 ],
 item:"Pulse Badge"
 },
@@ -208,12 +236,11 @@ item:"Pulse Badge"
 {
 name:"League of Legends Rift",
 bg:"https://www.allkeyshop.com/blog/wp-content/uploads/LoL-Champions-resized.webp",
-video:"https://www.youtube.com/embed/yWEvUZjL7oM",
-audio:"",
+travel:"Crossing into the Summoner's Rift...",
 puzzles:[
-{q:"yasuo", clue:"Wind never stops."},
-{q:"jinx", clue:"Chaos follows."},
-{q:"nexus", clue:"Heart of the game."}
+{q:"yasuo", clue:"Wind never stops.", hint:"Unforgiven swordsman."},
+{q:"jinx", clue:"Chaos follows.", hint:"Explosive chaos lover."},
+{q:"nexus", clue:"Heart of the game.", hint:"Core structure."}
 ],
 item:"Hex Core"
 },
@@ -221,12 +248,11 @@ item:"Hex Core"
 {
 name:"World of Warcraft Azeroth",
 bg:"https://bnetcmsus-a.akamaihd.net/cms/blog_header/wn/WNVJRL5YVDSB1764095280016.png",
-video:"https://www.youtube.com/embed/JYmokeNtRd0",
-audio:"",
+travel:"Entering Azeroth...",
 puzzles:[
-{q:"arthas", clue:"The fallen king."},
-{q:"horde", clue:"For the Horde."},
-{q:"azeroth", clue:"The world itself."}
+{q:"arthas", clue:"The fallen king.", hint:"Lich King origin."},
+{q:"horde", clue:"For the Horde.", hint:"Faction war cry."},
+{q:"azeroth", clue:"The world itself.", hint:"Planet name."}
 ],
 item:"Frost Relic"
 }
@@ -236,6 +262,7 @@ let player="";
 let z=0, p=0;
 let inv=[];
 let hintsUsed=0;
+let journal=[];
 
 /* START */
 function start(){
@@ -243,13 +270,12 @@ player=document.getElementById("name").value||"Traveler";
 document.getElementById("login").style.display="none";
 document.getElementById("game").style.display="flex";
 document.getElementById("player").innerText=player;
-load();
-render();
-particles();
+log("Journey started by "+player);
+travel();
 }
 
 /* ROAD */
-function road(){
+function renderRoad(){
 let r=document.getElementById("road");
 r.innerHTML="";
 zones.forEach((_,i)=>{
@@ -261,17 +287,15 @@ r.appendChild(d);
 });
 }
 
-/* LOAD SCREEN */
-function load(){
+/* TRAVEL SCREEN */
+function travel(){
 document.getElementById("loading").style.display="flex";
-document.getElementById("vid").src=zones[z].video;
-
-document.getElementById("fact").innerText =
-["Magic flows through all worlds.","Every hero starts somewhere.","Hints cost destiny."][Math.floor(Math.random()*3)];
+document.getElementById("travelText").innerText=zones[z].travel;
 
 setTimeout(()=>{
 document.getElementById("loading").style.display="none";
-},2500);
+render();
+},2200);
 }
 
 /* RENDER */
@@ -283,21 +307,29 @@ document.body.style.background=`url('${zones[z].bg}') center/cover`;
 document.getElementById("zone").innerText=zones[z].name;
 document.getElementById("clue").innerText=zones[z].puzzles[p].clue;
 
-road();
+renderRoad();
+renderInv();
+renderLog();
+}
 
+/* INVENTORY */
+function renderInv(){
 document.getElementById("inv").innerHTML=
 inv.map((i,idx)=>`<div class="item" onclick="use(${idx})">${i}</div>`).join("");
 }
 
-/* INVENTORY USE */
+/* USE ITEM */
 function use(i){
-if(!confirm("Use this item? It will be consumed and reveal a hint.")) return;
+if(!confirm("Use item to reveal hint? It will be consumed.")) return;
 
-alert("HINT: " + zones[z].puzzles[p].clue);
+alert("💡 HINT: " + zones[z].puzzles[p].hint);
 
 inv.splice(i,1);
 hintsUsed++;
-render();
+
+log("Hint used in "+zones[z].name);
+
+renderInv();
 }
 
 /* SUBMIT */
@@ -306,35 +338,44 @@ let v=document.getElementById("input").value.toLowerCase();
 
 if(v===zones[z].puzzles[p].q){
 
+document.getElementById("input").value="";
+
+log("Solved: "+zones[z].puzzles[p].q);
+
 p++;
+
 if(p>=zones[z].puzzles.length){
 inv.push(zones[z].item);
 z++; p=0;
-load();
+
+log("Zone completed: "+zones[z-1].name);
+
+travel();
+} else {
+log("Next objective unlocked");
 }
 
 render();
 
 } else {
-document.getElementById("msg").innerText="✖ Wrong rune";
+log("Failed attempt");
 }
 }
 
-/* PARTICLES */
-function particles(){
-setInterval(()=>{
-let p=document.createElement("div");
-p.className="particle";
-p.style.left=Math.random()*window.innerWidth+"px";
-p.style.top=Math.random()*window.innerHeight+"px";
-document.body.appendChild(p);
-setTimeout(()=>p.remove(),3000);
-},200);
+/* JOURNAL */
+function log(t){
+journal.unshift(t);
 }
 
-/* TITLE SYSTEM */
+/* RENDER LOG */
+function renderLog(){
+document.getElementById("log").innerHTML=
+journal.map(j=>`<div class="logEntry">${j}</div>`).join("");
+}
+
+/* TITLE */
 function title(){
-if(hintsUsed<=0) return "🏆 Mythic Explorer";
+if(hintsUsed===0) return "🏆 Mythic Explorer";
 if(hintsUsed<=2) return "⭐ Skilled Traveler";
 return "🪶 Casual Wanderer";
 }
