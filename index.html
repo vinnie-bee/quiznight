@@ -49,11 +49,12 @@ background:rgba(0,0,0,0.65);
 border:2px solid #c9a227;
 border-radius:12px;
 overflow:hidden;
+flex-direction:column;
 display:flex;
 }
 
-/* LEFT */
-.left {
+/* TOP AREA */
+.top {
 flex:3;
 padding:25px;
 display:flex;
@@ -63,12 +64,12 @@ align-items:center;
 text-align:center;
 }
 
-/* RIGHT */
-.right {
+/* BOTTOM LOG */
+.bottom {
 flex:1;
 background:rgba(0,0,0,0.75);
-padding:20px;
-border-left:2px solid #c9a227;
+padding:15px;
+overflow:auto;
 }
 
 /* MAP */
@@ -126,8 +127,13 @@ border:none;
 cursor:pointer;
 }
 
-/* QUEST LOG */
-.doneText {
+/* LOG */
+.logEntry {
+font-size:12px;
+margin-bottom:4px;
+}
+
+.done {
 text-decoration:line-through;
 opacity:0.5;
 }
@@ -142,22 +148,6 @@ border:none;
 padding:8px;
 border-radius:8px;
 cursor:pointer;
-}
-
-/* LOADING SCREEN */
-#loading {
-position:fixed;
-inset:0;
-display:none;
-flex-direction:column;
-justify-content:center;
-align-items:center;
-background:black;
-text-align:center;
-}
-
-#loading h1 {
-color:#c9a227;
 }
 
 /* SHAKE */
@@ -187,16 +177,10 @@ animation:shake 0.3s;
 </div>
 </div>
 
-<!-- LOADING -->
-<div id="loading">
-<h1 id="loadTitle"></h1>
-<p>Traveling through the world...</p>
-</div>
-
 <!-- GAME -->
 <div id="game">
 
-<div class="left">
+<div class="top">
 
 <div class="map" id="map"></div>
 
@@ -208,7 +192,7 @@ animation:shake 0.3s;
 
 </div>
 
-<div class="right">
+<div class="bottom">
 <h3>Quest Log</h3>
 <div id="log"></div>
 </div>
@@ -254,30 +238,15 @@ puzzles:[
 ];
 
 let z=0, p=0;
-let log=[];
+let logs=[];   // ✅ FIXED NAME
 let muted=false;
 
 /* START */
 function start(){
 document.getElementById("login").style.display="none";
-showLoading(()=>{
 document.getElementById("game").style.display="flex";
 playMusic();
 render();
-});
-}
-
-/* LOADING TRANSITION (5–10s) */
-function showLoading(callback){
-document.getElementById("loading").style.display="flex";
-document.getElementById("loadTitle").innerText = zones[z].name;
-
-let time = 6000; // 6 sec suspense
-
-setTimeout(()=>{
-document.getElementById("loading").style.display="none";
-callback();
-}, time);
 }
 
 /* MUSIC */
@@ -302,20 +271,14 @@ let m=document.getElementById("map");
 m.innerHTML="";
 
 for(let i=0;i<3;i++){
-
 let big=document.createElement("div");
 big.className="node big";
 if(i===z) big.classList.add("current");
-if(i<z) big.classList.add("done");
-
 m.appendChild(big);
 
-for(let j=0;j<3;j++){
+for(let j=0;j<2;j++){
 let small=document.createElement("div");
 small.className="node";
-
-if(i<z || (i===z && j<p)) small.style.opacity=1;
-
 m.appendChild(small);
 }
 }
@@ -323,8 +286,9 @@ m.appendChild(small);
 
 /* RENDER */
 function render(){
+
 if(z>=zones.length){
-document.body.innerHTML="<h1>🏆 You finished the journey</h1>";
+document.body.innerHTML="<h1>🏆 Victory</h1>";
 return;
 }
 
@@ -345,24 +309,13 @@ if(v===zones[z].puzzles[p].q){
 
 document.getElementById("input").value="";
 
+addLog("✔ "+v,true);
+
 p++;
 
-/* chapter finished → loading transition */
 if(p>=zones[z].puzzles.length){
-
-log("✔ Completed chapter: "+zones[z].name,true);
-
-z++;
-p=0;
-
-if(z < zones.length){
-showLoading(()=>{
+z++; p=0;
 playMusic();
-render();
-});
-} else {
-render();
-}
 }
 
 render();
@@ -373,14 +326,14 @@ setTimeout(()=>document.body.classList.remove("shake"),300);
 }
 }
 
-/* QUEST LOG */
-function log(t,done=false){
-log.unshift({t,done});
+/* LOG FIXED */
+function addLog(t,done=false){
+logs.unshift({t,done});
 }
 
 function renderLog(){
 document.getElementById("log").innerHTML =
-log.map(l=>`<div class="${l.done?'doneText':''}">${l.t}</div>`).join("");
+logs.map(l=>`<div class="${l.done?'done':''}">${l.t}</div>`).join("");
 }
 
 </script>
