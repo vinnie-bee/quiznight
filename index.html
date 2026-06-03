@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scavenger Hunt</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        #message {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Scavenger Hunt</h1>
+
+<p>Enter the password you've found:</p>
+
+<input type="text" id="password">
+<button onclick="checkPassword()">Submit</button>
+
+<div id="message"></div>
+
+<script>
+const clues = {
+    "dragon": "Correct! Next clue: Look where we first met online.",
+    "phoenix": "Correct! Next clue: Check the oldest photo in our group chat.",
+    "nebula": "Correct! Next clue: Search the playlist title.",
+    "galaxy": "Correct! Next clue: Look at the pinned message.",
+    "comet": "Correct! Next clue: Hidden in a game screenshot.",
+    "meteor": "Correct! Next clue: Check the shared document.",
+    "eclipse": "Correct! Next clue: Read the profile bio.",
+    "aurora": "Correct! Next clue: Look at the event date.",
+    "voyager": "Correct! Next clue: Hidden in the website footer.",
+    "treasure": "🎉 Congratulations! You completed the hunt!"
+};
+
+function checkPassword() {
+    const input = document
+        .getElementById("password")
+        .value
+        .trim()
+        .toLowerCase();
+
+    const message = document.getElementById("message");
+
+    if (clues[input]) {
+        message.innerHTML = clues[input];
+    } else {
+        message.innerHTML = "Incorrect password.";
+    }
+}
+</script>
+
+</body>
+</html>
