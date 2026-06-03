@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quest of Shadows - World Map</title>
+<title>World of Echoes</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
 
@@ -12,245 +12,283 @@ body {
     margin: 0;
     font-family: "Cinzel", serif;
     color: #f5e6c8;
-    background: url("https://images.unsplash.com/photo-1503264116251-35a269479413") center/cover fixed;
+    background-size: cover;
+    background-position: center;
+    transition: 1s;
 }
 
-.overlay {
-    min-height: 100vh;
-    background: rgba(0,0,0,0.7);
+/* LOGIN */
+#login {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: black;
+}
+
+.loginBox {
+    background: rgba(20,14,8,0.95);
+    padding: 30px;
+    border: 2px solid #c9a227;
+    border-radius: 15px;
+    width: 300px;
+}
+
+input, button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border-radius: 10px;
+    border: none;
+}
+
+/* GAME LAYOUT */
+#game {
+    display: none;
+    height: 100vh;
     display: flex;
 }
 
-/* LEFT PANEL = MAP */
-.map {
-    flex: 2;
+.left {
+    flex: 3;
     padding: 20px;
 }
 
-.world {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-}
-
-.zone {
-    border: 2px solid #c9a227;
-    border-radius: 12px;
-    height: 160px;
-    background-size: cover;
-    background-position: center;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: 0.3s;
-}
-
-.zone.locked {
-    filter: grayscale(1) brightness(0.3);
-    cursor: not-allowed;
-}
-
-.zone:hover:not(.locked) {
-    transform: scale(1.03);
-}
-
-.zone span {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-    background: rgba(0,0,0,0.6);
-    padding: 5px 10px;
-    border-radius: 8px;
-}
-
-/* RIGHT PANEL = UI */
-.ui {
+.right {
     flex: 1;
+    background: rgba(0,0,0,0.7);
     padding: 20px;
-    background: rgba(20,14,8,0.95);
     border-left: 2px solid #c9a227;
 }
 
-h2 {
-    margin-top: 0;
-    color: #ffd36a;
+/* ROAD MAP */
+.road {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
 }
 
-.questbox {
-    margin-top: 15px;
-    padding: 10px;
-    border: 1px solid #3a2f1d;
-    border-radius: 10px;
+.node {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #c9a227;
+    background: transparent;
+    opacity: 0.4;
 }
 
-input {
-    width: 100%;
-    padding: 12px;
-    border-radius: 10px;
-    border: none;
-    margin-top: 10px;
-}
-
-button {
-    width: 100%;
-    margin-top: 10px;
-    padding: 12px;
-    border: none;
-    border-radius: 10px;
+.node.active {
     background: #c9a227;
-    cursor: pointer;
+    opacity: 1;
 }
 
-button:hover { filter: brightness(1.1); }
-
-.msg {
-    margin-top: 10px;
-    min-height: 20px;
+.node.current {
+    box-shadow: 0 0 10px #ffd36a;
+    animation: pulse 1s infinite;
 }
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+
+/* UI */
+#clue {
+    font-size: 20px;
+    margin-top: 20px;
+}
+
+.msg { margin-top: 10px; min-height: 20px; }
 
 .success { color: #7CFC90; }
 .error { color: #ff6b6b; }
 
-.badge {
-    display:inline-block;
-    padding:5px 8px;
-    margin:3px;
-    border:1px solid #c9a227;
-    border-radius:6px;
-    font-size:12px;
-}
-
-.lockNotice {
+/* INVENTORY */
+.item {
+    display: inline-block;
+    padding: 5px 8px;
+    margin: 3px;
+    border: 1px solid #c9a227;
+    border-radius: 6px;
     font-size: 12px;
-    opacity: 0.7;
 }
 
-.boss {
-    display:none;
-    text-align:center;
-    padding:40px;
+/* LOADING SCREEN */
+#loading {
+    position: fixed;
+    inset: 0;
+    background: black;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+}
+
+.fact {
+    margin-top: 20px;
+    color: #ffd36a;
+    max-width: 500px;
+}
+
+/* VICTORY */
+#victory {
+    display: none;
+    text-align: center;
+    padding: 50px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="overlay">
-
-<!-- WORLD MAP -->
-<div class="map">
-
-<h1>🗺️ World of Shadows</h1>
-<p>Select a zone you have unlocked</p>
-
-<div class="world" id="world"></div>
-
+<!-- LOGIN -->
+<div id="login">
+  <div class="loginBox">
+    <h2>Enter your name</h2>
+    <input id="name" placeholder="Username">
+    <button onclick="start()">Enter World</button>
+  </div>
 </div>
 
-<!-- UI PANEL -->
-<div class="ui">
+<!-- LOADING -->
+<div id="loading">
+  <h2>Travelling...</h2>
+  <p id="zoneName"></p>
+  <div class="fact" id="fact"></div>
+</div>
 
-<h2>📜 Quest Log</h2>
+<!-- GAME -->
+<div id="game">
 
-<div id="quest"></div>
+<div class="left">
 
-<div class="questbox">
+<div class="road" id="road"></div>
+
+<h2 id="zoneTitle"></h2>
+<p id="clue"></p>
+
 <input id="input" placeholder="Enter rune..." />
 <button onclick="submit()">Submit</button>
+
 <div class="msg" id="msg"></div>
+
 </div>
 
-<h3>🧳 Inventory</h3>
+<div class="right">
+
+<h3>👤 Player</h3>
+<p id="player"></p>
+
+<h3>🎒 Inventory</h3>
 <div id="inv"></div>
 
 </div>
 
 </div>
 
-<!-- BOSS SCREEN -->
-<div class="boss" id="boss">
-<h1>🏆 THE FINAL CHAMBER</h1>
-<p>You have conquered the realm of shadows.</p>
-<p style="color:#ffd36a;">Only legends reach this point.</p>
+<!-- VICTORY -->
+<div id="victory">
+<h1>🏆 WORLD COMPLETED</h1>
+<p id="finalText"></p>
 </div>
 
 <script>
 
+/* 10 ZONES, 3 PUZZLES EACH */
 const zones = [
 {
-name:"Forgotten Gate",
-password:"dragon",
-clue:"Where fire once slept.",
+name:"Elwynn Crossing",
+theme:"WoW",
 bg:"https://images.unsplash.com/photo-1503264116251-35a269479413",
-item:"Ember Sigil"
+puzzles:[
+{q:"dragon", clue:"Fire sleeps beneath stone."},
+{q:"ember", clue:"The first spark remains."},
+{q:"lion", clue:"King of the early lands."}
+],
+item:"Lion Crest"
 },
 {
-name:"Hall of Echoes",
-password:"phoenix",
-clue:"Death is never the end.",
+name:"Piltover Gate",
+theme:"LoL",
 bg:"https://images.unsplash.com/photo-1519681393784-d120267933ba",
-item:"Echo Fragment"
+puzzles:[
+{q:"hextech", clue:"Magic meets machine."},
+{q:"jinx", clue:"Chaos leaves clues."},
+{q:"arcane", clue:"Knowledge forbidden."}
+],
+item:"Hex Crystal"
 },
 {
-name:"Vault of Stars",
-password:"nebula",
-clue:"The sky hides truth.",
-bg:"https://images.unsplash.com/photo-1446776811953-b23d57bd21aa",
-item:"Star Dust"
-},
-{
-name:"Final Chamber",
-password:"treasure",
-clue:"Speak the final name.",
-bg:"https://images.unsplash.com/photo-1470770841072-f978cf4d019e",
-item:"Crown of Completion"
+name:"Dreamlight Valley",
+theme:"Disney",
+bg:"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
+puzzles:[
+{q:"stitch", clue:"Experiment hides here."},
+{q:"magic", clue:"Wishes become real."},
+{q:"castle", clue:"Dreams begin here."}
+],
+item:"Dream Shard"
 }
 ];
 
-let index = parseInt(localStorage.getItem("mmo_index")) || 0;
-let inv = JSON.parse(localStorage.getItem("mmo_inv") || "[]");
+let player = "";
+let z = parseInt(localStorage.getItem("z")) || 0;
+let p = parseInt(localStorage.getItem("p")) || 0;
+let inv = JSON.parse(localStorage.getItem("inv") || "[]");
 
-function save(){
-localStorage.setItem("mmo_index", index);
-localStorage.setItem("mmo_inv", JSON.stringify(inv));
+const facts = [
+"Tip: Every zone has 3 secrets.",
+"Hint: Inventory items may be used later.",
+"Some answers are hidden in plain sight.",
+"The road is longer than it looks."
+];
+
+function start(){
+player = document.getElementById("name").value || "Traveler";
+document.getElementById("login").style.display="none";
+document.getElementById("game").style.display="flex";
+document.body.style.background = zones[z].bg;
+document.getElementById("player").innerText = player;
+render();
 }
 
-function renderWorld(){
+function renderRoad(){
+let road = document.getElementById("road");
+road.innerHTML = "";
 
-let world = document.getElementById("world");
-world.innerHTML = "";
-
-zones.forEach((z,i)=>{
-
-let locked = i > index;
-
-let div = document.createElement("div");
-div.className = "zone" + (locked ? " locked":"");
-div.style.backgroundImage = `url(${z.bg})`;
-
-div.innerHTML = `<span>${z.name}</span>`;
-
-div.onclick = () => {
-if(locked) return;
-showQuest(i);
-};
-
-world.appendChild(div);
-
+zones.forEach((_,i)=>{
+let node = document.createElement("div");
+node.className = "node";
+if(i < z) node.classList.add("active");
+if(i === z) node.classList.add("current");
+road.appendChild(node);
 });
 }
 
-let currentZone = index;
+function render(){
+renderRoad();
 
-function showQuest(i){
-currentZone = i;
+if(z >= zones.length){
+end();
+return;
+}
 
-document.getElementById("quest").innerHTML =
-`
-<h3>${zones[i].name}</h3>
-<p>${zones[i].clue}</p>
-<p class="lockNotice">Zone ${i+1}/${zones.length}</p>
-`;
+let zone = zones[z];
+
+document.body.style.background = zone.bg;
+
+document.getElementById("zoneTitle").innerText =
+zone.name + " (" + zone.theme + ")";
+
+document.getElementById("clue").innerText =
+zone.puzzles[p].clue;
+
+document.getElementById("inv").innerHTML =
+inv.map(i=>`<span class="item">${i}</span>`).join("");
 }
 
 function submit(){
@@ -258,48 +296,60 @@ function submit(){
 let val = document.getElementById("input").value.toLowerCase().trim();
 let msg = document.getElementById("msg");
 
-if(val === "azeroth"){
-msg.textContent = "👁 You whisper forbidden knowledge...";
-msg.className="msg error";
-return;
+let zone = zones[z];
+
+if(val === zone.puzzles[p].q){
+
+msg.textContent = "✔ Correct";
+
+p++;
+
+if(p >= zone.puzzles.length){
+inv.push(zone.item);
+z++;
+p = 0;
+showLoading();
+} else {
+msg.textContent = "✔ Next clue unlocked";
 }
 
-if(val === zones[currentZone].password){
-
-if(currentZone === index){
-index++;
-inv.push(zones[currentZone].item);
 save();
-}
 
-msg.textContent = "✔ Quest completed!";
-msg.className="msg success";
-
-document.getElementById("input").value="";
-
-renderWorld();
-showQuest(Math.min(currentZone,index));
-
-if(index >= zones.length){
-document.getElementById("world").style.display="none";
-document.querySelector(".ui").style.display="none";
-document.getElementById("boss").style.display="block";
-}
+render();
 
 } else {
-msg.textContent = "✖ The rune fails.";
-msg.className="msg error";
+msg.textContent = "✖ Wrong";
 }
 }
 
-function renderInv(){
-document.getElementById("inv").innerHTML =
-inv.map(i=>`<span class="badge">${i}</span>`).join("");
+function showLoading(){
+document.getElementById("loading").style.display="flex";
+
+document.getElementById("zoneName").innerText =
+zones[z]?.name || "Unknown";
+
+document.getElementById("fact").innerText =
+facts[Math.floor(Math.random()*facts.length)];
+
+setTimeout(()=>{
+document.getElementById("loading").style.display="none";
+render();
+},2500);
 }
 
-renderWorld();
-showQuest(index);
-renderInv();
+function save(){
+localStorage.setItem("z",z);
+localStorage.setItem("p",p);
+localStorage.setItem("inv",JSON.stringify(inv));
+}
+
+function end(){
+document.getElementById("game").style.display="none";
+document.getElementById("victory").style.display="block";
+
+document.getElementById("finalText").innerText =
+player + ", you have completed the world journey.";
+}
 
 </script>
 
