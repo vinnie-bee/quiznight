@@ -1,65 +1,296 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Scavenger Hunt</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 700px;
-            margin: 50px auto;
-            padding: 20px;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Hunt</title>
 
-        input, button {
-            padding: 10px;
-            font-size: 16px;
-        }
+<style>
+:root{
+    --bg:#0f172a;
+    --panel:#1e293b;
+    --accent:#38bdf8;
+    --text:#f8fafc;
+    --success:#22c55e;
+    --error:#ef4444;
+}
 
-        #message {
-            margin-top: 20px;
-        }
-    </style>
+body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(135deg,#020617,#0f172a);
+    font-family:system-ui,sans-serif;
+    color:var(--text);
+}
+
+.card{
+    width:min(90%,700px);
+    background:rgba(30,41,59,.9);
+    backdrop-filter:blur(10px);
+    padding:40px;
+    border-radius:20px;
+    box-shadow:0 0 40px rgba(0,0,0,.4);
+}
+
+h1{
+    margin-top:0;
+    text-align:center;
+}
+
+.progress-bar{
+    height:12px;
+    background:#334155;
+    border-radius:20px;
+    overflow:hidden;
+    margin-bottom:20px;
+}
+
+.progress{
+    height:100%;
+    width:0%;
+    background:var(--accent);
+    transition:.4s;
+}
+
+#stage{
+    margin-bottom:20px;
+    font-size:1.1rem;
+}
+
+input{
+    width:100%;
+    box-sizing:border-box;
+    padding:15px;
+    border:none;
+    border-radius:10px;
+    font-size:1rem;
+    margin-bottom:15px;
+}
+
+button{
+    width:100%;
+    padding:15px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:1rem;
+    background:var(--accent);
+    color:white;
+}
+
+button:hover{
+    opacity:.9;
+}
+
+#message{
+    margin-top:20px;
+    min-height:40px;
+}
+
+.success{
+    color:var(--success);
+}
+
+.error{
+    color:var(--error);
+}
+
+.hidden{
+    display:none;
+}
+
+#victory{
+    text-align:center;
+}
+
+.glow{
+    animation:glow .8s ease;
+}
+
+@keyframes glow{
+    0%{transform:scale(1)}
+    50%{transform:scale(1.03)}
+    100%{transform:scale(1)}
+}
+</style>
 </head>
+
 <body>
 
-<h1>Scavenger Hunt</h1>
+<div class="card">
 
-<p>Enter the password you've found:</p>
+    <h1>🔍 The Hunt</h1>
 
-<input type="text" id="password">
-<button onclick="checkPassword()">Submit</button>
+    <div class="progress-bar">
+        <div class="progress" id="progress"></div>
+    </div>
 
-<div id="message"></div>
+    <div id="game">
+        <div id="stage"></div>
+
+        <input
+            type="text"
+            id="passwordInput"
+            placeholder="Enter password..."
+            autocomplete="off">
+
+        <button onclick="checkPassword()">
+            Submit
+        </button>
+
+        <div id="message"></div>
+    </div>
+
+    <div id="victory" class="hidden">
+        <h2>🎉 Congratulations</h2>
+        <p>You completed the hunt.</p>
+        <p>The final reward is yours.</p>
+
+        <button onclick="resetGame()">
+            Play Again
+        </button>
+    </div>
+
+</div>
 
 <script>
-const clues = {
-    "dragon": "Correct! Next clue: Look where we first met online.",
-    "phoenix": "Correct! Next clue: Check the oldest photo in our group chat.",
-    "nebula": "Correct! Next clue: Search the playlist title.",
-    "galaxy": "Correct! Next clue: Look at the pinned message.",
-    "comet": "Correct! Next clue: Hidden in a game screenshot.",
-    "meteor": "Correct! Next clue: Check the shared document.",
-    "eclipse": "Correct! Next clue: Read the profile bio.",
-    "aurora": "Correct! Next clue: Look at the event date.",
-    "voyager": "Correct! Next clue: Hidden in the website footer.",
-    "treasure": "🎉 Congratulations! You completed the hunt!"
-};
 
-function checkPassword() {
-    const input = document
-        .getElementById("password")
-        .value
-        .trim()
-        .toLowerCase();
+const stages = [
 
-    const message = document.getElementById("message");
+{
+password:"dragon",
+clue:"Look where we first met online."
+},
 
-    if (clues[input]) {
-        message.innerHTML = clues[input];
-    } else {
-        message.innerHTML = "Incorrect password.";
-    }
+{
+password:"phoenix",
+clue:"Check the oldest photo in our group chat."
+},
+
+{
+password:"nebula",
+clue:"Search the playlist title."
+},
+
+{
+password:"galaxy",
+clue:"Look at the pinned message."
+},
+
+{
+password:"comet",
+clue:"Hidden in a game screenshot."
+},
+
+{
+password:"meteor",
+clue:"Check the shared document."
+},
+
+{
+password:"eclipse",
+clue:"Read the profile bio."
+},
+
+{
+password:"aurora",
+clue:"Look at the event date."
+},
+
+{
+password:"voyager",
+clue:"Hidden in the website footer."
+},
+
+{
+password:"treasure",
+clue:"Final password."
 }
+
+];
+
+let currentStage =
+parseInt(localStorage.getItem("huntProgress")) || 0;
+
+function updateScreen(){
+
+if(currentStage >= stages.length){
+
+document.getElementById("game")
+.classList.add("hidden");
+
+document.getElementById("victory")
+.classList.remove("hidden");
+
+document.getElementById("progress")
+.style.width="100%";
+
+return;
+}
+
+document.getElementById("stage").innerHTML =
+`Stage ${currentStage+1} of ${stages.length}<br><br>
+Current clue:<br>
+<strong>${stages[currentStage].clue}</strong>`;
+
+document.getElementById("progress").style.width =
+`${(currentStage/stages.length)*100}%`;
+}
+
+function checkPassword(){
+
+const input =
+document.getElementById("passwordInput")
+.value
+.trim()
+.toLowerCase();
+
+const message =
+document.getElementById("message");
+
+if(input === stages[currentStage].password){
+
+currentStage++;
+
+localStorage.setItem(
+"huntProgress",
+currentStage
+);
+
+message.className="success";
+message.textContent="✓ Correct password!";
+
+document.querySelector(".card")
+.classList.add("glow");
+
+setTimeout(()=>{
+document.querySelector(".card")
+.classList.remove("glow");
+
+message.textContent="";
+updateScreen();
+},1000);
+
+document.getElementById("passwordInput").value="";
+
+}else{
+
+message.className="error";
+message.textContent="✗ Incorrect password";
+}
+}
+
+function resetGame(){
+
+localStorage.removeItem("huntProgress");
+location.reload();
+}
+
+updateScreen();
+
 </script>
 
 </body>
