@@ -2,163 +2,185 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>World Journey RPG</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
 body {
-    margin:0;
-    font-family:Cinzel, serif;
-    color:#f5e6c8;
-    background-size:cover;
-    background-position:center;
-    transition:10s;
+margin:0;
+font-family:Cinzel, serif;
+color:#f5e6c8;
+background-size:cover;
+background-position:center;
+transition:1s;
+overflow:hidden;
 }
 
 /* LOGIN */
 #login {
-    position:fixed;
-    inset:0;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    background:black;
+position:fixed;
+inset:0;
+display:flex;
+justify-content:center;
+align-items:center;
+background:black;
 }
 
 .box {
-    background:rgba(20,14,8,0.95);
-    padding:25px;
-    border:2px solid #c9a227;
-    border-radius:12px;
-    width:300px;
+background:rgba(20,14,8,0.95);
+padding:25px;
+border:2px solid #c9a227;
+border-radius:12px;
+width:300px;
 }
 
-/* GAME LAYOUT */
+/* GAME */
 #game {
-    display:none;
-    height:100vh;
-    display:flex;
+display:none;
+height:100vh;
+display:flex;
 }
 
 .left {
-    flex:3;
-    padding:20px;
+flex:3;
+padding:20px;
 }
 
 .right {
-    flex:1;
-    background:rgba(0,0,0,0.75);
-    padding:20px;
-    border-left:2px solid #c9a227;
+flex:1;
+background:rgba(0,0,0,0.75);
+padding:20px;
+border-left:2px solid #c9a227;
 }
 
-/* ROAD (zeppelin style) */
+/* ROAD */
 .road {
-    position:relative;
-    display:flex;
-    align-items:center;
-    margin-bottom:20px;
+display:flex;
+align-items:center;
+gap:10px;
+margin-bottom:20px;
+position:relative;
 }
 
 .road::before {
-    content:"";
-    position:absolute;
-    width:100%;
-    height:2px;
-    background:#c9a227;
-    opacity:0.4;
-    top:50%;
+content:"";
+position:absolute;
+width:100%;
+height:2px;
+background:#c9a227;
+opacity:0.4;
+top:50%;
 }
 
 .node {
-    width:14px;
-    height:14px;
-    border-radius:50%;
-    border:2px solid #c9a227;
-    background:black;
-    margin-right:60px;
-    z-index:2;
-    opacity:0.4;
-    transition:0.5s;
+width:14px;
+height:14px;
+border-radius:50%;
+border:2px solid #c9a227;
+background:black;
+opacity:0.3;
+z-index:2;
 }
 
-.node.done {
-    background:#c9a227;
-    opacity:1;
-}
-
-.node.current {
-    animation:pulse 1s infinite;
-}
+.node.done { background:#c9a227; opacity:1; }
+.node.current { animation:pulse 1s infinite; }
 
 @keyframes pulse {
-    0%{transform:scale(1)}
-    50%{transform:scale(1.4)}
-    100%{transform:scale(1)}
+0%{transform:scale(1)}
+50%{transform:scale(1.4)}
+100%{transform:scale(1)}
 }
 
 /* INPUT */
 input, button {
-    width:100%;
-    padding:12px;
-    margin-top:10px;
-    border-radius:10px;
-    border:none;
+width:100%;
+padding:12px;
+margin-top:10px;
+border-radius:10px;
+border:none;
 }
 
 input {
-    background:rgba(0,0,0,0.5);
-    color:#f5e6c8;
-    border:1px solid #c9a227;
+background:rgba(0,0,0,0.5);
+color:#f5e6c8;
+border:1px solid #c9a227;
 }
 
 /* QUEST LOG */
 .log {
-    margin-top:15px;
-    font-size:12px;
-    max-height:200px;
-    overflow:auto;
-    border-top:1px solid #3a2f1d;
-    padding-top:10px;
+margin-top:10px;
+font-size:12px;
+max-height:180px;
+overflow:auto;
 }
 
 .logEntry {
-    margin-bottom:6px;
-    opacity:0.85;
+margin-bottom:5px;
 }
 
-/* INVENTORY */
-.item {
-    padding:6px;
-    border:1px solid #c9a227;
-    margin:4px;
-    display:inline-block;
-    cursor:pointer;
+.doneText {
+text-decoration:line-through;
+opacity:0.5;
 }
 
-/* TRAVEL SCREEN */
+/* SPELL EFFECTS */
+.flash-green {
+animation:greenFlash 0.5s;
+}
+
+.flash-red {
+animation:redFlash 0.5s;
+}
+
+@keyframes greenFlash {
+0%{box-shadow:0 0 0 #0f0}
+50%{box-shadow:0 0 40px #0f0}
+100%{box-shadow:0 0 0 #0f0}
+}
+
+@keyframes redFlash {
+0%{background:#000}
+50%{background:#400}
+100%{background:#000}
+}
+
+/* QUEST DIALOG */
+#dialog {
+position:fixed;
+inset:0;
+display:none;
+justify-content:center;
+align-items:center;
+background:rgba(0,0,0,0.8);
+}
+
+.dialogBox {
+background:#1a1410;
+border:2px solid #c9a227;
+padding:20px;
+width:400px;
+}
+
+/* LOADING */
 #loading {
-    position:fixed;
-    inset:0;
-    display:none;
-    background:black;
-    justify-content:center;
-    align-items:center;
-    flex-direction:column;
-    text-align:center;
+position:fixed;
+inset:0;
+display:none;
+background:black;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+text-align:center;
 }
 
 #loading p {
-    color:#ffd36a;
+color:#ffd36a;
 }
 
-/* VICTORY */
-#victory {
-    display:none;
-    text-align:center;
-    padding:50px;
+/* MUSIC */
+audio {
+display:none;
 }
 </style>
 </head>
@@ -167,17 +189,26 @@ input {
 
 <!-- LOGIN -->
 <div id="login">
-  <div class="box">
-    <h2>Enter Name</h2>
-    <input id="name">
-    <button onclick="start()">Begin Journey</button>
-  </div>
+<div class="box">
+<h2>Enter Name</h2>
+<input id="name">
+<button onclick="start()">Begin Journey</button>
+</div>
 </div>
 
-<!-- TRAVEL -->
+<!-- LOADING -->
 <div id="loading">
-  <h2>Traveling...</h2>
-  <p id="travelText"></p>
+<h2 id="travelTitle"></h2>
+<p id="travelText"></p>
+</div>
+
+<!-- QUEST DIALOG -->
+<div id="dialog">
+<div class="dialogBox">
+<h3 id="dTitle"></h3>
+<p id="dText"></p>
+<button onclick="closeDialog()">Accept Quest</button>
+</div>
 </div>
 
 <!-- GAME -->
@@ -189,6 +220,8 @@ input {
 
 <h2 id="zone"></h2>
 <p id="clue"></p>
+
+<p id="progress"></p>
 
 <input id="input">
 <button onclick="submit()">Submit</button>
@@ -205,63 +238,60 @@ input {
 <h3>🎒 Inventory</h3>
 <div id="inv"></div>
 
-<h3>📜 Quest Journal</h3>
+<h3>📜 Quest Log</h3>
 <div class="log" id="log"></div>
 
 </div>
 
 </div>
 
-<div id="victory">
-<h1>🏆 Journey Complete</h1>
-<p id="title"></p>
-</div>
+<!-- MUSIC -->
+<audio id="music" loop></audio>
 
 <script>
 
 /* WORLD */
 const zones = [
 {
-name:"Overwatch Watchpoint",
-bg:"https://r4.wallpaperflare.com/wallpaper/445/688/1024/4k-overwatch-widowmaker-wallpaper-d33462865149854f9bb7011a1a241254.jpg",
-travel:"Arriving at Watchpoint Gibraltar...",
+name:"Overwatch",
+bg:"https://blz-contentstack-images.akamaized.net/v3/assets/blt2477dcaf4ebd440c/bltdabc3782553659f1/6785b50a1970a9f14eb5ccd7/xboxshowcase.png",
+music:"music/overwatch.mp3",
+travel:"Entering Overwatch Watchpoint...",
 puzzles:[
-{q:"tracer", clue:"Fastest hero.", hint:"Time manipulation user."},
-{q:"reaper", clue:"Death walks again.", hint:"Shadow and shotguns."},
-{q:"overwatch", clue:"Organization reborn.", hint:"Global hero task force."}
+{q:"tracer", clue:"Fastest hero.", hint:"Time user."},
+{q:"reaper", clue:"Death walks again.", hint:"Shadow assassin."},
+{q:"overwatch", clue:"Organization reborn.", hint:"Hero force."}
 ],
 item:"Pulse Badge"
 },
-
 {
-name:"League of Legends Rift",
+name:"League of Legends",
 bg:"https://www.allkeyshop.com/blog/wp-content/uploads/LoL-Champions-resized.webp",
-travel:"Crossing into the Summoner's Rift...",
+music:"music/lol.mp3",
+travel:"Crossing into the Rift...",
 puzzles:[
-{q:"yasuo", clue:"Wind never stops.", hint:"Unforgiven swordsman."},
-{q:"jinx", clue:"Chaos follows.", hint:"Explosive chaos lover."},
-{q:"nexus", clue:"Heart of the game.", hint:"Core structure."}
+{q:"yasuo", clue:"Wind never stops.", hint:"Wind swordsman."},
+{q:"jinx", clue:"Chaos follows.", hint:"Explosive chaos."},
+{q:"nexus", clue:"Core of battle.", hint:"Main structure."}
 ],
 item:"Hex Core"
 },
-
 {
-name:"World of Warcraft Azeroth",
+name:"World of Warcraft",
 bg:"https://bnetcmsus-a.akamaihd.net/cms/blog_header/wn/WNVJRL5YVDSB1764095280016.png",
+music:"music/wow.mp3",
 travel:"Entering Azeroth...",
 puzzles:[
-{q:"arthas", clue:"The fallen king.", hint:"Lich King origin."},
-{q:"horde", clue:"For the Horde.", hint:"Faction war cry."},
+{q:"arthas", clue:"Fallen king.", hint:"Lich King."},
+{q:"horde", clue:"For the Horde.", hint:"Faction warcry."},
 {q:"azeroth", clue:"The world itself.", hint:"Planet name."}
 ],
 item:"Frost Relic"
 }
 ];
 
-let player="";
-let z=0, p=0;
+let player="", z=0, p=0;
 let inv=[];
-let hintsUsed=0;
 let journal=[];
 
 /* START */
@@ -270,12 +300,51 @@ player=document.getElementById("name").value||"Traveler";
 document.getElementById("login").style.display="none";
 document.getElementById("game").style.display="flex";
 document.getElementById("player").innerText=player;
-log("Journey started by "+player);
+
+openDialog(z);
+
+playMusic();
+render();
+}
+
+/* DIALOG */
+function openDialog(i){
+document.getElementById("dialog").style.display="flex";
+document.getElementById("dTitle").innerText=zones[i].name;
+document.getElementById("dText").innerText=zones[i].travel;
+}
+
+function closeDialog(){
+document.getElementById("dialog").style.display="none";
 travel();
 }
 
+/* MUSIC */
+function playMusic(){
+let m=document.getElementById("music");
+m.src=zones[z].music;
+m.volume=0;
+m.play();
+
+let fade=setInterval(()=>{
+if(m.volume<0.5) m.volume+=0.05;
+else clearInterval(fade);
+},200);
+}
+
+/* TRAVEL */
+function travel(){
+document.getElementById("loading").style.display="flex";
+
+setTimeout(()=>{
+document.getElementById("loading").style.display="none";
+document.body.style.background=`url('${zones[z].bg}') center/cover`;
+render();
+},10000);
+}
+
 /* ROAD */
-function renderRoad(){
+function road(){
 let r=document.getElementById("road");
 r.innerHTML="";
 zones.forEach((_,i)=>{
@@ -287,27 +356,16 @@ r.appendChild(d);
 });
 }
 
-/* TRAVEL SCREEN */
-function travel(){
-document.getElementById("loading").style.display="flex";
-document.getElementById("travelText").innerText=zones[z].travel;
-
-setTimeout(()=>{
-document.getElementById("loading").style.display="none";
-render();
-},2200);
-}
-
 /* RENDER */
 function render(){
 if(z>=zones.length){ end(); return; }
 
-document.body.style.background=`url('${zones[z].bg}') center/cover`;
-
 document.getElementById("zone").innerText=zones[z].name;
 document.getElementById("clue").innerText=zones[z].puzzles[p].clue;
+document.getElementById("progress").innerText=
+`Chapter ${z+1}: ${p}/${zones[z].puzzles.length}`;
 
-renderRoad();
+road();
 renderInv();
 renderLog();
 }
@@ -315,20 +373,14 @@ renderLog();
 /* INVENTORY */
 function renderInv(){
 document.getElementById("inv").innerHTML=
-inv.map((i,idx)=>`<div class="item" onclick="use(${idx})">${i}</div>`).join("");
+inv.map((i,idx)=>`<div onclick="use(${idx})">${i}</div>`).join("");
 }
 
-/* USE ITEM */
 function use(i){
-if(!confirm("Use item to reveal hint? It will be consumed.")) return;
-
-alert("💡 HINT: " + zones[z].puzzles[p].hint);
-
+if(!confirm("Use item for hint?")) return;
+alert(zones[z].puzzles[p].hint);
 inv.splice(i,1);
-hintsUsed++;
-
-log("Hint used in "+zones[z].name);
-
+log("Hint used");
 renderInv();
 }
 
@@ -340,7 +392,8 @@ if(v===zones[z].puzzles[p].q){
 
 document.getElementById("input").value="";
 
-log("Solved: "+zones[z].puzzles[p].q);
+spell(true);
+log("Completed: "+v,true);
 
 p++;
 
@@ -348,44 +401,51 @@ if(p>=zones[z].puzzles.length){
 inv.push(zones[z].item);
 z++; p=0;
 
-log("Zone completed: "+zones[z-1].name);
-
+if(z<zones.length){
+openDialog(z);
+playMusic();
 travel();
-} else {
-log("Next objective unlocked");
+}
 }
 
 render();
 
 } else {
-log("Failed attempt");
+spell(false);
+log("Wrong attempt");
 }
 }
 
-/* JOURNAL */
-function log(t){
-journal.unshift(t);
+/* SPELL EFFECTS */
+function spell(success){
+let b=document.body;
+
+if(success){
+b.classList.add("flash-green");
+setTimeout(()=>b.classList.remove("flash-green"),500);
+} else {
+b.classList.add("flash-red");
+setTimeout(()=>b.classList.remove("flash-red"),500);
+}
 }
 
-/* RENDER LOG */
+/* LOG */
+function log(t,done=false){
+journal.unshift({t,done});
+}
+
 function renderLog(){
 document.getElementById("log").innerHTML=
-journal.map(j=>`<div class="logEntry">${j}</div>`).join("");
-}
-
-/* TITLE */
-function title(){
-if(hintsUsed===0) return "🏆 Mythic Explorer";
-if(hintsUsed<=2) return "⭐ Skilled Traveler";
-return "🪶 Casual Wanderer";
+journal.map(j=>
+`<div class="${j.done?'doneText':''}">${j.t}</div>`
+).join("");
 }
 
 /* END */
 function end(){
 document.getElementById("game").style.display="none";
-document.getElementById("victory").style.display="block";
-document.getElementById("title").innerText=
-player+" → "+title();
+document.getElementById("dialog").style.display="none";
+alert("🏆 Journey Complete");
 }
 
 </script>
