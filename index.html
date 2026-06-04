@@ -263,7 +263,33 @@ z-index:15;
 #bossScreen {
 z-index:18;
 background:
+linear-gradient(rgba(0,0,0,0.50), rgba(0,0,0,0.88)),
 radial-gradient(circle, rgba(85,0,0,0.65), rgba(0,0,0,0.96));
+background-size:cover;
+background-position:center;
+}
+
+.raid-warning {
+color:#ff5555;
+font-size:24px;
+text-shadow:0 0 10px #ff0000;
+margin:10px 0;
+}
+
+.whisper {
+color:#b56cff;
+font-style:italic;
+margin:12px 0;
+text-shadow:0 0 8px rgba(181,108,255,0.7);
+}
+
+#bossStats {
+font-size:14px;
+opacity:0.95;
+line-height:1.6;
+margin-top:14px;
+border-top:1px solid rgba(201,162,39,0.35);
+padding-top:10px;
 }
 
 #creditsScreen {
@@ -524,6 +550,7 @@ margin:8px 0;
 </div>
 
 <div id="bossMessage"></div>
+<div id="bossStats"></div>
 <p class="small">Correct answers open a parry window. Perfect parries deal huge damage. Late or missed parries stun you.</p>
 </div>
 </div>
@@ -551,6 +578,14 @@ margin:8px 0;
 <p>Security Theater<br><strong>Foute & Chat</strong></p>
 <p>Special Thanks<br><strong>Foute & Chat</strong></p>
 <p>Additional Special Thanks<br><strong>Foute & Chat</strong></p>
+<p>Emergency Hook Avoidance Department<br><strong>Foute & Chat</strong></p>
+<p>Wheel RNG Complaints Desk<br><strong>Foute & Chat</strong></p>
+<p>Choosing A Main Prevention Team<br><strong>Foute & Chat</strong></p>
+<p>Nexus Point Xenos Trauma Support<br><strong>Foute & Chat</strong></p>
+<p>Mandatory Two-Minute Credits Enforcement<br><strong>Foute & Chat</strong></p>
+<p>More Titles Just To Complete Two Minutes Of This Bullshit<br><strong>Foute & Chat</strong></p>
+<p>Wait, Why's Everybody Grabbing A Drink? LOOK AT MY CREDITS!<br><strong>Foute & Chat</strong></p>
+<p>Assistant Regional Assistant To The Assistant Director<br><strong>Foute & Chat</strong></p>
 <p>Very Additional Special Thanks<br><strong>Foute & Chat</strong></p>
 <p>No Friends Were Harmed In The Making Of This Quest</p>
 <p>Except Emotionally</p>
@@ -580,28 +615,36 @@ display:"Fellicity",
 question:"What's my favorite Maroon 5 song?",
 hash:"8044aae1f86875d993f20d7fe3815306b640d6e039c4512cd7a2f8453207b4cd",
 intro:"Cute as a button, Excellent wit. Forgive me for not allowing your main, alas your sharp mind might win this game",
-audio:"fellicity.mp3"
+audio:"fellicity.mp3",
+bossName:"The Hook Boss",
+bossBg:"fellicitybossfight.jpg"
 },
 lariath:{
 display:"Lariath",
 question:"What do I mean by wwd?",
 hash:"9d7021c600025846dc58eb6e47b55a80109d70bee800ac196fbb689cb80b0a33",
 intro:"Some people might need a hint or some extra luck, you surely don't you competitive fuck <3",
-audio:"lariath.mp3"
+audio:"lariath.mp3",
+bossName:"The Wheel of Enormous Proportions",
+bossBg:"lariathbossfight.jpg"
 },
 alistia:{
 display:"Alistia",
 question:"Johnny is?",
 hash:"4c458ada6c7b8d9ad84ae71c8e77d93685030c62d45a5e82c796ef0caabbb374",
 intro:"The rest won't be so eas.. STOP PLAYING RUNESCAPE ALREADY! Sigh.. go on then",
-audio:"alistia.mp3"
+audio:"alistia.mp3",
+bossName:"Choosing a Main",
+bossBg:"alistiabossfight.jpg"
 },
 cam:{
 display:"Cam",
 question:"whenever someone sends me 1 video and then 3 more, I?",
 hash:"b006a012ff0f93be9a8dbd742e7e231dfffb9942f41bbf900ae86cd47b5c25d8",
 intro:"Our main protankonist, taking each blow. Show me, how much you actually know",
-audio:"cam.mp3"
+audio:"cam.mp3",
+bossName:"Nexus Point Xenos",
+bossBg:"cambossfight.png"
 }
 };
 
@@ -669,6 +712,13 @@ let qteStart=0;
 let qteDuration=1800;
 let qteAnimation=null;
 let qteTimeout=null;
+let activeMechanic=null;
+let mechanicIndex=0;
+let mechanicsSolved=0;
+let criticalMechanics=0;
+let perfectParries=0;
+let stunsTaken=0;
+let finalHealerSolved=false;
 
 function normalize(value){
 return value.toLowerCase().trim().replace(/\s+/g," ");
@@ -779,6 +829,13 @@ finishedTime=0;
 bossHp=100;
 bossQuestionsAnswered=0;
 bossWrongAnswers=0;
+mechanicsSolved=0;
+criticalMechanics=0;
+perfectParries=0;
+stunsTaken=0;
+finalHealerSolved=false;
+activeMechanic=null;
+mechanicIndex=0;
 gameCompleted=false;
 
 stopAllAudio();
@@ -1309,78 +1366,348 @@ render();
 },TRAVEL_DURATION_MS);
 }
 
+const bossMechanics=[
+{
+id:"protect",
+threshold:90,
+owner:"cam",
+warning:"THE BOSS STARTS TO FOCUS A HEALER",
+prompt:"Type PROTECT, HELP, ASSIST, DISTRACT or AID.",
+valid:["protect","help","assist","distract","aid"],
+bonus:["taunt"],
+bonusDamage:45,
+qte:"normal"
+},
+{
+id:"invisible",
+threshold:65,
+owner:"fellicity",
+warning:"THE BOSS SUDDENLY GOES INVISIBLE",
+prompt:"Type DETECT, FIND, AOE, or anything involving the word REAL.",
+valid:["detect","find","aoe","real"],
+bonus:["spectral sight","use spectral sight"],
+bonusDamage:45,
+qte:"average"
+},
+{
+id:"charge",
+threshold:40,
+owner:"lariath",
+warning:"THE BOSS STARTS TO CHARGE INTO YOUR DIRECTION",
+prompt:"Type DODGE.",
+valid:["dodge"],
+bonus:["feign","feign death"],
+bonusDamage:45,
+qte:"hard"
+},
+{
+id:"doom",
+threshold:20,
+owner:"alistia",
+warning:"THE HARDEST PHASE BEGINS. THE BOSS BEGINS CASTING DOOM [2s]",
+prompt:"Type INTERRUPT.",
+valid:["interrupt"],
+bonus:["fury"],
+bonusDamage:55,
+qte:"hardest"
+}
+];
+
 function startBossEncounter(){
 document.getElementById("game").style.display="none";
 document.getElementById("bossScreen").style.display="flex";
+
+const user=users[currentUser];
+
+document.getElementById("bossScreen").style.backgroundImage=
+`linear-gradient(rgba(0,0,0,0.50), rgba(0,0,0,0.88)), url('${user.bossBg}')`;
+
+document.getElementById("bossName").innerText=user.bossName;
+document.getElementById("bossMessage").innerHTML="Oh no, it's your worst enemy! Quickly!";
 
 bossHp=120;
 bossQuestionsAnswered=0;
 bossWrongAnswers=0;
 qteActive=false;
+activeMechanic=null;
+mechanicIndex=0;
+mechanicsSolved=0;
+criticalMechanics=0;
+perfectParries=0;
+stunsTaken=0;
+finalHealerSolved=false;
 
 playBossMusic();
-renderBoss();
+
+setTimeout(()=>renderBoss(),1800);
 }
 
 function generateBossQuestion(){
 const questions=[
-{q:"What is 7 + 8?", a:15},
-{q:"What is 9 × 3?", a:27},
-{q:"What is 42 - 19?", a:23},
-{q:"What is 6 × 6?", a:36},
-{q:"What is 100 / 4?", a:25},
-{q:"What is 13 + 14?", a:27},
-{q:"What is 8 × 7?", a:56},
-{q:"What is 81 / 9?", a:9},
-{q:"What is 12 × 4?", a:48},
-{q:"What is 50 - 17?", a:33},
-{q:"I speak without a mouth and hear without ears. What am I? Type 4.", a:4},
-{q:"The boss raises its blade. Type 1 to keep calm.", a:1}
+{q:"Only one U.S. state can be typed using one QWERTY keyboard row. Which state?", a:["alaska"]},
+{q:"In human anatomy, what does hallux refer to?", a:["big toe","the big toe","toe"]},
+{q:"Which planet rotates clockwise on its axis?", a:["venus"]},
+{q:"Due to the Mpemba effect, which freezes faster: hot or cold water?", a:["hot","hot water"]},
+{q:"What do you call a group of flamingos?", a:["flamboyance","a flamboyance"]},
+{q:"What does URL stand for?", a:["uniform resource locator"]},
+{q:"According to Guinness World Records, what is the best-selling book of all time?", a:["bible","the bible"]},
+{q:"The first iPhone was released in what year?", a:["2007"]},
+{q:"Cillian Murphy plays a 1900s mob boss in Birmingham in which series?", a:["peaky blinders"]},
+{q:"Anna, Elsa, Kristoff and Olaf are characters in what animated movie?", a:["frozen"]},
+{q:"What was the first video ever played on MTV?", a:["video killed the radio star"]},
+{q:"“Call me Ishmael” is the first line from what novel?", a:["moby dick","mobydick"]},
+{q:"Which singer's real name is Robyn Fenty?", a:["rihanna"]},
+{q:"How many legs does a lobster have?", a:["10","ten"]},
+{q:"Which shoe did Cinderella leave behind at the ball?", a:["left","left shoe","the left shoe"]},
+{q:"Casablanca is the largest city in which African country?", a:["morocco"]},
+{q:"What is the national flower of Scotland?", a:["thistle"]},
+{q:"What ingredient is the core of a savory dish?", a:["salt"]},
+{q:"What is the most expensive spice in the world?", a:["saffron"]},
+{q:"What does a funambulist walk on?", a:["rope","a rope","tightrope","a tightrope"]},
+{q:"What does the Q in IQ stand for?", a:["quotient"], wrong:"Not that high, is it?"},
+{q:"What was Linkin Park originally called?", a:["xero"]},
+{q:"What does the c in E=mc² stand for?", a:["speed of light","the speed of light","light speed"]},
+{q:"Latin word for “beyond”, often used as a prefix to signify an extreme?", a:["ultra"]},
+{q:"In Big Hero 6, Baymax's movements were modeled after what?", a:["baby","diaper","babies","a baby"]},
+{q:"Who was the first Disney princess with a tattoo?", a:["pocahontas"]},
+
+{q:"First player rule TRUE/FALSE: Patchwork — the player who most recently used a needle.", a:["true"]},
+{q:"First player rule TRUE/FALSE: Power Grid — the player who most recently powered a major city.", a:["false"]},
+{q:"First player rule TRUE/FALSE: Honey Buzz — the player who woke up first today.", a:["true"]},
+{q:"First player rule TRUE/FALSE: Blood Rage — the player who most recently led a Viking clan.", a:["false"]},
+{q:"First player rule TRUE/FALSE: Pandemic — the player who was most recently sick.", a:["true"]},
+{q:"First player rule TRUE/FALSE: Kingdomino — the player who most recently built something.", a:["true"]},
+{q:"First player rule TRUE/FALSE: Agricola — the player who most recently plowed a field.", a:["false"]},
+{q:"First player rule TRUE/FALSE: Spyfall — the most suspicious-looking player.", a:["true"]},
+{q:"First player rule TRUE/FALSE: Ticket to Ride — the player who most recently conducted a train.", a:["false"]},
+{q:"First player rule TRUE/FALSE: Wingspan — the player who most recently saw a bird.", a:["true"]},
+{q:"First player rule TRUE/FALSE: The Resistance — the player who most recently sabotaged something.", a:["false"]},
+{q:"First player rule TRUE/FALSE: Love Letter — the player who most recently went on a date.", a:["true"]},
+{q:"First player rule TRUE/FALSE: Food Chain Magnate — most recently ate fast-food.", a:["false"]},
+{q:"First player rule TRUE/FALSE: Ghost Stories — most recently watched a kung-fu movie.", a:["true"]},
+{q:"First player rule TRUE/FALSE: Camel Up — most recently visited a desert.", a:["true"]},
+{q:"First player rule TRUE/FALSE: Catan — most recently traded something for a brick.", a:["false"]},
+{q:"First player rule TRUE/FALSE: Meadow — most recently stung by a bee.", a:["true"]},
+{q:"First player rule TRUE/FALSE: Bears vs Babies — the hairiest player.", a:["true"]},
+{q:"First player rule TRUE/FALSE: King of Tokyo — most recently visited Tokyo or closest city nearby.", a:["false"]},
+{q:"First player rule TRUE/FALSE: Parks — most recently went on a hike.", a:["true"]},
+{q:"First player rule TRUE/FALSE: Munchkin — roll the dice and argue about the sentence.", a:["true"]},
+{q:"First player rule TRUE/FALSE: Gloom — the player who has had the worst day.", a:["true"]},
+{q:"First player rule TRUE/FALSE: Forbidden Desert — the thirstiest person.", a:["true"]},
+{q:"First player rule TRUE/FALSE: Hive — the player who most recently trapped a bee.", a:["false"]},
+{q:"First player rule TRUE/FALSE: Azul — the player who most recently visited Portugal.", a:["true"]},
+
+{q:"Which missive gives Versatility and Critical Strike?", a:["quickblade","of the quickblade"]},
+{q:"Which missive gives Critical Strike and Mastery?", a:["peerless","of the peerless"]},
+{q:"Which missive gives Versatility and Mastery?", a:["harmonious","of the harmonious"]},
+{q:"Which missive gives Critical Strike and Haste?", a:["fireflash","of the fireflash"]},
+{q:"Which missive gives Mastery and Haste?", a:["feverflare","of the feverflare"]},
+{q:"Which missive gives Versatility and Haste?", a:["aurora","of the aurora","missive of the aurora"]}
 ];
 
 const pick=questions[Math.floor(Math.random()*questions.length)];
 bossCurrentAnswer=pick.a;
-return pick.q;
+return pick;
 }
 
 function renderBoss(){
 clearQte();
 
+if(shouldTriggerFinalHealer()){
+startFinalHealerMechanic();
+return;
+}
+
+const nextMechanic=bossMechanics[mechanicIndex];
+if(nextMechanic && bossHp<=nextMechanic.threshold){
+startMechanic(nextMechanic);
+return;
+}
+
 document.getElementById("bossHpBar").style.width=Math.max(0,(bossHp/120)*100)+"%";
 document.getElementById("bossHpText").innerText=`Boss HP: ${bossHp}/120`;
-document.getElementById("bossQuestion").innerText=generateBossQuestion();
+const picked=generateBossQuestion();
+document.getElementById("bossQuestion").innerHTML=escapeHtml(picked.q);
+document.getElementById("bossQuestion").dataset.wrong=picked.wrong || "";
 document.getElementById("bossInput").style.display="inline-block";
 document.getElementById("bossSubmitBtn").style.display="inline-block";
+document.getElementById("bossSubmitBtn").disabled=false;
+document.getElementById("bossInput").disabled=false;
+document.getElementById("bossSubmitBtn").innerText="Open Parry Window";
 document.getElementById("bossInput").value="";
 document.getElementById("bossInput").focus();
-document.getElementById("bossMessage").innerText="";
 document.getElementById("qteArea").style.display="none";
+updateBossStats();
+}
+
+function shouldTriggerFinalHealer(){
+return bossHp<=6 && !finalHealerSolved;
+}
+
+function startFinalHealerMechanic(){
+activeMechanic={
+id:"finalhealer",
+owner:null,
+warning:"FINAL 5% PHASE",
+prompt:"Imäm is out of mana to heal your sorry asses. I guess it's a bit late to discuss avoiding damage. How would you help out the poor guy?",
+valid:["pot","potion"],
+bonus:[],
+bonusDamage:0,
+qte:"hardest",
+final:true
+};
+
+showMechanic();
+}
+
+function startMechanic(mechanic){
+activeMechanic=mechanic;
+showMechanic();
+}
+
+function showMechanic(){
+const whisper = activeMechanic.owner===currentUser
+? `<div class="whisper">[Whisper] Foute -> ${users[currentUser].display}: What can your class do to help out?</div>`
+: "";
+
+document.getElementById("bossHpBar").style.width=Math.max(0,(bossHp/120)*100)+"%";
+document.getElementById("bossHpText").innerText=`Boss HP: ${bossHp}/120`;
+document.getElementById("bossQuestion").innerHTML=
+`<div class="raid-warning">⚠ ${escapeHtml(activeMechanic.warning)} ⚠</div>`+
+`<div>${escapeHtml(activeMechanic.prompt)}</div>`+
+whisper;
+
+document.getElementById("bossInput").style.display="inline-block";
+document.getElementById("bossSubmitBtn").style.display="inline-block";
+document.getElementById("bossSubmitBtn").disabled=false;
+document.getElementById("bossInput").disabled=false;
+document.getElementById("bossSubmitBtn").innerText="Respond";
+document.getElementById("bossInput").value="";
+document.getElementById("bossInput").focus();
+document.getElementById("qteArea").style.display="none";
+document.getElementById("bossMessage").innerText="The boss keeps casting until you solve the mechanic.";
+updateBossStats();
+}
+
+function textIncludesAny(text, words){
+return words.some(w=>text.includes(w));
+}
+
+function isAccepted(input, accepted){
+return accepted.some(a=>input===a || input.includes(a));
+}
+
+function isNormalAnswerCorrect(input){
+if(Array.isArray(bossCurrentAnswer)){
+return bossCurrentAnswer.some(a=>input===a || input.includes(a));
+}
+return Number(input)===bossCurrentAnswer;
 }
 
 function submitBossAnswer(){
 const btn=document.getElementById("bossSubmitBtn");
-const input=document.getElementById("bossInput");
-const answer=Number(input.value.trim());
+const inputEl=document.getElementById("bossInput");
+const input=normalize(inputEl.value);
 
-input.value="";
+inputEl.value="";
 
-if(Number.isNaN(answer)) return;
+if(!input) return;
 
-if(answer===bossCurrentAnswer){
+if(currentUser!=="cam" && input.includes("taunt")){
+stunBossPlayer("You try to TAUNT the boss. Unfortunately, you are not equipped to tank bosses! Stunned for 30 seconds.",30000);
+return;
+}
+
+if(activeMechanic){
+submitMechanicAnswer(input);
+return;
+}
+
+if(isNormalAnswerCorrect(input)){
 bossQuestionsAnswered++;
 document.getElementById("bossMessage").innerText="The boss attacks! Time your parry!";
 document.getElementById("bossInput").style.display="none";
 document.getElementById("bossSubmitBtn").style.display="none";
-startQte();
+startQte("normal");
 }else{
 bossWrongAnswers++;
-stunBossPlayer("Wrong answer! Stunned for 5 seconds.");
+const customWrong=document.getElementById("bossQuestion").dataset.wrong;
+document.getElementById("bossMessage").innerText=customWrong || "Wrong! The boss changes tactics.";
+setTimeout(()=>renderBoss(),1000);
 }
 }
 
-function startQte(){
+function submitMechanicAnswer(input){
+if(activeMechanic.id==="finalhealer"){
+const badWords=["kick","yell","scream","flame","blame","complain","moan","not"];
+
+if(textIncludesAny(input,badWords)){
+stunBossPlayer("Teamwork makes the dreamwork! You chose not to help the healer. Stunned for 60 seconds.",60000);
+return;
+}
+
+if(input.includes("pot") || input.includes("potion")){
+finalHealerSolved=true;
+mechanicsSolved++;
+bossQuestionsAnswered++;
+activeMechanic=null;
+bossHp=0;
+finishAdventure();
+return;
+}
+
+bossWrongAnswers++;
+document.getElementById("bossMessage").innerText="Imäm is still out of mana. Try actually helping.";
+showMechanic();
+return;
+}
+
+const isBonus = activeMechanic.owner===currentUser && isAccepted(input,activeMechanic.bonus || []);
+const isValid = isAccepted(input,activeMechanic.valid || []);
+
+if(isBonus){
+criticalMechanics++;
+mechanicsSolved++;
+bossQuestionsAnswered++;
+bossHp=Math.max(1,bossHp-activeMechanic.bonusDamage);
+document.getElementById("bossMessage").innerText="Critical class play! Foute is almost proud.";
+activeMechanic=null;
+mechanicIndex++;
+setTimeout(()=>renderBoss(),1200);
+return;
+}
+
+if(isValid){
+mechanicsSolved++;
+bossQuestionsAnswered++;
+const difficulty=activeMechanic.qte || "normal";
+document.getElementById("bossMessage").innerText="Mechanic handled! Now parry the counterattack!";
+document.getElementById("bossInput").style.display="none";
+document.getElementById("bossSubmitBtn").style.display="none";
+activeMechanic=null;
+mechanicIndex++;
+startQte(difficulty);
+return;
+}
+
+bossWrongAnswers++;
+document.getElementById("bossMessage").innerText="Wrong mechanic answer. The boss keeps casting.";
+showMechanic();
+}
+
+function startQte(difficulty="normal"){
 qteActive=true;
 qteStart=performance.now();
+
+if(difficulty==="average"){
+qteDuration=1550;
+}else if(difficulty==="hard"){
+qteDuration=1250;
+}else if(difficulty==="hardest"){
+qteDuration=2000;
+}else{
+qteDuration=1700;
+}
 
 const qteArea=document.getElementById("qteArea");
 const marker=document.getElementById("qteMarker");
@@ -1404,7 +1731,7 @@ qteTimeout=setTimeout(()=>{
 if(qteActive){
 qteActive=false;
 bossWrongAnswers++;
-stunBossPlayer("Too late! The boss crushes your guard. Stunned for 5 seconds.");
+stunBossPlayer("Too late! The boss crushes your guard. Stunned for 5 seconds.",5000);
 }
 },qteDuration);
 }
@@ -1420,18 +1747,22 @@ clearQte();
 let damage=0;
 let message="";
 
-if(progress>=0.45 && progress<=0.55){
-damage=40;
+if(progress>=0.475 && progress<=0.525){
+damage=38;
+perfectParries++;
 message="Perfect parry! Massive counterattack!";
-}else if(progress>=0.35 && progress<=0.65){
+}else if(progress>=0.40 && progress<=0.60){
 damage=22;
 message="Good parry! Solid damage!";
-}else if(progress<0.35){
-damage=8;
+}else if(progress>=0.30 && progress<=0.70){
+damage=12;
+message="Glancing parry! Some damage.";
+}else if(progress<0.30){
+damage=5;
 message="Too early! You barely scratch the boss.";
 }else{
 bossWrongAnswers++;
-stunBossPlayer("Too late! Stunned for 5 seconds.");
+stunBossPlayer("Too late! Stunned for 5 seconds.",5000);
 return;
 }
 
@@ -1439,6 +1770,7 @@ bossHp=Math.max(0,bossHp-damage);
 document.getElementById("bossHpBar").style.width=Math.max(0,(bossHp/120)*100)+"%";
 document.getElementById("bossHpText").innerText=`Boss HP: ${bossHp}/120`;
 document.getElementById("bossMessage").innerText=message;
+updateBossStats();
 
 if(bossHp<=0){
 setTimeout(()=>finishAdventure(),1200);
@@ -1461,8 +1793,10 @@ qteTimeout=null;
 }
 }
 
-function stunBossPlayer(message){
+function stunBossPlayer(message,duration=5000){
 clearQte();
+
+stunsTaken++;
 
 const btn=document.getElementById("bossSubmitBtn");
 const input=document.getElementById("bossInput");
@@ -1474,14 +1808,37 @@ input.style.display="inline-block";
 btn.style.display="inline-block";
 input.disabled=true;
 btn.disabled=true;
-btn.innerText="Stunned";
 
-setTimeout(()=>{
+let remaining=Math.ceil(duration/1000);
+btn.innerText=`Stunned ${remaining}s`;
+
+const stunTimer=setInterval(()=>{
+remaining--;
+btn.innerText=`Stunned ${remaining}s`;
+
+if(remaining<=0){
+clearInterval(stunTimer);
 input.disabled=false;
 btn.disabled=false;
-btn.innerText="Open Parry Window";
+btn.innerText=activeMechanic ? "Respond" : "Open Parry Window";
+
+if(activeMechanic){
+showMechanic();
+}else{
 renderBoss();
-},5000);
+}
+}
+},1000);
+}
+
+function updateBossStats(){
+document.getElementById("bossStats").innerHTML=
+`Boss timer: ${formatTime(currentElapsed())}<br>`+
+`Correct answers: ${bossQuestionsAnswered}<br>`+
+`Mechanics solved: ${mechanicsSolved}/5<br>`+
+`Critical answers found: ${criticalMechanics}<br>`+
+`Perfect parries: ${perfectParries}<br>`+
+`Stuns taken: ${stunsTaken}`;
 }
 
 function finishAdventure(){
@@ -1495,6 +1852,10 @@ timeText:formatTime(finishedTime),
 questAttempts:attempts.length,
 bossQuestionsAnswered:bossQuestionsAnswered,
 bossWrongAnswers:bossWrongAnswers,
+mechanicsSolved:mechanicsSolved,
+criticalMechanics:criticalMechanics,
+perfectParries:perfectParries,
+stunsTaken:stunsTaken,
 completedAt:new Date().toLocaleString()
 };
 
@@ -1547,8 +1908,11 @@ if(result){
 document.getElementById("resultText").innerHTML =
 `<div class="result-line">Player: ${escapeHtml(result.player)}</div>`+
 `<div class="result-line">Total time: ${escapeHtml(result.timeText)}</div>`+
-`<div class="result-line">Boss hits landed: ${result.bossQuestionsAnswered}</div>`+
-`<div class="result-line">Boss stuns taken: ${result.bossWrongAnswers}</div>`+
+`<div class="result-line">Boss correct answers: ${result.bossQuestionsAnswered}</div>`+
+`<div class="result-line">Mechanics solved: ${result.mechanicsSolved || 0}/5</div>`+
+`<div class="result-line">Critical answers found: ${result.criticalMechanics || 0}</div>`+
+`<div class="result-line">Perfect parries: ${result.perfectParries || 0}</div>`+
+`<div class="result-line">Stuns taken: ${result.stunsTaken || result.bossWrongAnswers || 0}</div>`+
 `<div class="result-line">Completed: ${escapeHtml(result.completedAt)}</div>`;
 }else{
 document.getElementById("resultText").innerHTML =
@@ -1572,6 +1936,13 @@ finishedTime=0;
 bossHp=100;
 bossQuestionsAnswered=0;
 bossWrongAnswers=0;
+mechanicsSolved=0;
+criticalMechanics=0;
+perfectParries=0;
+stunsTaken=0;
+finalHealerSolved=false;
+activeMechanic=null;
+mechanicIndex=0;
 gameCompleted=false;
 
 document.getElementById("resultStep").style.display="none";
