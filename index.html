@@ -49,7 +49,7 @@ button:disabled { opacity:0.55; cursor:not-allowed; }
 <button id="muteBtn" onclick="toggleMute()">🔊</button>
 
 <div id="login"><div class="box">
-<div id="landingStep"><h1 class="box-title">Quest Journey</h1><button onclick="showNameStep()">Begin Journey</button></div>
+<div id="landingStep"><button onclick="showNameStep()">Begin Journey</button></div>
 <div id="nameStep"><h2>Enter Name</h2><input id="name" autocomplete="off"><button onclick="checkName()">Continue</button><div class="login-message" id="nameMessage"></div></div>
 <div id="securityStep"><h2 id="securityTitle">Security Question</h2><p id="securityQuestion"></p><input id="securityAnswer" autocomplete="off"><button onclick="checkSecurityAnswer()">Answer</button><div class="login-message" id="securityMessage"></div><button onclick="backToName()">Back</button></div>
 </div></div>
