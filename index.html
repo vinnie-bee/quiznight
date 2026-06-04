@@ -301,6 +301,7 @@ animation:shake 0.3s;
 #introScreen,
 #fouteScreen,
 #bossScreen,
+#secretBossScreen,
 #killScreen,
 #creditsScreen {
 position:fixed;
@@ -447,6 +448,27 @@ line-height:1.5;
 margin-bottom:20px;
 }
 
+#secretBossImage {
+max-width:260px;
+max-height:260px;
+border:2px solid #c9a227;
+border-radius:14px;
+box-shadow:0 0 24px rgba(201,162,39,0.35);
+margin-bottom:18px;
+}
+
+#secretBossText {
+font-size:24px;
+line-height:1.5;
+margin-bottom:15px;
+}
+
+#secretBossMessage {
+min-height:26px;
+margin-top:10px;
+color:#c9a227;
+}
+
 #creditsScreen {
 z-index:22;
 background:black;
@@ -570,7 +592,8 @@ height:100%;
 background:rgba(201,162,39,0.22);
 }
 
-#qteMarker {
+#qteMarker,
+#secretQteMarker {
 position:absolute;
 top:0;
 left:0%;
@@ -610,12 +633,12 @@ margin:8px 0;
 
 <div id="helpBox">
 <strong>Raid Hint</strong><br>
-Correct answers open a parry window. Perfect parries deal more damage. Slightly off parries still help. Late parries stun you.
+Correct answers open a parry window. Perfect parries deal more damage. Slightly off parries still help. Late parries stun you.<br><br>You can press <strong>spacebar</strong> instead of clicking, for easier timings!
 </div>
 
 <div id="helpBox">
 <strong>Raid Hint</strong><br>
-Correct answers open a parry window. Perfect parries deal more damage. Slightly off parries still help. Late parries stun you.<br><br>
+Correct answers open a parry window. Perfect parries deal more damage. Slightly off parries still help. Late parries stun you.<br><br>You can press <strong>spacebar</strong> instead of clicking, for easier timings!<br><br>
 You can press <strong>spacebar</strong> instead of clicking, for easier timings!
 </div>
 
@@ -711,11 +734,11 @@ You can press <strong>spacebar</strong> instead of clicking, for easier timings!
 <div id="bossHpOverlay">
 <div class="hp-wrap">
 <div id="bossHpBar"></div>
-<div class="hp-marker" style="left:34.6%;"></div>
-<div class="hp-marker" style="left:55.8%;"></div>
-<div class="hp-marker" style="left:76.9%;"></div>
-<div class="hp-marker" style="left:92.3%;"></div>
-<div class="hp-marker" style="left:97.7%;"></div>
+<div class="hp-marker" style="left:70%;"></div>
+<div class="hp-marker" style="left:55%;"></div>
+<div class="hp-marker" style="left:40%;"></div>
+<div class="hp-marker" style="left:25%;"></div>
+<div class="hp-marker" style="left:5%;"></div>
 </div>
 <div id="bossFeedback"></div>
 </div>
@@ -740,6 +763,25 @@ You can press <strong>spacebar</strong> instead of clicking, for easier timings!
 <div id="bossMessage"></div>
 <div id="bossStats"></div>
 <p class="small"></p>
+</div>
+</div>
+
+<div id="secretBossScreen">
+<div class="kill-box">
+<img id="secretBossImage" src="secretboss.jpg" alt="Secret boss">
+<div id="secretBossText">A feral druid suddenly pounces on you. What do you do?</div>
+<input id="secretBossInput" autocomplete="off">
+<button id="secretBossBtn" onclick="submitSecretBoss()">Respond</button>
+<div id="secretBossMessage"></div>
+<div id="secretQteArea" style="display:none;">
+<p>Give the companion attention at the perfect moment!</p>
+<div class="qte-track">
+<div class="qte-good"></div>
+<div class="qte-perfect"></div>
+<div id="secretQteMarker"></div>
+</div>
+<button onclick="secretParry()">Attention!</button>
+</div>
 </div>
 </div>
 
@@ -919,6 +961,8 @@ let tauntPunishments=0;
 let healerCruelty=0;
 let waitingForFirstTransition=false;
 let usedBossQuestions=[];
+let secretPhaseActive=false;
+let secretQteReady=false;
 
 function normalize(value){
 return value.toLowerCase().trim().replace(/\s+/g," ");
@@ -1049,6 +1093,7 @@ document.getElementById("transition").style.display="none";
 document.getElementById("introScreen").style.display="none";
 document.getElementById("fouteScreen").style.display="none";
 document.getElementById("bossScreen").style.display="none";
+document.getElementById("secretBossScreen").style.display="none";
 document.getElementById("killScreen").style.display="none";
 document.getElementById("creditsScreen").style.display="none";
 document.getElementById("helpBtn").style.display="none";
@@ -1579,7 +1624,7 @@ if(fb) fb.innerText=message || "";
 const bossMechanics=[
 {
 id:"protect",
-threshold:90,
+threshold:182,
 owner:"cam",
 warning:"THE BOSS STARTS TO FOCUS A HEALER",
 prompt:"Type PROTECT, HELP, ASSIST, DISTRACT or AID.",
@@ -1590,7 +1635,7 @@ qte:"normal"
 },
 {
 id:"invisible",
-threshold:65,
+threshold:143,
 owner:"fellicity",
 warning:"THE BOSS SUDDENLY GOES INVISIBLE",
 prompt:"Type DETECT, FIND, AOE, or anything involving the word REAL.",
@@ -1601,7 +1646,7 @@ qte:"average"
 },
 {
 id:"charge",
-threshold:40,
+threshold:104,
 owner:"lariath",
 warning:"THE BOSS STARTS TO CHARGE INTO YOUR DIRECTION",
 prompt:"Type DODGE.",
@@ -1612,7 +1657,7 @@ qte:"hard"
 },
 {
 id:"doom",
-threshold:20,
+threshold:65,
 owner:"alistia",
 warning:"THE HARDEST PHASE BEGINS. THE BOSS BEGINS CASTING DOOM [2s]",
 prompt:"Type INTERRUPT.",
@@ -1749,7 +1794,7 @@ updateBossStats();
 }
 
 function shouldTriggerFinalHealer(){
-return bossHp<=6 && !finalHealerSolved;
+return bossHp<=13 && !finalHealerSolved;
 }
 
 function startFinalHealerMechanic(){
@@ -1911,8 +1956,10 @@ function startQte(difficulty="normal"){
 qteActive=true;
 qteStart=performance.now();
 
-if(difficulty==="average"){
-qteDuration=1550;
+if(difficulty==="secret"){
+qteDuration=5200;
+}else if(difficulty==="average"){
+qteDuration=1450;
 }else if(difficulty==="hard"){
 qteDuration=1250;
 }else if(difficulty==="hardest"){
@@ -1923,9 +1970,16 @@ qteDuration=1700;
 
 const qteArea=document.getElementById("qteArea");
 const marker=document.getElementById("qteMarker");
-const hpRatio=Math.max(0.05,bossHp/260);
-const perfectWidth=Math.max(3,10*hpRatio);
-const goodWidth=Math.max(12,30*hpRatio);
+let hpRatio=Math.max(0.01,bossHp/260);
+
+if(difficulty==="secret"){
+hpRatio=1;
+}
+
+const perfectWidth = difficulty==="secret" ? 99 : Math.max(1.5, 8 * hpRatio);
+const goodWidth = difficulty==="secret" ? 99 : Math.max(5, 18 * hpRatio);
+const glancingWidth = difficulty==="secret" ? 99 : Math.max(8, 30 * hpRatio);
+
 qteArea.style.setProperty("--perfect-width",perfectWidth+"%");
 qteArea.style.setProperty("--perfect-left",(50-perfectWidth/2)+"%");
 qteArea.style.setProperty("--good-width",goodWidth+"%");
@@ -1934,6 +1988,8 @@ qteArea.dataset.perfectMin=String(0.5-perfectWidth/200);
 qteArea.dataset.perfectMax=String(0.5+perfectWidth/200);
 qteArea.dataset.goodMin=String(0.5-goodWidth/200);
 qteArea.dataset.goodMax=String(0.5+goodWidth/200);
+qteArea.dataset.glancingMin=String(0.5-glancingWidth/200);
+qteArea.dataset.glancingMax=String(0.5+glancingWidth/200);
 qteArea.style.display="block";
 marker.style.left="0%";
 
@@ -1959,6 +2015,18 @@ stunBossPlayer("Too late! The boss crushes your guard. Stunned for 5 seconds.",5
 },qteDuration);
 }
 
+function clampBossHpAfterDamage(){
+const next=bossMechanics[mechanicIndex];
+if(next && bossHp<=next.threshold){
+bossHp=next.threshold;
+return;
+}
+
+if(!finalHealerSolved && bossHp<=13){
+bossHp=13;
+}
+}
+
 function parryBoss(){
 if(!qteActive) return;
 
@@ -1975,6 +2043,8 @@ const perfectMin=Number(qteArea.dataset.perfectMin || 0.475);
 const perfectMax=Number(qteArea.dataset.perfectMax || 0.525);
 const goodMin=Number(qteArea.dataset.goodMin || 0.40);
 const goodMax=Number(qteArea.dataset.goodMax || 0.60);
+const glancingMin=Number(qteArea.dataset.glancingMin || 0.30);
+const glancingMax=Number(qteArea.dataset.glancingMax || 0.70);
 
 if(progress>=perfectMin && progress<=perfectMax){
 damage=15;
@@ -1983,7 +2053,7 @@ message="Perfect parry! Massive counterattack!";
 }else if(progress>=goodMin && progress<=goodMax){
 damage=10;
 message="Good parry! Solid damage!";
-}else if(progress>=0.30 && progress<=0.70){
+}else if(progress>=glancingMin && progress<=glancingMax){
 damage=6;
 message="Glancing parry! Some damage.";
 }else if(progress<0.30){
@@ -1996,6 +2066,7 @@ return;
 }
 
 bossHp=Math.max(0,bossHp-damage);
+clampBossHpAfterDamage();
 document.getElementById("bossHpBar").style.width=Math.max(0,(bossHp/260)*100)+"%";
 document.getElementById("bossHpText").innerText=`Boss HP: ${bossHp}/260`;
 setBossFeedback(message);
@@ -2095,6 +2166,104 @@ saveGame();
 
 document.getElementById("bossScreen").style.display="none";
 showKillScene();
+}
+
+function startSecretBossPhase(){
+secretPhaseActive=true;
+secretQteReady=false;
+stopAllAudio();
+playBossMusic();
+
+document.getElementById("secretBossScreen").style.display="flex";
+document.getElementById("secretBossInput").value="";
+document.getElementById("secretBossInput").disabled=false;
+document.getElementById("secretBossBtn").disabled=false;
+document.getElementById("secretBossBtn").innerText="Respond";
+document.getElementById("secretBossMessage").innerText="";
+document.getElementById("secretQteArea").style.display="none";
+document.getElementById("secretBossInput").focus();
+}
+
+function submitSecretBoss(){
+const input=normalize(document.getElementById("secretBossInput").value);
+document.getElementById("secretBossInput").value="";
+
+if(!input) return;
+
+if(input.includes("hug") || input.includes("pet") || input.includes("play")){
+document.getElementById("secretBossMessage").innerText="The feral druid accepts your attention. Now don't mess this up.";
+document.getElementById("secretBossInput").disabled=true;
+document.getElementById("secretBossBtn").disabled=true;
+startSecretQte();
+}else{
+document.getElementById("secretBossMessage").innerText="The druid saw your move and instinctively countered it. Try again";
+document.getElementById("secretBossInput").focus();
+}
+}
+
+function startSecretQte(){
+secretQteReady=true;
+const area=document.getElementById("secretQteArea");
+const marker=document.getElementById("secretQteMarker");
+
+area.style.setProperty("--perfect-width","99%");
+area.style.setProperty("--perfect-left","0.5%");
+area.style.setProperty("--good-width","99%");
+area.style.setProperty("--good-left","0.5%");
+area.dataset.perfectMin="0.005";
+area.dataset.perfectMax="0.995";
+area.style.display="block";
+
+qteActive=true;
+qteStart=performance.now();
+qteDuration=5200;
+marker.style.left="0%";
+
+function animate(now){
+if(!qteActive || !secretPhaseActive) return;
+
+const progress=Math.min((now-qteStart)/qteDuration,1);
+marker.style.left=(progress*100)+"%";
+
+if(progress<1){
+qteAnimation=requestAnimationFrame(animate);
+}
+}
+
+qteAnimation=requestAnimationFrame(animate);
+
+qteTimeout=setTimeout(()=>{
+if(qteActive && secretPhaseActive){
+failSecretBoss();
+}
+},qteDuration);
+}
+
+function secretParry(){
+if(!qteActive || !secretPhaseActive) return;
+
+const now=performance.now();
+const progress=(now-qteStart)/qteDuration;
+
+clearQte();
+
+if(progress>=0.005 && progress<=0.995){
+secretPhaseActive=false;
+document.getElementById("secretBossScreen").style.display="none";
+showKillScene();
+}else{
+failSecretBoss();
+}
+}
+
+function failSecretBoss(){
+clearQte();
+secretPhaseActive=false;
+document.getElementById("secretBossMessage").innerText="You missed the easiest affection window in history. The entire bossfight resets.";
+setTimeout(()=>{
+document.getElementById("secretBossScreen").style.display="none";
+startBossEncounter();
+},2500);
 }
 
 function playKillMusic(){
@@ -2245,10 +2414,18 @@ document.getElementById("securityAnswer").addEventListener("keydown", e=>{
 if(e.key==="Enter") checkSecurityAnswer();
 });
 
+document.getElementById("secretBossInput").addEventListener("keydown", e=>{
+if(e.key==="Enter") submitSecretBoss();
+});
+
 document.addEventListener("keydown", e=>{
 if(e.code==="Space" && qteActive){
 e.preventDefault();
+if(secretPhaseActive){
+secretParry();
+}else{
 parryBoss();
+}
 }
 });
 });
