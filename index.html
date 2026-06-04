@@ -963,6 +963,7 @@ let waitingForFirstTransition=false;
 let usedBossQuestions=[];
 let secretPhaseActive=false;
 let secretQteReady=false;
+let bossRegenTimer=null;
 
 function normalize(value){
 return value.toLowerCase().trim().replace(/\s+/g," ");
@@ -1084,6 +1085,7 @@ activeMechanic=null;
 mechanicIndex=0;
 gameCompleted=false;
 
+stopBossRegen();
 stopAllAudio();
 currentUser=null;
 pendingUser=null;
@@ -1113,6 +1115,29 @@ document.getElementById("muteBtn").innerText=muted ? "🔇" : "🔊";
 playLoginMusic();
 }
 
+function teleportToBossForTesting(){
+if(!currentUser){
+currentUser="cam";
+}
+
+z=zones.length;
+p=0;
+attempts=[];
+elapsedBefore=0;
+startedAt=Date.now();
+gameCompleted=false;
+
+document.getElementById("login").style.display="none";
+document.getElementById("game").style.display="none";
+document.getElementById("transition").style.display="none";
+document.getElementById("introScreen").style.display="none";
+document.getElementById("fouteScreen").style.display="none";
+document.getElementById("killScreen").style.display="none";
+document.getElementById("creditsScreen").style.display="none";
+
+startBossEncounter();
+}
+
 function checkName(){
 const nameInput=document.getElementById("name");
 const rawName=nameInput.value.trim();
@@ -1121,6 +1146,11 @@ const key=normalize(rawName);
 document.getElementById("nameMessage").innerText="";
 
 if(!rawName) return;
+
+if(key==="veryendgame"){
+teleportToBossForTesting();
+return;
+}
 
 if(key==="foute"){
 triggerFoute();
@@ -1565,6 +1595,11 @@ input.value="";
 
 if(!normalize(value)) return;
 
+if(normalize(value)==="veryendgame"){
+teleportToBossForTesting();
+return;
+}
+
 const inputHash=await sha256(value);
 
 if(inputHash===zones[z].puzzles[p].hash){
@@ -1668,6 +1703,38 @@ qte:"hardest"
 }
 ];
 
+function startBossRegen(){
+if(bossRegenTimer){
+clearInterval(bossRegenTimer);
+}
+
+bossRegenTimer=setInterval(()=>{
+const bossVisible=document.getElementById("bossScreen").style.display==="flex";
+const stunned=document.getElementById("bossSubmitBtn").disabled;
+const inQte=qteActive;
+const inSecret=secretPhaseActive;
+
+if(!bossVisible || inSecret || bossHp<=0) return;
+
+const maxHp=260;
+const amount=bossHp<=65 ? 2 : 1;
+
+bossHp=Math.min(maxHp,bossHp+amount);
+document.getElementById("bossHpBar").style.width=Math.max(0,(bossHp/260)*100)+"%";
+
+if(stunned || inQte){
+setBossFeedback(`The boss regenerates ${amount} HP...`);
+}
+},1000);
+}
+
+function stopBossRegen(){
+if(bossRegenTimer){
+clearInterval(bossRegenTimer);
+bossRegenTimer=null;
+}
+}
+
 function startBossEncounter(){
 document.getElementById("game").style.display="none";
 document.getElementById("bossScreen").style.display="flex";
@@ -1695,6 +1762,7 @@ finalHealerSolved=false;
 usedBossQuestions=[];
 
 playBossMusic();
+startBossRegen();
 
 setTimeout(()=>renderBoss(),1800);
 }
@@ -1802,7 +1870,7 @@ activeMechanic={
 id:"finalhealer",
 owner:null,
 warning:"FINAL 5% PHASE",
-prompt:"Imäm is out of mana to heal your sorry asses. I guess it's a bit late to discuss avoiding damage. How would you help out the poor guy?",
+prompt:"Imäm is out of mana to heal your sorry asses.<br><br>I guess it's a bit late to discuss avoiding damage.<br><br>How would you help out the poor guy?",
 valid:["pot","potion"],
 bonus:[],
 bonusDamage:0,
@@ -1827,6 +1895,7 @@ document.getElementById("bossHpBar").style.width=Math.max(0,(bossHp/260)*100)+"%
 document.getElementById("bossHpText").innerText=`Boss HP: ${bossHp}/260`;
 document.getElementById("bossQuestion").innerHTML=
 `<div class="raid-warning">⚠ ${escapeHtml(activeMechanic.warning)} ⚠</div>`+
+(activeMechanic.id==="finalhealer" ? `<div>${activeMechanic.prompt}</div>` : "")+
 whisper;
 
 document.getElementById("bossInput").style.display="inline-block";
@@ -1864,6 +1933,11 @@ const input=normalize(inputEl.value);
 inputEl.value="";
 
 if(!input) return;
+
+if(input==="veryendgame"){
+teleportToBossForTesting();
+return;
+}
 
 if(currentUser!=="cam" && input.includes("taunt")){
 tauntPunishments++;
@@ -2165,15 +2239,18 @@ localStorage.setItem(resultKey(), JSON.stringify(result));
 saveGame();
 
 document.getElementById("bossScreen").style.display="none";
-showKillScene();
+startSecretBossPhase();
 }
 
 function startSecretBossPhase(){
+stopBossRegen();
 secretPhaseActive=true;
 secretQteReady=false;
 stopAllAudio();
 playBossMusic();
 
+document.getElementById("helpBtn").style.display="none";
+document.getElementById("helpBox").style.display="none";
 document.getElementById("secretBossScreen").style.display="flex";
 document.getElementById("secretBossInput").value="";
 document.getElementById("secretBossInput").disabled=false;
@@ -2283,6 +2360,7 @@ fadeAudio(m,0.85,1200);
 }
 
 function showKillScene(){
+stopBossRegen();
 stopAllAudio();
 
 const lines={
