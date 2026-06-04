@@ -1701,8 +1701,6 @@ qte:"hardest"
 }
 ];
 
-}
-
 function startBossEncounter(){
 document.getElementById("game").style.display="none";
 document.getElementById("bossScreen").style.display="flex";
@@ -2167,11 +2165,6 @@ btn.innerText=activeMechanic ? "Respond" : "Open Parry Window";
 
 if(activeMechanic){
 showMechanic();
-}else{
-renderBoss();
-}
-}
-},1000);
 }else{
 renderBoss();
 }
