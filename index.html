@@ -212,6 +212,37 @@ z-index:30;
 }
 
 #helpBtn {
+display:none;
+position:fixed;
+top:52px;
+right:10px;
+background:rgba(20,14,8,0.9);
+border:1px solid #c9a227;
+color:#f5e6c8;
+padding:8px 13px;
+border-radius:50%;
+cursor:pointer;
+width:auto;
+z-index:30;
+}
+
+#helpBox {
+position:fixed;
+top:92px;
+right:10px;
+display:none;
+width:310px;
+background:rgba(20,14,8,0.96);
+border:1px solid #c9a227;
+border-radius:12px;
+padding:15px;
+z-index:31;
+font-size:14px;
+line-height:1.5;
+box-shadow:0 0 20px rgba(0,0,0,0.8);
+}
+
+#helpBtn {
 position:fixed;
 top:52px;
 right:10px;
@@ -320,6 +351,52 @@ text-shadow:0 0 8px rgba(181,108,255,0.7);
 display:none;
 }
 
+#bossHpOverlay {
+position:absolute;
+top:155px;
+left:50%;
+transform:translateX(-50%);
+width:62%;
+z-index:20;
+text-align:center;
+}
+
+#bossHpOverlay .hp-wrap {
+display:block !important;
+width:100%;
+height:30px;
+border:2px solid #c9a227;
+border-radius:12px;
+overflow:hidden;
+background:rgba(0,0,0,0.72);
+box-shadow:0 0 18px rgba(0,0,0,0.9);
+position:relative;
+}
+
+#bossHpOverlay #bossHpBar {
+height:100%;
+width:100%;
+background:#c9a227;
+transition:width 0.4s;
+}
+
+.hp-marker {
+position:absolute;
+top:0;
+width:2px;
+height:100%;
+background:rgba(245,230,200,0.65);
+box-shadow:0 0 6px rgba(245,230,200,0.8);
+}
+
+#bossFeedback {
+min-height:28px;
+margin-top:10px;
+font-size:18px;
+color:#c9a227;
+text-shadow:0 0 8px black;
+}
+
 #bossTitleOverlay {
 position:absolute;
 top:42px;
@@ -419,7 +496,7 @@ animation:transitionPulse 2s infinite;
 }
 
 .boss-box {
-margin-top:190px;
+margin-top:230px;
 padding:24px 32px;
 background:rgba(20,14,8,0.82);
 }
@@ -479,16 +556,16 @@ overflow:hidden;
 
 .qte-perfect {
 position:absolute;
-left:45%;
-width:10%;
+left:var(--perfect-left,45%);
+width:var(--perfect-width,10%);
 height:100%;
 background:rgba(201,162,39,0.45);
 }
 
 .qte-good {
 position:absolute;
-left:35%;
-width:30%;
+left:var(--good-left,35%);
+width:var(--good-width,30%);
 height:100%;
 background:rgba(201,162,39,0.22);
 }
@@ -529,10 +606,17 @@ margin:8px 0;
 <button id="resetBtn" onclick="resetProgress()">Reset Progress</button>
 <button id="muteBtn" onclick="toggleMute()">🔊</button>
 <button id="helpBtn" onclick="toggleHelp()">?</button>
+<button id="helpBtn" onclick="toggleHelp()">?</button>
 
 <div id="helpBox">
 <strong>Raid Hint</strong><br>
 Correct answers open a parry window. Perfect parries deal more damage. Slightly off parries still help. Late parries stun you.
+</div>
+
+<div id="helpBox">
+<strong>Raid Hint</strong><br>
+Correct answers open a parry window. Perfect parries deal more damage. Slightly off parries still help. Late parries stun you.<br><br>
+You can press <strong>spacebar</strong> instead of clicking, for easier timings!
 </div>
 
 <div id="login">
@@ -623,8 +707,20 @@ Correct answers open a parry window. Perfect parries deal more damage. Slightly 
 <h1>⚔ Raid Boss Encounter ⚔</h1>
 <h2 id="bossName">The Final Gatekeeper</h2>
 </div>
+
+<div id="bossHpOverlay">
+<div class="hp-wrap">
+<div id="bossHpBar"></div>
+<div class="hp-marker" style="left:34.6%;"></div>
+<div class="hp-marker" style="left:55.8%;"></div>
+<div class="hp-marker" style="left:76.9%;"></div>
+<div class="hp-marker" style="left:92.3%;"></div>
+<div class="hp-marker" style="left:97.7%;"></div>
+</div>
+<div id="bossFeedback"></div>
+</div>
+
 <div class="boss-box">
-<div class="hp-wrap" style="display:none;"><div id="bossHpBar"></div></div>
 <p id="bossHpText" style="display:none;"></p>
 
 <div id="bossQuestion"></div>
@@ -822,6 +918,7 @@ let finalHealerSolved=false;
 let tauntPunishments=0;
 let healerCruelty=0;
 let waitingForFirstTransition=false;
+let usedBossQuestions=[];
 
 function normalize(value){
 return value.toLowerCase().trim().replace(/\s+/g," ");
@@ -954,6 +1051,8 @@ document.getElementById("fouteScreen").style.display="none";
 document.getElementById("bossScreen").style.display="none";
 document.getElementById("killScreen").style.display="none";
 document.getElementById("creditsScreen").style.display="none";
+document.getElementById("helpBtn").style.display="none";
+document.getElementById("helpBox").style.display="none";
 document.getElementById("login").style.display="flex";
 document.getElementById("landingStep").style.display="block";
 document.getElementById("nameStep").style.display="none";
@@ -1472,6 +1571,11 @@ render();
 },TRAVEL_DURATION_MS);
 }
 
+function setBossFeedback(message){
+const fb=document.getElementById("bossFeedback");
+if(fb) fb.innerText=message || "";
+}
+
 const bossMechanics=[
 {
 id:"protect",
@@ -1522,6 +1626,7 @@ qte:"hardest"
 function startBossEncounter(){
 document.getElementById("game").style.display="none";
 document.getElementById("bossScreen").style.display="flex";
+document.getElementById("helpBtn").style.display="block";
 
 const user=users[currentUser];
 
@@ -1542,6 +1647,7 @@ criticalMechanics=0;
 perfectParries=0;
 stunsTaken=0;
 finalHealerSolved=false;
+usedBossQuestions=[];
 
 playBossMusic();
 
@@ -1583,12 +1689,32 @@ const questions=[
 {q:"Which missive gives Versatility and Mastery?", a:["harmonious","of the harmonious"]},
 {q:"Which missive gives Critical Strike and Haste?", a:["fireflash","of the fireflash"]},
 {q:"Which missive gives Mastery and Haste?", a:["feverflare","of the feverflare"]},
-{q:"Which missive gives Versatility and Haste?", a:["aurora","of the aurora","missive of the aurora"]}
+{q:"Which missive gives Versatility and Haste?", a:["aurora","of the aurora","missive of the aurora"]},
+{q:"What is 14 + 9?", a:["23"]},
+{q:"What is 8 × 6?", a:["48"]},
+{q:"What is 72 / 8?", a:["9"]},
+{q:"What is 100 - 37?", a:["63"]},
+{q:"What is 11 × 11?", a:["121"]},
+{q:"What is 45 + 18?", a:["63"]},
+{q:"What is 7 × 12?", a:["84"]},
+{q:"What is 144 / 12?", a:["12"]},
+{q:"What is 19 + 26?", a:["45"]},
+{q:"What is 90 - 54?", a:["36"]}
 ];
 
-const pick=questions[Math.floor(Math.random()*questions.length)];
-bossCurrentAnswer=pick.a;
-return pick;
+if(usedBossQuestions.length>=questions.length){
+usedBossQuestions=[];
+}
+
+let available=questions
+.map((q,i)=>({q,i}))
+.filter(item=>!usedBossQuestions.includes(item.i));
+
+const item=available[Math.floor(Math.random()*available.length)];
+usedBossQuestions.push(item.i);
+
+bossCurrentAnswer=item.q.a;
+return item.q;
 }
 
 function renderBoss(){
@@ -1618,6 +1744,7 @@ document.getElementById("bossSubmitBtn").innerText="Open Parry Window";
 document.getElementById("bossInput").value="";
 document.getElementById("bossInput").focus();
 document.getElementById("qteArea").style.display="none";
+setBossFeedback("");
 updateBossStats();
 }
 
@@ -1665,7 +1792,7 @@ document.getElementById("bossSubmitBtn").innerText="Respond";
 document.getElementById("bossInput").value="";
 document.getElementById("bossInput").focus();
 document.getElementById("qteArea").style.display="none";
-document.getElementById("bossMessage").innerText="The boss keeps casting until you solve the mechanic.";
+setBossFeedback("The boss keeps casting until you solve the mechanic.");
 updateBossStats();
 }
 
@@ -1706,7 +1833,7 @@ return;
 
 if(isNormalAnswerCorrect(input)){
 bossQuestionsAnswered++;
-document.getElementById("bossMessage").innerText="The boss attacks! Time your parry!";
+setBossFeedback("The boss attacks! Time your parry!");
 document.getElementById("bossInput").style.display="none";
 document.getElementById("bossSubmitBtn").style.display="none";
 startQte("normal");
@@ -1738,7 +1865,7 @@ return;
 }
 
 bossWrongAnswers++;
-document.getElementById("bossMessage").innerText="Imäm is still out of mana. Try actually helping.";
+setBossFeedback("Imäm is still out of mana. Try actually helping.");
 showMechanic();
 return;
 }
@@ -1755,7 +1882,7 @@ const next=bossMechanics[mechanicIndex+1];
 if(next && bossHp<=next.threshold){
 bossHp=next.threshold+8;
 }
-document.getElementById("bossMessage").innerText="Critical class play! Foute is almost proud.";
+setBossFeedback("Critical class play! Foute is almost proud.");
 activeMechanic=null;
 mechanicIndex++;
 setTimeout(()=>renderBoss(),1200);
@@ -1766,7 +1893,7 @@ if(isValid){
 mechanicsSolved++;
 bossQuestionsAnswered++;
 const difficulty=activeMechanic.qte || "normal";
-document.getElementById("bossMessage").innerText="Mechanic handled! Now parry the counterattack!";
+setBossFeedback("Mechanic handled! Now parry the counterattack!");
 document.getElementById("bossInput").style.display="none";
 document.getElementById("bossSubmitBtn").style.display="none";
 activeMechanic=null;
@@ -1776,7 +1903,7 @@ return;
 }
 
 bossWrongAnswers++;
-document.getElementById("bossMessage").innerText="Wrong mechanic answer. The boss keeps casting.";
+setBossFeedback("Wrong mechanic answer. The boss keeps casting.");
 showMechanic();
 }
 
@@ -1796,6 +1923,17 @@ qteDuration=1700;
 
 const qteArea=document.getElementById("qteArea");
 const marker=document.getElementById("qteMarker");
+const hpRatio=Math.max(0.05,bossHp/260);
+const perfectWidth=Math.max(3,10*hpRatio);
+const goodWidth=Math.max(12,30*hpRatio);
+qteArea.style.setProperty("--perfect-width",perfectWidth+"%");
+qteArea.style.setProperty("--perfect-left",(50-perfectWidth/2)+"%");
+qteArea.style.setProperty("--good-width",goodWidth+"%");
+qteArea.style.setProperty("--good-left",(50-goodWidth/2)+"%");
+qteArea.dataset.perfectMin=String(0.5-perfectWidth/200);
+qteArea.dataset.perfectMax=String(0.5+perfectWidth/200);
+qteArea.dataset.goodMin=String(0.5-goodWidth/200);
+qteArea.dataset.goodMax=String(0.5+goodWidth/200);
 qteArea.style.display="block";
 marker.style.left="0%";
 
@@ -1832,11 +1970,17 @@ clearQte();
 let damage=0;
 let message="";
 
-if(progress>=0.475 && progress<=0.525){
+const qteArea=document.getElementById("qteArea");
+const perfectMin=Number(qteArea.dataset.perfectMin || 0.475);
+const perfectMax=Number(qteArea.dataset.perfectMax || 0.525);
+const goodMin=Number(qteArea.dataset.goodMin || 0.40);
+const goodMax=Number(qteArea.dataset.goodMax || 0.60);
+
+if(progress>=perfectMin && progress<=perfectMax){
 damage=15;
 perfectParries++;
 message="Perfect parry! Massive counterattack!";
-}else if(progress>=0.40 && progress<=0.60){
+}else if(progress>=goodMin && progress<=goodMax){
 damage=10;
 message="Good parry! Solid damage!";
 }else if(progress>=0.30 && progress<=0.70){
@@ -1854,7 +1998,7 @@ return;
 bossHp=Math.max(0,bossHp-damage);
 document.getElementById("bossHpBar").style.width=Math.max(0,(bossHp/260)*100)+"%";
 document.getElementById("bossHpText").innerText=`Boss HP: ${bossHp}/260`;
-document.getElementById("bossMessage").innerText=message;
+setBossFeedback(message);
 updateBossStats();
 
 if(bossHp<=0){
@@ -1887,7 +2031,7 @@ const btn=document.getElementById("bossSubmitBtn");
 const input=document.getElementById("bossInput");
 
 document.getElementById("qteArea").style.display="none";
-document.getElementById("bossMessage").innerText=message;
+setBossFeedback(message);
 
 input.style.display="inline-block";
 btn.style.display="inline-block";
