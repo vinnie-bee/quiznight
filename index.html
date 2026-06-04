@@ -972,6 +972,7 @@ let stunsTaken=0;
 let finalHealerSolved=false;
 let tauntPunishments=0;
 let healerCruelty=0;
+let alistiaHealUsed=false;
 let waitingForFirstTransition=false;
 let usedBossQuestions=[];
 let secretPhaseActive=false;
@@ -1093,6 +1094,7 @@ stunsTaken=0;
 finalHealerSolved=false;
 tauntPunishments=0;
 healerCruelty=0;
+alistiaHealUsed=false;
 activeMechanic=null;
 mechanicIndex=0;
 gameCompleted=false;
@@ -1743,6 +1745,9 @@ criticalMechanics=0;
 perfectParries=0;
 stunsTaken=0;
 finalHealerSolved=false;
+activeMechanic=null;
+mechanicIndex=0;
+alistiaHealUsed=false;
 usedBossQuestions=[];
 
 playBossMusic();
@@ -1921,6 +1926,37 @@ teleportToBossForTesting();
 return;
 }
 
+if(input.includes("ignore")){
+bossWrongAnswers++;
+stunBossPlayer("Ignoring the boss does not make it go away. Stunned for 5 seconds.",5000);
+return;
+}
+
+if(input.includes("heal")){
+if(currentUser==="cam"){
+setBossFeedback("You're a tank.");
+return;
+}
+
+if(currentUser==="lariath" || currentUser==="fellicity"){
+setBossFeedback("You're a dps.");
+return;
+}
+
+if(currentUser==="alistia"){
+if(!alistiaHealUsed){
+alistiaHealUsed=true;
+bossHp=Math.max(1,bossHp-8);
+document.getElementById("bossHpBar").style.width=Math.max(0,(bossHp/260)*100)+"%";
+setBossFeedback("Fine. One heal. Do not make a habit of this.");
+return;
+}
+
+setBossFeedback("No more healing from you.");
+return;
+}
+}
+
 if(currentUser!=="cam" && input.includes("taunt")){
 tauntPunishments++;
 stunBossPlayer("You try to TAUNT the boss. Unfortunately, you are not equipped to tank bosses! Stunned for 30 seconds.",30000);
@@ -1949,11 +1985,15 @@ function submitMechanicAnswer(input){
 if(activeMechanic.id==="finalhealer"){
 const badWords=["kick","yell","scream","flame","blame","complain","moan","not"];
 
-if(textIncludesAny(input,badWords)){
+if(textIncludesAny(input,badWords) || input.includes("ignore")){
 healerCruelty++;
 
 bossHp=260;
 document.getElementById("bossHpBar").style.width="100%";
+
+activeMechanic=null;
+finalHealerSolved=false;
+mechanicIndex=0;
 
 stunBossPlayer(
 "Healer died. Everyone had to jump off and reset. The boss heals to full. That'll teach you.",
@@ -1977,6 +2017,44 @@ bossWrongAnswers++;
 setBossFeedback("Imäm is still out of mana. Try actually helping.");
 showMechanic();
 return;
+}
+
+if(input.includes("ignore")){
+bossWrongAnswers++;
+stunBossPlayer("Ignoring raid mechanics is rarely a winning strategy. Stunned for 5 seconds.",5000);
+return;
+}
+
+if(input.includes("heal")){
+if(currentUser==="cam"){
+setBossFeedback("You're a tank.");
+showMechanic();
+return;
+}
+
+if(currentUser==="lariath" || currentUser==="fellicity"){
+setBossFeedback("You're a dps.");
+showMechanic();
+return;
+}
+
+if(currentUser==="alistia"){
+if(!alistiaHealUsed){
+alistiaHealUsed=true;
+mechanicsSolved++;
+bossQuestionsAnswered++;
+bossHp=Math.max(1,bossHp-12);
+setBossFeedback("Fine. One heal. Do not make a habit of this.");
+activeMechanic=null;
+mechanicIndex++;
+setTimeout(()=>renderBoss(),1200);
+return;
+}
+
+setBossFeedback("No more healing from you.");
+showMechanic();
+return;
+}
 }
 
 const isBonus = activeMechanic.owner===currentUser && isAccepted(input,activeMechanic.bonus || []);
@@ -2455,6 +2533,7 @@ stunsTaken=0;
 finalHealerSolved=false;
 tauntPunishments=0;
 healerCruelty=0;
+alistiaHealUsed=false;
 activeMechanic=null;
 mechanicIndex=0;
 gameCompleted=false;
