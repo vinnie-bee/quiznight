@@ -7,133 +7,689 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
-* { box-sizing:border-box; }
-body { margin:0; font-family:Cinzel, serif; background-size:cover; background-position:center; overflow:hidden; display:flex; justify-content:center; align-items:center; height:100vh; transition:background-image 1s ease, opacity 0.8s ease; color:#f5e6c8; }
-body.fade { opacity:0.25; }
-#login { position:fixed; inset:0; display:flex; justify-content:center; align-items:flex-end; background:linear-gradient(rgba(0,0,0,0.05), rgba(0,0,0,0.35)), url('login.png') center/cover; z-index:5; padding-bottom:80px; }
-.box { background:rgba(20,14,8,0.92); padding:30px; border:2px solid #c9a227; border-radius:14px; width:380px; text-align:center; box-shadow:0 0 30px rgba(201,162,39,0.45); }
-#landingStep { display:block; }
-#nameStep, #securityStep { display:none; }
-#landingStep .box-title { font-size:40px; margin:0 0 18px; text-shadow:0 0 12px rgba(201,162,39,0.75); }
-#landingStep button { width:300px; font-size:26px; padding:18px; margin-top:10px; }
-.login-message { min-height:24px; margin-top:10px; font-size:14px; color:#c9a227; }
-#game { display:none; width:950px; height:640px; background:rgba(0,0,0,0.65); border:2px solid #c9a227; border-radius:12px; overflow:hidden; box-shadow:0 0 30px rgba(0,0,0,0.8); }
-.left { flex:3; padding:25px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; }
-.right { flex:1; background:rgba(0,0,0,0.75); padding:20px; border-left:2px solid #c9a227; overflow-y:auto; }
-.map { display:flex; justify-content:center; align-items:center; gap:7px; margin-bottom:25px; flex-wrap:wrap; max-width:780px; }
-.node { width:13px; height:13px; border-radius:50%; background:#c9a227; opacity:0.28; position:relative; }
-.node.world { width:24px; height:24px; opacity:0.45; border:2px solid #c9a227; background:rgba(0,0,0,0.65); box-shadow:0 0 8px rgba(201,162,39,0.45); }
-.node.world::after { content:""; position:absolute; inset:6px; border-radius:50%; background:#c9a227; }
-.node.completed { opacity:1; box-shadow:0 0 8px #c9a227; }
-.node.current { animation:pulse 1s infinite; opacity:1; box-shadow:0 0 14px #c9a227; }
-@keyframes pulse { 0%{transform:scale(1)} 50%{transform:scale(1.35)} 100%{transform:scale(1)} }
-input { width:260px; padding:10px; margin-top:10px; border-radius:10px; border:1px solid #c9a227; background:rgba(0,0,0,0.55); color:#f5e6c8; text-align:center; font-family:Cinzel, serif; }
-button { width:165px; padding:10px; margin-top:10px; border-radius:10px; border:none; cursor:pointer; font-family:Cinzel, serif; background:#c9a227; color:#1b1208; font-weight:600; }
-button:disabled { opacity:0.55; cursor:not-allowed; }
-#muteBtn { position:fixed; top:10px; right:10px; background:#c9a227; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; width:auto; z-index:20; }
-#resetBtn { position:fixed; top:10px; left:10px; background:rgba(20,14,8,0.9); border:1px solid #c9a227; color:#f5e6c8; padding:8px 10px; border-radius:8px; cursor:pointer; width:auto; z-index:20; }
-.shake { animation:shake 0.3s; }
-@keyframes shake { 0%{transform:translate(0)} 25%{transform:translate(5px)} 50%{transform:translate(-5px)} 100%{transform:translate(0)} }
-#transition, #introScreen, #fouteScreen { position:fixed; inset:0; display:none; justify-content:center; align-items:center; text-align:center; background:rgba(0,0,0,0.94); z-index:10; padding:30px; }
-#introScreen { z-index:12; }
-#fouteScreen { z-index:15; }
-.transition-box, .intro-box { border:2px solid #c9a227; border-radius:14px; padding:35px; background:rgba(20,14,8,0.95); box-shadow:0 0 30px rgba(201,162,39,0.3); max-width:760px; animation:transitionPulse 2s infinite; }
-@keyframes transitionPulse { 0%{box-shadow:0 0 18px rgba(201,162,39,0.25)} 50%{box-shadow:0 0 38px rgba(201,162,39,0.55)} 100%{box-shadow:0 0 18px rgba(201,162,39,0.25)} }
-#fouteText, #introText { max-width:760px; font-size:24px; line-height:1.5; color:#f5e6c8; }
-.small { font-size:13px; opacity:0.8; }
+* {
+box-sizing:border-box;
+}
+
+body {
+margin:0;
+font-family:Cinzel, serif;
+background-size:cover;
+background-position:center;
+overflow:hidden;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+transition:background-image 1s ease, opacity 0.8s ease;
+color:#f5e6c8;
+}
+
+body.fade {
+opacity:0.25;
+}
+
+#login {
+position:fixed;
+inset:0;
+display:flex;
+justify-content:center;
+align-items:flex-end;
+background:
+linear-gradient(
+rgba(0,0,0,0),
+rgba(0,0,0,0.15)
+),
+url('login.png') center/cover;
+z-index:5;
+padding-bottom:80px;
+}
+
+.box {
+background:rgba(20,14,8,0.88);
+padding:30px;
+border:2px solid #c9a227;
+border-radius:14px;
+width:420px;
+text-align:center;
+box-shadow:0 0 30px rgba(201,162,39,0.45);
+}
+
+#landingStep {
+display:block;
+}
+
+#nameStep,
+#securityStep,
+#resultStep {
+display:none;
+}
+
+#landingStep .box-title {
+font-size:40px;
+margin:0 0 18px;
+text-shadow:0 0 12px rgba(201,162,39,0.75);
+}
+
+#landingStep button,
+#resultStep button {
+width:330px;
+font-size:24px;
+padding:18px;
+margin-top:10px;
+}
+
+.login-message {
+min-height:24px;
+margin-top:10px;
+font-size:14px;
+color:#c9a227;
+}
+
+#game {
+display:none;
+width:950px;
+height:640px;
+background:rgba(0,0,0,0.65);
+border:2px solid #c9a227;
+border-radius:12px;
+overflow:hidden;
+box-shadow:0 0 30px rgba(0,0,0,0.8);
+}
+
+.left {
+flex:3;
+padding:25px;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+text-align:center;
+}
+
+.right {
+flex:1;
+background:rgba(0,0,0,0.75);
+padding:20px;
+border-left:2px solid #c9a227;
+overflow-y:auto;
+}
+
+.map {
+display:flex;
+justify-content:center;
+align-items:center;
+gap:7px;
+margin-bottom:25px;
+flex-wrap:wrap;
+max-width:780px;
+}
+
+.node {
+width:13px;
+height:13px;
+border-radius:50%;
+background:#c9a227;
+opacity:0.28;
+position:relative;
+}
+
+.node.world {
+width:24px;
+height:24px;
+opacity:0.45;
+border:2px solid #c9a227;
+background:rgba(0,0,0,0.65);
+box-shadow:0 0 8px rgba(201,162,39,0.45);
+}
+
+.node.world::after {
+content:"";
+position:absolute;
+inset:6px;
+border-radius:50%;
+background:#c9a227;
+}
+
+.node.completed {
+opacity:1;
+box-shadow:0 0 8px #c9a227;
+}
+
+.node.current {
+animation:pulse 1s infinite;
+opacity:1;
+box-shadow:0 0 14px #c9a227;
+}
+
+@keyframes pulse {
+0%{transform:scale(1)}
+50%{transform:scale(1.35)}
+100%{transform:scale(1)}
+}
+
+input {
+width:260px;
+padding:10px;
+margin-top:10px;
+border-radius:10px;
+border:1px solid #c9a227;
+background:rgba(0,0,0,0.55);
+color:#f5e6c8;
+text-align:center;
+font-family:Cinzel, serif;
+}
+
+button {
+width:165px;
+padding:10px;
+margin-top:10px;
+border-radius:10px;
+border:none;
+cursor:pointer;
+font-family:Cinzel, serif;
+background:#c9a227;
+color:#1b1208;
+font-weight:600;
+}
+
+button:disabled {
+opacity:0.55;
+cursor:not-allowed;
+}
+
+#muteBtn {
+position:fixed;
+top:10px;
+right:10px;
+background:#c9a227;
+border:none;
+padding:8px 10px;
+border-radius:8px;
+cursor:pointer;
+width:auto;
+z-index:30;
+}
+
+#resetBtn {
+position:fixed;
+top:10px;
+left:10px;
+background:rgba(20,14,8,0.9);
+border:1px solid #c9a227;
+color:#f5e6c8;
+padding:8px 10px;
+border-radius:8px;
+cursor:pointer;
+width:auto;
+z-index:30;
+}
+
+.shake {
+animation:shake 0.3s;
+}
+
+@keyframes shake {
+0%{transform:translate(0)}
+25%{transform:translate(5px)}
+50%{transform:translate(-5px)}
+100%{transform:translate(0)}
+}
+
+#transition,
+#introScreen,
+#fouteScreen,
+#bossScreen {
+position:fixed;
+inset:0;
+display:none;
+justify-content:center;
+align-items:center;
+text-align:center;
+background:rgba(0,0,0,0.94);
+z-index:10;
+padding:30px;
+}
+
+#introScreen {
+z-index:12;
+}
+
+#fouteScreen {
+z-index:15;
+}
+
+#bossScreen {
+z-index:18;
+background:
+radial-gradient(circle, rgba(85,0,0,0.65), rgba(0,0,0,0.96));
+}
+
+.transition-box,
+.intro-box,
+.boss-box {
+border:2px solid #c9a227;
+border-radius:14px;
+padding:35px;
+background:rgba(20,14,8,0.95);
+box-shadow:0 0 30px rgba(201,162,39,0.3);
+max-width:780px;
+animation:transitionPulse 2s infinite;
+}
+
+@keyframes transitionPulse {
+0%{box-shadow:0 0 18px rgba(201,162,39,0.25)}
+50%{box-shadow:0 0 38px rgba(201,162,39,0.55)}
+100%{box-shadow:0 0 18px rgba(201,162,39,0.25)}
+}
+
+#fouteText,
+#introText {
+max-width:760px;
+font-size:24px;
+line-height:1.5;
+color:#f5e6c8;
+}
+
+.hp-wrap {
+width:100%;
+height:28px;
+border:2px solid #c9a227;
+border-radius:10px;
+overflow:hidden;
+background:rgba(0,0,0,0.6);
+margin:18px 0;
+}
+
+#bossHpBar {
+height:100%;
+width:100%;
+background:#c9a227;
+transition:width 0.4s;
+}
+
+#bossQuestion {
+font-size:32px;
+margin:20px 0 8px;
+}
+
+#bossMessage {
+min-height:24px;
+color:#c9a227;
+}
+
+.small {
+font-size:13px;
+opacity:0.8;
+}
+
+.result-line {
+margin:8px 0;
+}
 </style>
 </head>
+
 <body>
 
 <button id="resetBtn" onclick="resetProgress()">Reset Progress</button>
 <button id="muteBtn" onclick="toggleMute()">🔊</button>
 
-<div id="login"><div class="box">
-<div id="landingStep"><button onclick="showNameStep()">Begin Journey</button></div>
-<div id="nameStep"><h2>Enter Name</h2><input id="name" autocomplete="off"><button onclick="checkName()">Continue</button><div class="login-message" id="nameMessage"></div></div>
-<div id="securityStep"><h2 id="securityTitle">Security Question</h2><p id="securityQuestion"></p><input id="securityAnswer" autocomplete="off"><button onclick="checkSecurityAnswer()">Answer</button><div class="login-message" id="securityMessage"></div><button onclick="backToName()">Back</button></div>
-</div></div>
+<div id="login">
+<div class="box">
 
-<div id="game"><div class="left"><div class="map" id="map"></div><h2 id="zone"></h2><p id="clue"></p><input id="input" autocomplete="off"><button id="submitBtn" onclick="submit()">Submit</button></div><div class="right"><h3>Player</h3><p id="playerName"></p><h3>Progress</h3><p id="progress"></p><h3>Quest Log</h3><div id="attempts"><em>No failed attempts</em></div><p class="small">Progress is saved automatically for this username.</p></div></div>
+<div id="landingStep">
+<h1 class="box-title">Quest Journey</h1>
+<button onclick="showNameStep()" id="landingButton">Begin Journey</button>
+</div>
 
-<div id="transition"><div class="transition-box"><h1 id="transitionTitle">Traveling...</h1><p id="transitionText">The path ahead is hidden in shadow.</p></div></div>
-<div id="introScreen"><div class="intro-box"><div id="introText"></div></div></div>
-<div id="fouteScreen"><div class="intro-box"><div id="fouteText"></div></div></div>
+<div id="nameStep">
+<h2>Enter Name</h2>
+<input id="name" autocomplete="off">
+<button onclick="checkName()">Continue</button>
+<div class="login-message" id="nameMessage"></div>
+</div>
 
-<audio id="music"></audio><audio id="transitionMusic"></audio><audio id="fouteMusic"></audio><audio id="introMusic"></audio>
+<div id="securityStep">
+<h2 id="securityTitle">Security Question</h2>
+<p id="securityQuestion"></p>
+<input id="securityAnswer" autocomplete="off">
+<button onclick="checkSecurityAnswer()">Answer</button>
+<div class="login-message" id="securityMessage"></div>
+<button onclick="backToName()">Back</button>
+</div>
+
+<div id="resultStep">
+<h2>Quest Complete</h2>
+<div id="resultText"></div>
+<button onclick="restartAdventure()">just.. one... more... quest...</button>
+</div>
+
+</div>
+</div>
+
+<div id="game">
+
+<div class="left">
+
+<div class="map" id="map"></div>
+
+<h2 id="zone"></h2>
+<p id="clue"></p>
+
+<input id="input" autocomplete="off">
+<button id="submitBtn" onclick="submit()">Submit</button>
+
+</div>
+
+<div class="right">
+<h3>Player</h3>
+<p id="playerName"></p>
+
+<h3>Progress</h3>
+<p id="progress"></p>
+
+<h3>Timer</h3>
+<p id="timer">00:00</p>
+
+<h3>Quest Log</h3>
+<div id="attempts"><em>No failed attempts</em></div>
+
+<p class="small">Progress is saved automatically for this username.</p>
+</div>
+
+</div>
+
+<div id="transition">
+<div class="transition-box">
+<h1 id="transitionTitle">Traveling...</h1>
+<p id="transitionText">The path ahead is hidden in shadow.</p>
+</div>
+</div>
+
+<div id="introScreen">
+<div class="intro-box">
+<div id="introText"></div>
+</div>
+</div>
+
+<div id="fouteScreen">
+<div class="intro-box">
+<div id="fouteText"></div>
+</div>
+</div>
+
+<div id="bossScreen">
+<div class="boss-box">
+<h1>⚔ Raid Boss Encounter ⚔</h1>
+<h2 id="bossName">The Final Gatekeeper</h2>
+<div class="hp-wrap"><div id="bossHpBar"></div></div>
+<p id="bossHpText"></p>
+<div id="bossQuestion"></div>
+<input id="bossInput" autocomplete="off">
+<button id="bossSubmitBtn" onclick="submitBossAnswer()">Strike</button>
+<div id="bossMessage"></div>
+<p class="small">Wrong answers stun you for 5 seconds.</p>
+</div>
+</div>
+
+<audio id="music"></audio>
+<audio id="transitionMusic"></audio>
+<audio id="fouteMusic"></audio>
+<audio id="introMusic"></audio>
 
 <script>
+
 const STANDARD_MUSIC = "standardbgmusic.mp3";
 const TRAVEL_DURATION_MS = 15000;
 const INTRO_DURATION_MS = 10000;
 
 const users = {
-fellicity:{display:"Fellicity", question:"What's my favorite Maroon 5 song?", answer:"how", intro:"Cute as a button, Excellent wit. Forgive me for not allowing your main, alas your sharp mind might win this game", audio:"fellicity.mp3"},
-lariath:{display:"Lariath", question:"What do I mean by wwd?", answer:"what we doing", intro:"Some people might need a hint or some extra luck, you surely don't you competitive fuck <3", audio:"lariath.mp3"},
-alistia:{display:"Alistia", question:"Johnny is?", answer:"a cunt", intro:"The rest won't be so eas.. STOP PLAYING RUNESCAPE ALREADY! Sigh.. go on then", audio:"alistia.mp3"},
-cam:{display:"Cam", question:"whenever someone sends me 1 video and then 3 more, I?", answer:"stop watching", intro:"Our main protankonist, taking each blow. Show me, how much you actually know", audio:"cam.mp3"}
+fellicity:{
+display:"Fellicity",
+question:"What's my favorite Maroon 5 song?",
+hash:"8044aae1f86875d993f20d7fe3815306b640d6e039c4512cd7a2f8453207b4cd",
+intro:"Cute as a button, Excellent wit. Forgive me for not allowing your main, alas your sharp mind might win this game",
+audio:"fellicity.mp3"
+},
+lariath:{
+display:"Lariath",
+question:"What do I mean by wwd?",
+hash:"9d7021c600025846dc58eb6e47b55a80109d70bee800ac196fbb689cb80b0a33",
+intro:"Some people might need a hint or some extra luck, you surely don't you competitive fuck <3",
+audio:"lariath.mp3"
+},
+alistia:{
+display:"Alistia",
+question:"Johnny is?",
+hash:"4c458ada6c7b8d9ad84ae71c8e77d93685030c62d45a5e82c796ef0caabbb374",
+intro:"The rest won't be so eas.. STOP PLAYING RUNESCAPE ALREADY! Sigh.. go on then",
+audio:"alistia.mp3"
+},
+cam:{
+display:"Cam",
+question:"whenever someone sends me 1 video and then 3 more, I?",
+hash:"b006a012ff0f93be9a8dbd742e7e231dfffb9942f41bbf900ae86cd47b5c25d8",
+intro:"Our main protankonist, taking each blow. Show me, how much you actually know",
+audio:"cam.mp3"
+}
 };
 
-const foutePrompt = "You put on your deepest voice and start taking the lead. Acting like you created all this huh? It's a good thing nobody can see your sad attempt. Now, let's try that again shall we?";
+const foutePrompt =
+"You put on your deepest voice and start taking the lead. Acting like you created all this huh? It's a good thing nobody can see your sad attempt. Now, let's try that again shall we?";
 
 const zones = [
-{name:"Overwatch", music:"Overwatch.mp3", puzzles:[
-{q:"tracer", clue:"Fastest hero.", bg:"overwatchbg1.jpg"},
-{q:"reaper", clue:"Death walks again.", bg:"overwatchbg2.jpg"},
-{q:"overwatch", clue:"Hero organization.", bg:"overwatchbg3.jpg"}
-]},
-{name:"The War Within", music:"TWW.mp3", puzzles:[
-{q:"khaz algar", clue:"Deep titan domain.", bg:"twwbg1.jpg"},
-{q:"dornogal", clue:"City of earth.", bg:"twwbg2.jpg"},
-{q:"earthen", clue:"New titan race.", bg:"twwbg3.jpg"}
-]},
-{name:"Pokemon", music:"pokemon.mp3", puzzles:[
-{q:"pikachu", clue:"Ash's electric partner.", bg:"pokemonbg1.jpg"},
-{q:"charizard", clue:"Fire lizard final evolution.", bg:"pokemonbg2.jpg"},
-{q:"mewtwo", clue:"Legendary psychic clone.", bg:"pokemonbg3.jpg"}
-]},
-{name:"Midnight", music:"midnight.mp3", puzzles:[
-{q:"quelthalas", clue:"Elven homeland.", bg:"midnightbg1.jpg"},
-{q:"sunwell", clue:"Arcane source.", bg:"midnightbg2.jpg"},
-{q:"scourge", clue:"Undead threat.", bg:"midnightbg3.jpg"}
-]}
+{
+name:"Overwatch",
+music:"Overwatch.mp3",
+puzzles:[
+{hash:"1e6243a2b17026f8b37bdaa6db841aa1d68733ac98dce46ef9aee051f38c1772", clue:"Fastest hero.", bg:"overwatchbg1.jpg"},
+{hash:"fc8db96bab2a414d1db52c4177a15d3e292fb9d4354d0992f29bfc3f4715825e", clue:"Death walks again.", bg:"overwatchbg2.jpg"},
+{hash:"6df983c20df2ddf0c981c8978d526cf0a5b4fd8369759fee4419fdf31d6b22cb", clue:"Hero organization.", bg:"overwatchbg3.jpg"}
+]
+},
+{
+name:"The War Within",
+music:"TWW.mp3",
+puzzles:[
+{hash:"842295872e7c01b1d6218d199704c108c52cc017ce22189c9fd3822cd12c7ff9", clue:"Deep titan domain.", bg:"twwbg1.jpg"},
+{hash:"0ffba2399387565b6a5999f09aa289efd839a8dfee4c2ac0d0f939aa665f328d", clue:"City of earth.", bg:"twwbg2.jpg"},
+{hash:"37f9eae4de3be04eb02c1432d29339cfb9281f79cf28c227490017521857bfc6", clue:"New titan race.", bg:"twwbg3.jpg"}
+]
+},
+{
+name:"Pokemon",
+music:"pokemon.mp3",
+puzzles:[
+{hash:"43999461d22f67840fcd9b8824293eaa4f18146e57b2c651bcd925e3b3e4e429", clue:"Ash's electric partner.", bg:"pokemonbg1.jpg"},
+{hash:"73e512eccd9639bf632f1675f6a34a116f0abe5404dcebe98bf023be0e329d10", clue:"Fire lizard final evolution.", bg:"pokemonbg2.jpg"},
+{hash:"b3011a26f0f5047f91e14a8ae0daf2ea26de4a4cb831fb0ffe6d1060fd006ac0", clue:"Legendary psychic clone.", bg:"pokemonbg3.jpg"}
+]
+},
+{
+name:"Midnight",
+music:"midnight.mp3",
+puzzles:[
+{hash:"78d08e34cc71174c32522caad2b7bc1739a1f00121261cc3c3ca55e021256c59", clue:"Elven homeland.", bg:"midnightbg1.jpg"},
+{hash:"132255778e32a21db5059929e9f96596a56b8051543de45fcb99a7bc034a2b16", clue:"Arcane source.", bg:"midnightbg2.jpg"},
+{hash:"fcc31d9c7c7bcfb67928fa9a0f212910de2e5592c5acf6df6f4856aae7370357", clue:"Undead threat.", bg:"midnightbg3.jpg"}
+]
+}
 ];
 
-let z=0, p=0, muted=false, attempts=[], locked=false, currentUser=null, pendingUser=null, musicWatchdog=null;
+let z=0;
+let p=0;
+let muted=false;
+let attempts=[];
+let locked=false;
+let currentUser=null;
+let pendingUser=null;
+let musicWatchdog=null;
+let timerInterval=null;
+let startedAt=null;
+let elapsedBefore=0;
+let finishedTime=0;
+let bossHp=100;
+let bossCurrentAnswer=0;
+let bossQuestionsAnswered=0;
+let bossWrongAnswers=0;
+let gameCompleted=false;
 
-function normalize(value){ return value.toLowerCase().trim().replace(/\s+/g," "); }
-function showNameStep(){ document.getElementById("landingStep").style.display="none"; document.getElementById("nameStep").style.display="block"; document.getElementById("name").focus(); }
-function saveKey(){ return currentUser ? "questSave_" + currentUser : null; }
-function saveGame(){ if(!currentUser) return; localStorage.setItem(saveKey(), JSON.stringify({username:currentUser,z:z,p:p,attempts:attempts,muted:muted})); }
-function loadGame(username){ const raw=localStorage.getItem("questSave_" + username); if(!raw) return false; try{ const data=JSON.parse(raw); z=data.z || 0; p=data.p || 0; attempts=data.attempts || []; muted=!!data.muted; return true; }catch(e){ return false; } }
+function normalize(value){
+return value.toLowerCase().trim().replace(/\s+/g," ");
+}
+
+async function sha256(text){
+const data=new TextEncoder().encode(normalize(text));
+const buffer=await crypto.subtle.digest("SHA-256", data);
+return Array.from(new Uint8Array(buffer)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+function formatTime(ms){
+const total=Math.floor(ms/1000);
+const minutes=Math.floor(total/60);
+const seconds=total%60;
+return String(minutes).padStart(2,"0")+":"+String(seconds).padStart(2,"0");
+}
+
+function currentElapsed(){
+if(!startedAt) return elapsedBefore;
+return elapsedBefore + (Date.now() - startedAt);
+}
+
+function startTimer(){
+if(!startedAt) startedAt=Date.now();
+
+if(timerInterval) clearInterval(timerInterval);
+
+timerInterval=setInterval(()=>{
+document.getElementById("timer").innerText=formatTime(currentElapsed());
+saveGame();
+},1000);
+
+document.getElementById("timer").innerText=formatTime(currentElapsed());
+}
+
+function stopTimer(){
+if(timerInterval){
+clearInterval(timerInterval);
+timerInterval=null;
+}
+
+finishedTime=currentElapsed();
+elapsedBefore=finishedTime;
+startedAt=null;
+}
+
+function showNameStep(){
+document.getElementById("landingStep").style.display="none";
+document.getElementById("resultStep").style.display="none";
+document.getElementById("nameStep").style.display="block";
+document.getElementById("name").focus();
+}
+
+function saveKey(){
+return currentUser ? "questSave_" + currentUser : null;
+}
+
+function resultKey(){
+return currentUser ? "questResult_" + currentUser : null;
+}
+
+function saveGame(){
+if(!currentUser) return;
+
+localStorage.setItem(saveKey(), JSON.stringify({
+username:currentUser,
+z:z,
+p:p,
+attempts:attempts,
+muted:muted,
+elapsedBefore:currentElapsed(),
+gameCompleted:gameCompleted
+}));
+}
+
+function loadGame(username){
+const raw=localStorage.getItem("questSave_" + username);
+if(!raw) return false;
+
+try{
+const data=JSON.parse(raw);
+z=data.z || 0;
+p=data.p || 0;
+attempts=data.attempts || [];
+muted=!!data.muted;
+elapsedBefore=data.elapsedBefore || 0;
+gameCompleted=!!data.gameCompleted;
+return true;
+}catch(e){
+return false;
+}
+}
 
 function resetProgress(){
-if(currentUser){ localStorage.removeItem(saveKey()); }
-z=0; p=0; attempts=[]; locked=false; stopAllAudio(); currentUser=null; pendingUser=null;
+if(currentUser){
+localStorage.removeItem(saveKey());
+localStorage.removeItem(resultKey());
+}
+
+z=0;
+p=0;
+attempts=[];
+locked=false;
+elapsedBefore=0;
+startedAt=null;
+finishedTime=0;
+bossHp=100;
+bossQuestionsAnswered=0;
+bossWrongAnswers=0;
+gameCompleted=false;
+
+stopAllAudio();
+currentUser=null;
+pendingUser=null;
+
 document.getElementById("game").style.display="none";
 document.getElementById("transition").style.display="none";
 document.getElementById("introScreen").style.display="none";
 document.getElementById("fouteScreen").style.display="none";
+document.getElementById("bossScreen").style.display="none";
 document.getElementById("login").style.display="flex";
 document.getElementById("landingStep").style.display="block";
 document.getElementById("nameStep").style.display="none";
 document.getElementById("securityStep").style.display="none";
+document.getElementById("resultStep").style.display="none";
 document.getElementById("name").value="";
 document.getElementById("securityAnswer").value="";
 document.getElementById("nameMessage").innerText="";
 document.getElementById("securityMessage").innerText="";
+document.getElementById("landingButton").innerText="Begin Journey";
 document.getElementById("muteBtn").innerText=muted ? "🔇" : "🔊";
+
 playLoginMusic();
 }
 
 function checkName(){
-const rawName=document.getElementById("name").value.trim();
+const nameInput=document.getElementById("name");
+const rawName=nameInput.value.trim();
 const key=normalize(rawName);
+
 document.getElementById("nameMessage").innerText="";
+
 if(!rawName) return;
-if(key==="foute"){ triggerFoute(); return; }
-if(!users[key]){ document.getElementById("nameMessage").innerText="Unknown traveler."; return; }
+
+if(key==="foute"){
+triggerFoute();
+return;
+}
+
+if(!users[key]){
+document.getElementById("nameMessage").innerText="Unknown traveler.";
+return;
+}
+
 pendingUser=key;
+
 document.getElementById("nameStep").style.display="none";
 document.getElementById("securityStep").style.display="block";
 document.getElementById("securityQuestion").innerText=users[key].question;
@@ -141,14 +697,42 @@ document.getElementById("securityAnswer").value="";
 document.getElementById("securityMessage").innerText="";
 document.getElementById("securityAnswer").focus();
 }
-function backToName(){ pendingUser=null; document.getElementById("securityStep").style.display="none"; document.getElementById("nameStep").style.display="block"; document.getElementById("name").focus(); }
 
-function checkSecurityAnswer(){
+function backToName(){
+pendingUser=null;
+document.getElementById("securityStep").style.display="none";
+document.getElementById("nameStep").style.display="block";
+document.getElementById("name").focus();
+}
+
+async function checkSecurityAnswer(){
 if(!pendingUser) return;
-const answer=normalize(document.getElementById("securityAnswer").value);
-if(answer===users[pendingUser].answer){
+
+const answerHash=await sha256(document.getElementById("securityAnswer").value);
+
+if(answerHash===users[pendingUser].hash){
 document.getElementById("securityMessage").innerText="You know me <3";
-setTimeout(()=>{ currentUser=pendingUser; pendingUser=null; z=0; p=0; attempts=[]; loadGame(currentUser); showUserIntro(); },700);
+
+setTimeout(()=>{
+currentUser=pendingUser;
+pendingUser=null;
+
+z=0;
+p=0;
+attempts=[];
+elapsedBefore=0;
+startedAt=null;
+gameCompleted=false;
+
+loadGame(currentUser);
+
+if(gameCompleted){
+showResultOnLogin();
+}else{
+showUserIntro();
+}
+},700);
+
 }else{
 document.getElementById("securityMessage").innerText="I thought you knew me >3";
 document.getElementById("securityAnswer").value="";
@@ -157,48 +741,568 @@ document.getElementById("securityAnswer").value="";
 
 function triggerFoute(){
 stopAllAudio();
-const screen=document.getElementById("fouteScreen"), text=document.getElementById("fouteText"), audio=document.getElementById("fouteMusic");
-text.innerText=foutePrompt; screen.style.display="flex";
-audio.src="foute.mp3"; audio.loop=false; audio.volume=1; audio.muted=muted; audio.play().catch(()=>{});
-setTimeout(()=>{ screen.style.display="none"; stopAllAudio(); playLoginMusic(); document.getElementById("name").value=""; document.getElementById("nameMessage").innerText=""; document.getElementById("securityAnswer").value=""; document.getElementById("landingStep").style.display="none"; document.getElementById("nameStep").style.display="block"; document.getElementById("securityStep").style.display="none"; },10000);
+
+const screen=document.getElementById("fouteScreen");
+const text=document.getElementById("fouteText");
+const audio=document.getElementById("fouteMusic");
+
+text.innerText=foutePrompt;
+screen.style.display="flex";
+
+audio.src="foute.mp3";
+audio.loop=false;
+audio.volume=1;
+audio.muted=muted;
+audio.play().catch(()=>{});
+
+setTimeout(()=>{
+screen.style.display="none";
+stopAllAudio();
+playLoginMusic();
+document.getElementById("name").value="";
+document.getElementById("nameMessage").innerText="";
+document.getElementById("securityAnswer").value="";
+document.getElementById("landingStep").style.display="none";
+document.getElementById("nameStep").style.display="block";
+document.getElementById("securityStep").style.display="none";
+},10000);
 }
 
 function showUserIntro(){
 stopAllAudio();
+
 document.getElementById("login").style.display="none";
-const user=users[currentUser], screen=document.getElementById("introScreen"), text=document.getElementById("introText"), audio=document.getElementById("introMusic");
-text.innerText=user.intro; screen.style.display="flex";
-audio.src=user.audio; audio.loop=false; audio.volume=1; audio.muted=muted; audio.play().catch(()=>{});
-setTimeout(()=>{ screen.style.display="none"; stopAllAudio(); startGame(); },INTRO_DURATION_MS);
+
+const user=users[currentUser];
+const screen=document.getElementById("introScreen");
+const text=document.getElementById("introText");
+const audio=document.getElementById("introMusic");
+
+text.innerText=user.intro;
+screen.style.display="flex";
+
+audio.src=user.audio;
+audio.loop=false;
+audio.volume=1;
+audio.muted=muted;
+audio.play().catch(()=>{});
+
+setTimeout(()=>{
+screen.style.display="none";
+stopAllAudio();
+startGame();
+},INTRO_DURATION_MS);
 }
 
-function startGame(){ document.getElementById("login").style.display="none"; document.getElementById("game").style.display="flex"; document.getElementById("playerName").innerText=users[currentUser].display; document.getElementById("muteBtn").innerText=muted ? "🔇" : "🔊"; playWorldMusic(); render(); saveGame(); }
+function startGame(){
+document.getElementById("login").style.display="none";
+document.getElementById("game").style.display="flex";
+document.getElementById("playerName").innerText=users[currentUser].display;
+document.getElementById("muteBtn").innerText=muted ? "🔇" : "🔊";
 
-function stopAllAudio(){ ["music","transitionMusic","fouteMusic","introMusic"].forEach(id=>{ const a=document.getElementById(id); a.pause(); a.currentTime=0; }); if(musicWatchdog){ clearInterval(musicWatchdog); musicWatchdog=null; } }
-function fadeAudio(audio,targetVolume,duration){ const startVolume=audio.volume, steps=20, stepTime=duration/steps; let step=0; const interval=setInterval(()=>{ step++; const progress=step/steps; audio.volume=startVolume+(targetVolume-startVolume)*progress; if(step>=steps){ audio.volume=targetVolume; clearInterval(interval); } },stepTime); }
-function playLoginMusic(){ const m=document.getElementById("music"); m.onended=null; m.src=STANDARD_MUSIC; m.loop=true; m.volume=0; m.muted=muted; m.play().catch(()=>{}); fadeAudio(m,0.65,900); startMusicWatchdog(); }
-function playWorldMusic(){ if(z>=zones.length) return; const m=document.getElementById("music"); m.onended=()=>playStandardFallback(); m.src=zones[z].music; m.loop=false; m.volume=0; m.muted=muted; m.play().catch(()=>playStandardFallback()); fadeAudio(m,0.85,900); startMusicWatchdog(); }
-function playStandardFallback(){ const m=document.getElementById("music"); m.onended=null; m.src=STANDARD_MUSIC; m.loop=true; m.volume=0; m.muted=muted; m.play().catch(()=>{}); fadeAudio(m,0.55,900); }
-function startMusicWatchdog(){ if(musicWatchdog){ clearInterval(musicWatchdog); } musicWatchdog=setInterval(()=>{ const gameVisible=document.getElementById("game").style.display==="flex"; const loginVisible=document.getElementById("login").style.display==="flex"; const transitionVisible=document.getElementById("transition").style.display==="flex"; const fouteVisible=document.getElementById("fouteScreen").style.display==="flex"; const introVisible=document.getElementById("introScreen").style.display==="flex"; if(transitionVisible || fouteVisible || introVisible) return; const m=document.getElementById("music"); if((gameVisible || loginVisible) && !muted && (m.paused || m.ended || !m.src)){ if(gameVisible){ playStandardFallback(); }else{ playLoginMusic(); } } },3000); }
-function playTransitionMusic(){ const t=document.getElementById("transitionMusic"); t.src="worldtransition.mp3"; t.loop=false; t.volume=0; t.muted=muted; t.play().catch(()=>{}); fadeAudio(t,0.9,900); }
-function toggleMute(){ muted=!muted; ["music","transitionMusic","fouteMusic","introMusic"].forEach(id=>{ document.getElementById(id).muted=muted; }); document.getElementById("muteBtn").innerText=muted ? "🔇" : "🔊"; saveGame(); if(!muted){ startMusicWatchdog(); } }
+playWorldMusic();
+render();
+startTimer();
+saveGame();
+}
 
-function getGlobalQuestionIndex(worldIndex,puzzleIndex){ let total=0; for(let i=0;i<worldIndex;i++){ total += zones[i].puzzles.length; } return total+puzzleIndex; }
-function getCurrentGlobalQuestionIndex(){ return getGlobalQuestionIndex(z,p); }
-function renderMap(){ const map=document.getElementById("map"); map.innerHTML=""; const currentIndex=getCurrentGlobalQuestionIndex(); let questionIndex=0; zones.forEach((zone,zoneIndex)=>{ const worldNode=document.createElement("div"); worldNode.className="node world"; if(zoneIndex<z){ worldNode.classList.add("completed"); } if(zoneIndex===z && p===0){ worldNode.classList.add("current"); } map.appendChild(worldNode); zone.puzzles.forEach(()=>{ const qNode=document.createElement("div"); qNode.className="node"; if(questionIndex<currentIndex){ qNode.classList.add("completed"); } if(questionIndex===currentIndex){ qNode.classList.add("current"); } map.appendChild(qNode); questionIndex++; }); }); }
-function updateQuestLog(){ const log=document.getElementById("attempts"); if(attempts.length===0){ log.innerHTML="<em>No failed attempts</em>"; return; } log.innerHTML=attempts.map(a=>"• "+escapeHtml(a)).join("<br>"); }
-function escapeHtml(text){ return text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
-function render(){ if(z>=zones.length){ saveGame(); document.body.innerHTML="<h1>🏆 Victory</h1>"; return; } document.body.classList.add("fade"); setTimeout(()=>{ document.body.style.background=`url('${zones[z].puzzles[p].bg}') center/cover`; document.body.classList.remove("fade"); },250); document.getElementById("zone").innerText=zones[z].name; document.getElementById("clue").innerText=zones[z].puzzles[p].clue; document.getElementById("progress").innerText=`Chapter ${z+1}/${zones.length}: ${p+1}/${zones[z].puzzles.length}`; renderMap(); updateQuestLog(); saveGame(); }
-function startLockout(){ locked=true; let remaining=15; const btn=document.getElementById("submitBtn"); btn.disabled=true; btn.innerText=`Wait ${remaining}s`; const timer=setInterval(()=>{ remaining--; btn.innerText=`Wait ${remaining}s`; if(remaining<=0){ clearInterval(timer); locked=false; btn.disabled=false; btn.innerText="Submit"; } },1000); }
-function submit(){ if(locked) return; const input=document.getElementById("input"); const value=normalize(input.value); input.value=""; if(!value) return; if(value===zones[z].puzzles[p].q){ attempts=[]; p++; if(p>=zones[z].puzzles.length){ const oldWorld=z; z++; p=0; if(z<zones.length){ saveGame(); travelToNextWorld(oldWorld,z); return; } } render(); }else{ attempts.push(value); updateQuestLog(); saveGame(); document.body.classList.add("shake"); setTimeout(()=>document.body.classList.remove("shake"),300); startLockout(); } }
-function travelToNextWorld(fromIndex,toIndex){ stopAllAudio(); const overlay=document.getElementById("transition"); document.getElementById("transitionTitle").innerText="Traveling..."; document.getElementById("transitionText").innerText="The path ahead is hidden in shadow."; overlay.style.display="flex"; playTransitionMusic(); setTimeout(()=>{ overlay.style.display="none"; playWorldMusic(); render(); },TRAVEL_DURATION_MS); }
+function stopAllAudio(){
+["music","transitionMusic","fouteMusic","introMusic"].forEach(id=>{
+const a=document.getElementById(id);
+a.pause();
+a.currentTime=0;
+});
 
-document.addEventListener("DOMContentLoaded",()=>{
+if(musicWatchdog){
+clearInterval(musicWatchdog);
+musicWatchdog=null;
+}
+}
+
+function fadeAudio(audio, targetVolume, duration){
+const startVolume=audio.volume;
+const steps=20;
+const stepTime=duration / steps;
+let step=0;
+
+const interval=setInterval(()=>{
+step++;
+const progress=step / steps;
+audio.volume=startVolume + (targetVolume - startVolume) * progress;
+
+if(step>=steps){
+audio.volume=targetVolume;
+clearInterval(interval);
+}
+},stepTime);
+}
+
+function playLoginMusic(){
+const m=document.getElementById("music");
+
+m.onended=null;
+m.onerror=null;
+m.src=STANDARD_MUSIC;
+m.loop=true;
+m.volume=0;
+m.muted=muted;
+m.play().catch(()=>{});
+fadeAudio(m,0.65,900);
+startMusicWatchdog();
+}
+
+function playWorldMusic(){
+if(z>=zones.length) return;
+
+const m=document.getElementById("music");
+const track=zones[z].music;
+
+m.pause();
+m.currentTime=0;
+m.loop=false;
+m.onended=()=>playStandardFallback();
+m.onerror=()=>playStandardFallback();
+m.src=track;
+m.volume=0;
+m.muted=muted;
+
+m.load();
+
+const playPromise=m.play();
+
+if(playPromise){
+playPromise.then(()=>{
+fadeAudio(m,0.85,900);
+}).catch(()=>{
+setTimeout(()=>{
+if(m.paused || m.ended) playStandardFallback();
+},1200);
+});
+}
+
+startMusicWatchdog();
+}
+
+function playStandardFallback(){
+const m=document.getElementById("music");
+
+m.pause();
+m.currentTime=0;
+m.onended=null;
+m.onerror=null;
+m.src=STANDARD_MUSIC;
+m.loop=true;
+m.volume=0;
+m.muted=muted;
+m.load();
+m.play().catch(()=>{});
+fadeAudio(m,0.55,900);
+}
+
+function startMusicWatchdog(){
+if(musicWatchdog){
+clearInterval(musicWatchdog);
+}
+
+musicWatchdog=setInterval(()=>{
+const gameVisible=document.getElementById("game").style.display==="flex";
+const loginVisible=document.getElementById("login").style.display==="flex";
+const transitionVisible=document.getElementById("transition").style.display==="flex";
+const fouteVisible=document.getElementById("fouteScreen").style.display==="flex";
+const introVisible=document.getElementById("introScreen").style.display==="flex";
+const bossVisible=document.getElementById("bossScreen").style.display==="flex";
+
+if(transitionVisible || fouteVisible || introVisible) return;
+
+const m=document.getElementById("music");
+
+if((gameVisible || loginVisible || bossVisible) && !muted && (m.paused || m.ended || !m.src)){
+if(gameVisible || bossVisible){
+playStandardFallback();
+}else{
 playLoginMusic();
-document.getElementById("input").addEventListener("keydown",e=>{ if(e.key==="Enter"){ submit(); } });
-document.getElementById("name").addEventListener("keydown",e=>{ if(e.key==="Enter"){ checkName(); } });
-document.getElementById("securityAnswer").addEventListener("keydown",e=>{ if(e.key==="Enter"){ checkSecurityAnswer(); } });
+}
+}
+},3000);
+}
+
+function playTransitionMusic(){
+const t=document.getElementById("transitionMusic");
+t.src="worldtransition.mp3";
+t.loop=false;
+t.volume=0;
+t.muted=muted;
+t.play().catch(()=>{});
+fadeAudio(t,0.9,900);
+}
+
+function toggleMute(){
+muted=!muted;
+
+["music","transitionMusic","fouteMusic","introMusic"].forEach(id=>{
+document.getElementById(id).muted=muted;
+});
+
+document.getElementById("muteBtn").innerText = muted ? "🔇" : "🔊";
+saveGame();
+
+if(!muted){
+startMusicWatchdog();
+}
+}
+
+function getGlobalQuestionIndex(worldIndex, puzzleIndex){
+let total=0;
+
+for(let i=0;i<worldIndex;i++){
+total += zones[i].puzzles.length;
+}
+
+return total + puzzleIndex;
+}
+
+function getCurrentGlobalQuestionIndex(){
+return getGlobalQuestionIndex(z,p);
+}
+
+function renderMap(){
+const map=document.getElementById("map");
+map.innerHTML="";
+
+const currentIndex=getCurrentGlobalQuestionIndex();
+let questionIndex=0;
+
+zones.forEach((zone, zoneIndex)=>{
+const worldNode=document.createElement("div");
+worldNode.className="node world";
+
+if(zoneIndex<z){
+worldNode.classList.add("completed");
+}
+
+if(zoneIndex===z && p===0){
+worldNode.classList.add("current");
+}
+
+map.appendChild(worldNode);
+
+zone.puzzles.forEach(()=>{
+const qNode=document.createElement("div");
+qNode.className="node";
+
+if(questionIndex<currentIndex){
+qNode.classList.add("completed");
+}
+
+if(questionIndex===currentIndex){
+qNode.classList.add("current");
+}
+
+map.appendChild(qNode);
+questionIndex++;
+});
+});
+}
+
+function updateQuestLog(){
+const log=document.getElementById("attempts");
+
+if(attempts.length===0){
+log.innerHTML="<em>No failed attempts</em>";
+return;
+}
+
+log.innerHTML=attempts.map(a=>"• "+escapeHtml(a)).join("<br>");
+}
+
+function escapeHtml(text){
+return text
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+}
+
+function render(){
+if(z>=zones.length){
+startBossEncounter();
+return;
+}
+
+document.body.classList.add("fade");
+
+setTimeout(()=>{
+document.body.style.background=`url('${zones[z].puzzles[p].bg}') center/cover`;
+document.body.classList.remove("fade");
+},250);
+
+document.getElementById("zone").innerText=zones[z].name;
+document.getElementById("clue").innerText=zones[z].puzzles[p].clue;
+
+document.getElementById("progress").innerText =
+`Chapter ${z+1}/${zones.length}: ${p+1}/${zones[z].puzzles.length}`;
+
+renderMap();
+updateQuestLog();
+saveGame();
+}
+
+function startLockout(){
+locked=true;
+
+let remaining=15;
+const btn=document.getElementById("submitBtn");
+
+btn.disabled=true;
+btn.innerText=`Wait ${remaining}s`;
+
+const timer=setInterval(()=>{
+remaining--;
+btn.innerText=`Wait ${remaining}s`;
+
+if(remaining<=0){
+clearInterval(timer);
+locked=false;
+btn.disabled=false;
+btn.innerText="Submit";
+}
+},1000);
+}
+
+async function submit(){
+if(locked) return;
+
+const input=document.getElementById("input");
+const value=input.value;
+
+input.value="";
+
+if(!normalize(value)) return;
+
+const inputHash=await sha256(value);
+
+if(inputHash===zones[z].puzzles[p].hash){
+attempts=[];
+
+p++;
+
+if(p>=zones[z].puzzles.length){
+const oldWorld=z;
+z++;
+p=0;
+
+if(z<zones.length){
+saveGame();
+travelToNextWorld(oldWorld,z);
+return;
+}
+}
+
+render();
+
+}else{
+attempts.push(normalize(value));
+updateQuestLog();
+saveGame();
+
+document.body.classList.add("shake");
+setTimeout(()=>document.body.classList.remove("shake"),300);
+
+startLockout();
+}
+}
+
+function travelToNextWorld(fromIndex,toIndex){
+stopAllAudio();
+
+const overlay=document.getElementById("transition");
+document.getElementById("transitionTitle").innerText="Traveling...";
+document.getElementById("transitionText").innerText =
+"The path ahead is hidden in shadow.";
+
+overlay.style.display="flex";
+playTransitionMusic();
+
+setTimeout(()=>{
+overlay.style.display="none";
+playWorldMusic();
+render();
+},TRAVEL_DURATION_MS);
+}
+
+function startBossEncounter(){
+document.getElementById("game").style.display="none";
+document.getElementById("bossScreen").style.display="flex";
+
+bossHp=100;
+bossQuestionsAnswered=0;
+bossWrongAnswers=0;
+
+playStandardFallback();
+renderBoss();
+}
+
+function generateBossQuestion(){
+const a=Math.floor(Math.random()*10)+2;
+const b=Math.floor(Math.random()*10)+2;
+const type=Math.floor(Math.random()*3);
+
+if(type===0){
+bossCurrentAnswer=a+b;
+return `${a} + ${b} = ?`;
+}
+
+if(type===1){
+const high=a+b;
+bossCurrentAnswer=high-a;
+return `${high} - ${a} = ?`;
+}
+
+bossCurrentAnswer=a*b;
+return `${a} × ${b} = ?`;
+}
+
+function renderBoss(){
+document.getElementById("bossHpBar").style.width=bossHp+"%";
+document.getElementById("bossHpText").innerText=`Boss HP: ${bossHp}/100`;
+document.getElementById("bossQuestion").innerText=generateBossQuestion();
+document.getElementById("bossInput").value="";
+document.getElementById("bossInput").focus();
+document.getElementById("bossMessage").innerText="";
+}
+
+function submitBossAnswer(){
+const btn=document.getElementById("bossSubmitBtn");
+const input=document.getElementById("bossInput");
+const answer=Number(input.value.trim());
+
+input.value="";
+
+if(Number.isNaN(answer)) return;
+
+if(answer===bossCurrentAnswer){
+bossHp=Math.max(0,bossHp-20);
+bossQuestionsAnswered++;
+document.getElementById("bossHpBar").style.width=bossHp+"%";
+document.getElementById("bossHpText").innerText=`Boss HP: ${bossHp}/100`;
+
+if(bossHp<=0){
+finishAdventure();
+return;
+}
+
+renderBoss();
+}else{
+bossWrongAnswers++;
+document.getElementById("bossMessage").innerText="Stunned for 5 seconds!";
+btn.disabled=true;
+btn.innerText="Stunned";
+
+setTimeout(()=>{
+btn.disabled=false;
+btn.innerText="Strike";
+renderBoss();
+},5000);
+}
+}
+
+function finishAdventure(){
+stopTimer();
+gameCompleted=true;
+
+const result={
+player:users[currentUser].display,
+time:finishedTime,
+timeText:formatTime(finishedTime),
+questAttempts:attempts.length,
+bossQuestionsAnswered:bossQuestionsAnswered,
+bossWrongAnswers:bossWrongAnswers,
+completedAt:new Date().toLocaleString()
+};
+
+localStorage.setItem(resultKey(), JSON.stringify(result));
+saveGame();
+
+document.getElementById("bossScreen").style.display="none";
+showResultOnLogin();
+}
+
+function showResultOnLogin(){
+stopAllAudio();
+playLoginMusic();
+
+const raw=localStorage.getItem(resultKey());
+let result=null;
+
+try{
+result=raw ? JSON.parse(raw) : null;
+}catch(e){}
+
+document.getElementById("game").style.display="none";
+document.getElementById("bossScreen").style.display="none";
+document.getElementById("login").style.display="flex";
+document.getElementById("landingStep").style.display="none";
+document.getElementById("nameStep").style.display="none";
+document.getElementById("securityStep").style.display="none";
+document.getElementById("resultStep").style.display="block";
+
+if(result){
+document.getElementById("resultText").innerHTML =
+`<div class="result-line">Player: ${escapeHtml(result.player)}</div>`+
+`<div class="result-line">Total time: ${escapeHtml(result.timeText)}</div>`+
+`<div class="result-line">Boss hits landed: ${result.bossQuestionsAnswered}</div>`+
+`<div class="result-line">Boss stuns taken: ${result.bossWrongAnswers}</div>`+
+`<div class="result-line">Completed: ${escapeHtml(result.completedAt)}</div>`;
+}else{
+document.getElementById("resultText").innerHTML =
+`<div class="result-line">Your result could not be loaded.</div>`;
+}
+}
+
+function restartAdventure(){
+if(currentUser){
+localStorage.removeItem(saveKey());
+localStorage.removeItem(resultKey());
+}
+
+z=0;
+p=0;
+attempts=[];
+locked=false;
+elapsedBefore=0;
+startedAt=null;
+finishedTime=0;
+bossHp=100;
+bossQuestionsAnswered=0;
+bossWrongAnswers=0;
+gameCompleted=false;
+
+document.getElementById("resultStep").style.display="none";
+document.getElementById("landingStep").style.display="block";
+document.getElementById("landingButton").innerText="just.. one... more... quest...";
+}
+
+document.addEventListener("DOMContentLoaded", ()=>{
+playLoginMusic();
+
+document.getElementById("input").addEventListener("keydown", e=>{
+if(e.key==="Enter") submit();
+});
+
+document.getElementById("bossInput").addEventListener("keydown", e=>{
+if(e.key==="Enter") submitBossAnswer();
+});
+
+document.getElementById("name").addEventListener("keydown", e=>{
+if(e.key==="Enter") checkName();
+});
+
+document.getElementById("securityAnswer").addEventListener("keydown", e=>{
+if(e.key==="Enter") checkSecurityAnswer();
+});
 });
 </script>
+
 </body>
 </html>
