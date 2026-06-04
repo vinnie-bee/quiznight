@@ -42,7 +42,7 @@ rgba(0,0,0,0.15)
 ),
 url('login.png') center/cover;
 z-index:5;
-padding-bottom:80px;
+padding-bottom:145px;
 }
 
 .box {
@@ -239,7 +239,8 @@ animation:shake 0.3s;
 #transition,
 #introScreen,
 #fouteScreen,
-#bossScreen {
+#bossScreen,
+#creditsScreen {
 position:fixed;
 inset:0;
 display:none;
@@ -263,6 +264,42 @@ z-index:15;
 z-index:18;
 background:
 radial-gradient(circle, rgba(85,0,0,0.65), rgba(0,0,0,0.96));
+}
+
+#creditsScreen {
+z-index:22;
+background:black;
+overflow:hidden;
+}
+
+#creditsRoll {
+position:absolute;
+bottom:-2600px;
+width:100%;
+text-align:center;
+font-size:26px;
+line-height:1.7;
+animation:rollCredits 120s linear forwards;
+}
+
+#creditsRoll h1 {
+font-size:56px;
+margin-bottom:20px;
+}
+
+#creditsRoll h2 {
+font-size:36px;
+margin:40px 0;
+color:#c9a227;
+}
+
+#creditsRoll p {
+margin:45px 0;
+}
+
+@keyframes rollCredits {
+from { transform:translateY(0); }
+to { transform:translateY(-4300px); }
 }
 
 .transition-box,
@@ -309,8 +346,56 @@ transition:width 0.4s;
 }
 
 #bossQuestion {
-font-size:32px;
+font-size:30px;
 margin:20px 0 8px;
+}
+
+#qteArea {
+display:none;
+margin-top:20px;
+}
+
+.qte-track {
+position:relative;
+width:520px;
+max-width:100%;
+height:34px;
+margin:16px auto;
+border:2px solid #c9a227;
+border-radius:12px;
+background:rgba(0,0,0,0.75);
+overflow:hidden;
+}
+
+.qte-perfect {
+position:absolute;
+left:45%;
+width:10%;
+height:100%;
+background:rgba(201,162,39,0.45);
+}
+
+.qte-good {
+position:absolute;
+left:35%;
+width:30%;
+height:100%;
+background:rgba(201,162,39,0.22);
+}
+
+#qteMarker {
+position:absolute;
+top:0;
+left:0%;
+width:4px;
+height:100%;
+background:#f5e6c8;
+box-shadow:0 0 10px #f5e6c8;
+}
+
+#qteButton {
+width:220px;
+font-size:18px;
 }
 
 #bossMessage {
@@ -423,11 +508,55 @@ margin:8px 0;
 <h2 id="bossName">The Final Gatekeeper</h2>
 <div class="hp-wrap"><div id="bossHpBar"></div></div>
 <p id="bossHpText"></p>
+
 <div id="bossQuestion"></div>
 <input id="bossInput" autocomplete="off">
-<button id="bossSubmitBtn" onclick="submitBossAnswer()">Strike</button>
+<button id="bossSubmitBtn" onclick="submitBossAnswer()">Open Parry Window</button>
+
+<div id="qteArea">
+<p>Parry the attack when the marker reaches the golden center!</p>
+<div class="qte-track">
+<div class="qte-good"></div>
+<div class="qte-perfect"></div>
+<div id="qteMarker"></div>
+</div>
+<button id="qteButton" onclick="parryBoss()">PARRY!</button>
+</div>
+
 <div id="bossMessage"></div>
-<p class="small">Wrong answers stun you for 5 seconds.</p>
+<p class="small">Correct answers open a parry window. Perfect parries deal huge damage. Late or missed parries stun you.</p>
+</div>
+</div>
+
+<div id="creditsScreen">
+<div id="creditsRoll">
+<h1>Quest Journey</h1>
+<h2>A Hollywood Ending</h2>
+
+<p>Directed by<br><strong>Foute & Chat</strong></p>
+<p>Produced by<br><strong>Foute & Chat</strong></p>
+<p>Executive Producers<br><strong>Foute & Chat</strong></p>
+<p>Written by<br><strong>Foute & Chat</strong></p>
+<p>Lead Game Designer<br><strong>Foute & Chat</strong></p>
+<p>Boss Encounter Specialist<br><strong>Foute & Chat</strong></p>
+<p>Question Wrangler<br><strong>Foute & Chat</strong></p>
+<p>Art Direction<br><strong>Foute & Chat</strong></p>
+<p>Audio Engineering<br><strong>Foute & Chat</strong></p>
+<p>World Transition Department<br><strong>Foute & Chat</strong></p>
+<p>Emotional Damage Consultant<br><strong>Foute & Chat</strong></p>
+<p>Raid Balance Team<br><strong>Foute & Chat</strong></p>
+<p>Frontend Development<br><strong>Foute & Chat</strong></p>
+<p>Bug Creation<br><strong>Foute & Chat</strong></p>
+<p>Bug Fixing<br><strong>Foute & Chat</strong></p>
+<p>Security Theater<br><strong>Foute & Chat</strong></p>
+<p>Special Thanks<br><strong>Foute & Chat</strong></p>
+<p>Additional Special Thanks<br><strong>Foute & Chat</strong></p>
+<p>Very Additional Special Thanks<br><strong>Foute & Chat</strong></p>
+<p>No Friends Were Harmed In The Making Of This Quest</p>
+<p>Except Emotionally</p>
+<p><strong>Foute & Chat</strong></p>
+<h2>The End</h2>
+<p>...or is it?</p>
 </div>
 </div>
 
@@ -439,8 +568,11 @@ margin:8px 0;
 <script>
 
 const STANDARD_MUSIC = "standardbgmusic.mp3";
+const BOSS_MUSIC = "bossfight.mp3";
+const CREDITS_MUSIC = "credits.mp3";
 const TRAVEL_DURATION_MS = 15000;
 const INTRO_DURATION_MS = 10000;
+const CREDITS_DURATION_MS = 120000;
 
 const users = {
 fellicity:{
@@ -488,7 +620,7 @@ puzzles:[
 },
 {
 name:"The War Within",
-music:"TWW.mp3",
+music:["TWW.mp3","tww.mp3","Tww.mp3"],
 puzzles:[
 {hash:"842295872e7c01b1d6218d199704c108c52cc017ce22189c9fd3822cd12c7ff9", clue:"Deep titan domain.", bg:"twwbg1.jpg"},
 {hash:"0ffba2399387565b6a5999f09aa289efd839a8dfee4c2ac0d0f939aa665f328d", clue:"City of earth.", bg:"twwbg2.jpg"},
@@ -532,6 +664,11 @@ let bossCurrentAnswer=0;
 let bossQuestionsAnswered=0;
 let bossWrongAnswers=0;
 let gameCompleted=false;
+let qteActive=false;
+let qteStart=0;
+let qteDuration=1800;
+let qteAnimation=null;
+let qteTimeout=null;
 
 function normalize(value){
 return value.toLowerCase().trim().replace(/\s+/g," ");
@@ -653,6 +790,7 @@ document.getElementById("transition").style.display="none";
 document.getElementById("introScreen").style.display="none";
 document.getElementById("fouteScreen").style.display="none";
 document.getElementById("bossScreen").style.display="none";
+document.getElementById("creditsScreen").style.display="none";
 document.getElementById("login").style.display="flex";
 document.getElementById("landingStep").style.display="block";
 document.getElementById("nameStep").style.display="none";
@@ -853,18 +991,26 @@ startMusicWatchdog();
 function playWorldMusic(){
 if(z>=zones.length) return;
 
+const candidates=Array.isArray(zones[z].music) ? zones[z].music : [zones[z].music];
+tryPlayWorldMusic(candidates,0);
+}
+
+function tryPlayWorldMusic(candidates,index){
 const m=document.getElementById("music");
-const track=zones[z].music;
+
+if(index>=candidates.length){
+playStandardFallback();
+return;
+}
 
 m.pause();
 m.currentTime=0;
 m.loop=false;
 m.onended=()=>playStandardFallback();
-m.onerror=()=>playStandardFallback();
-m.src=track;
+m.onerror=()=>tryPlayWorldMusic(candidates,index+1);
+m.src=candidates[index];
 m.volume=0;
 m.muted=muted;
-
 m.load();
 
 const playPromise=m.play();
@@ -874,8 +1020,8 @@ playPromise.then(()=>{
 fadeAudio(m,0.85,900);
 }).catch(()=>{
 setTimeout(()=>{
-if(m.paused || m.ended) playStandardFallback();
-},1200);
+if(m.paused || m.ended) tryPlayWorldMusic(candidates,index+1);
+},900);
 });
 }
 
@@ -933,6 +1079,39 @@ t.volume=0;
 t.muted=muted;
 t.play().catch(()=>{});
 fadeAudio(t,0.9,900);
+}
+
+function playBossMusic(){
+const m=document.getElementById("music");
+
+m.pause();
+m.currentTime=0;
+m.onended=null;
+m.onerror=()=>playStandardFallback();
+m.src=BOSS_MUSIC;
+m.loop=true;
+m.volume=0;
+m.muted=muted;
+m.load();
+m.play().catch(()=>playStandardFallback());
+fadeAudio(m,0.85,900);
+startMusicWatchdog();
+}
+
+function playCreditsMusic(){
+const m=document.getElementById("music");
+
+m.pause();
+m.currentTime=0;
+m.onended=null;
+m.onerror=null;
+m.src=CREDITS_MUSIC;
+m.loop=false;
+m.volume=0;
+m.muted=muted;
+m.load();
+m.play().catch(()=>{});
+fadeAudio(m,0.85,1200);
 }
 
 function toggleMute(){
@@ -1134,41 +1313,48 @@ function startBossEncounter(){
 document.getElementById("game").style.display="none";
 document.getElementById("bossScreen").style.display="flex";
 
-bossHp=100;
+bossHp=120;
 bossQuestionsAnswered=0;
 bossWrongAnswers=0;
+qteActive=false;
 
-playStandardFallback();
+playBossMusic();
 renderBoss();
 }
 
 function generateBossQuestion(){
-const a=Math.floor(Math.random()*10)+2;
-const b=Math.floor(Math.random()*10)+2;
-const type=Math.floor(Math.random()*3);
+const questions=[
+{q:"What is 7 + 8?", a:15},
+{q:"What is 9 × 3?", a:27},
+{q:"What is 42 - 19?", a:23},
+{q:"What is 6 × 6?", a:36},
+{q:"What is 100 / 4?", a:25},
+{q:"What is 13 + 14?", a:27},
+{q:"What is 8 × 7?", a:56},
+{q:"What is 81 / 9?", a:9},
+{q:"What is 12 × 4?", a:48},
+{q:"What is 50 - 17?", a:33},
+{q:"I speak without a mouth and hear without ears. What am I? Type 4.", a:4},
+{q:"The boss raises its blade. Type 1 to keep calm.", a:1}
+];
 
-if(type===0){
-bossCurrentAnswer=a+b;
-return `${a} + ${b} = ?`;
-}
-
-if(type===1){
-const high=a+b;
-bossCurrentAnswer=high-a;
-return `${high} - ${a} = ?`;
-}
-
-bossCurrentAnswer=a*b;
-return `${a} × ${b} = ?`;
+const pick=questions[Math.floor(Math.random()*questions.length)];
+bossCurrentAnswer=pick.a;
+return pick.q;
 }
 
 function renderBoss(){
-document.getElementById("bossHpBar").style.width=bossHp+"%";
-document.getElementById("bossHpText").innerText=`Boss HP: ${bossHp}/100`;
+clearQte();
+
+document.getElementById("bossHpBar").style.width=Math.max(0,(bossHp/120)*100)+"%";
+document.getElementById("bossHpText").innerText=`Boss HP: ${bossHp}/120`;
 document.getElementById("bossQuestion").innerText=generateBossQuestion();
+document.getElementById("bossInput").style.display="inline-block";
+document.getElementById("bossSubmitBtn").style.display="inline-block";
 document.getElementById("bossInput").value="";
 document.getElementById("bossInput").focus();
 document.getElementById("bossMessage").innerText="";
+document.getElementById("qteArea").style.display="none";
 }
 
 function submitBossAnswer(){
@@ -1181,29 +1367,121 @@ input.value="";
 if(Number.isNaN(answer)) return;
 
 if(answer===bossCurrentAnswer){
-bossHp=Math.max(0,bossHp-20);
 bossQuestionsAnswered++;
-document.getElementById("bossHpBar").style.width=bossHp+"%";
-document.getElementById("bossHpText").innerText=`Boss HP: ${bossHp}/100`;
+document.getElementById("bossMessage").innerText="The boss attacks! Time your parry!";
+document.getElementById("bossInput").style.display="none";
+document.getElementById("bossSubmitBtn").style.display="none";
+startQte();
+}else{
+bossWrongAnswers++;
+stunBossPlayer("Wrong answer! Stunned for 5 seconds.");
+}
+}
 
-if(bossHp<=0){
-finishAdventure();
+function startQte(){
+qteActive=true;
+qteStart=performance.now();
+
+const qteArea=document.getElementById("qteArea");
+const marker=document.getElementById("qteMarker");
+qteArea.style.display="block";
+marker.style.left="0%";
+
+function animate(now){
+if(!qteActive) return;
+
+const progress=Math.min((now-qteStart)/qteDuration,1);
+marker.style.left=(progress*100)+"%";
+
+if(progress<1){
+qteAnimation=requestAnimationFrame(animate);
+}
+}
+
+qteAnimation=requestAnimationFrame(animate);
+
+qteTimeout=setTimeout(()=>{
+if(qteActive){
+qteActive=false;
+bossWrongAnswers++;
+stunBossPlayer("Too late! The boss crushes your guard. Stunned for 5 seconds.");
+}
+},qteDuration);
+}
+
+function parryBoss(){
+if(!qteActive) return;
+
+const now=performance.now();
+const progress=(now-qteStart)/qteDuration;
+
+clearQte();
+
+let damage=0;
+let message="";
+
+if(progress>=0.45 && progress<=0.55){
+damage=40;
+message="Perfect parry! Massive counterattack!";
+}else if(progress>=0.35 && progress<=0.65){
+damage=22;
+message="Good parry! Solid damage!";
+}else if(progress<0.35){
+damage=8;
+message="Too early! You barely scratch the boss.";
+}else{
+bossWrongAnswers++;
+stunBossPlayer("Too late! Stunned for 5 seconds.");
 return;
 }
 
-renderBoss();
+bossHp=Math.max(0,bossHp-damage);
+document.getElementById("bossHpBar").style.width=Math.max(0,(bossHp/120)*100)+"%";
+document.getElementById("bossHpText").innerText=`Boss HP: ${bossHp}/120`;
+document.getElementById("bossMessage").innerText=message;
+
+if(bossHp<=0){
+setTimeout(()=>finishAdventure(),1200);
 }else{
-bossWrongAnswers++;
-document.getElementById("bossMessage").innerText="Stunned for 5 seconds!";
+setTimeout(()=>renderBoss(),1200);
+}
+}
+
+function clearQte(){
+qteActive=false;
+
+if(qteAnimation){
+cancelAnimationFrame(qteAnimation);
+qteAnimation=null;
+}
+
+if(qteTimeout){
+clearTimeout(qteTimeout);
+qteTimeout=null;
+}
+}
+
+function stunBossPlayer(message){
+clearQte();
+
+const btn=document.getElementById("bossSubmitBtn");
+const input=document.getElementById("bossInput");
+
+document.getElementById("qteArea").style.display="none";
+document.getElementById("bossMessage").innerText=message;
+
+input.style.display="inline-block";
+btn.style.display="inline-block";
+input.disabled=true;
 btn.disabled=true;
 btn.innerText="Stunned";
 
 setTimeout(()=>{
+input.disabled=false;
 btn.disabled=false;
-btn.innerText="Strike";
+btn.innerText="Open Parry Window";
 renderBoss();
 },5000);
-}
 }
 
 function finishAdventure(){
@@ -1224,7 +1502,26 @@ localStorage.setItem(resultKey(), JSON.stringify(result));
 saveGame();
 
 document.getElementById("bossScreen").style.display="none";
+showCredits();
+}
+
+function showCredits(){
+stopAllAudio();
+
+const credits=document.getElementById("creditsScreen");
+const roll=document.getElementById("creditsRoll");
+
+roll.style.animation="none";
+roll.offsetHeight;
+roll.style.animation="rollCredits 120s linear forwards";
+
+credits.style.display="flex";
+playCreditsMusic();
+
+setTimeout(()=>{
+credits.style.display="none";
 showResultOnLogin();
+},CREDITS_DURATION_MS);
 }
 
 function showResultOnLogin(){
@@ -1299,6 +1596,13 @@ if(e.key==="Enter") checkName();
 
 document.getElementById("securityAnswer").addEventListener("keydown", e=>{
 if(e.key==="Enter") checkSecurityAnswer();
+});
+
+document.addEventListener("keydown", e=>{
+if(e.code==="Space" && qteActive){
+e.preventDefault();
+parryBoss();
+}
 });
 });
 </script>
