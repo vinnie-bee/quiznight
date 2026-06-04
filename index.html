@@ -317,6 +317,8 @@ padding:30px;
 
 #introScreen {
 z-index:12;
+background-size:cover;
+background-position:center;
 }
 
 #fouteScreen {
@@ -429,6 +431,8 @@ justify-content:center;
 align-items:center;
 text-align:center;
 background:rgba(0,0,0,0.94);
+background-size:cover;
+background-position:center;
 z-index:21;
 padding:30px;
 }
@@ -557,6 +561,11 @@ transition:width 0.4s;
 #bossQuestion {
 font-size:30px;
 margin:20px 0 8px;
+}
+
+#clue {
+white-space:pre-line;
+line-height:1.6;
 }
 
 #qteArea {
@@ -854,6 +863,7 @@ question:"What's my favorite Maroon 5 song?",
 hash:"8044aae1f86875d993f20d7fe3815306b640d6e039c4512cd7a2f8453207b4cd",
 intro:"Cute as a button, Excellent wit. Forgive me for not allowing your main, alas your sharp mind might win this game",
 audio:"fellicity.mp3",
+introBg:"demonhunter.jpg",
 bossName:"The Hook Boss",
 bossBg:"fellicitybossfight.jpg"
 },
@@ -863,6 +873,7 @@ question:"What do I mean by wwd?",
 hash:"9d7021c600025846dc58eb6e47b55a80109d70bee800ac196fbb689cb80b0a33",
 intro:"Some people might need a hint or some extra luck, you surely don't you competitive fuck <3",
 audio:"lariath.mp3",
+introBg:"hunter.jpg",
 bossName:"The Wheel of Enormous Proportions",
 bossBg:"lariathbossfight.jpg"
 },
@@ -872,6 +883,7 @@ question:"Johnny is?",
 hash:"4c458ada6c7b8d9ad84ae71c8e77d93685030c62d45a5e82c796ef0caabbb374",
 intro:"The rest won't be so eas.. STOP PLAYING RUNESCAPE ALREADY! Sigh.. go on then",
 audio:"alistia.mp3",
+introBg:"evoker.jpg",
 bossName:"Choosing a Main",
 bossBg:"alistiabossfight.jpg"
 },
@@ -881,6 +893,7 @@ question:"whenever someone sends me 1 video and then 3 more, I?",
 hash:"b006a012ff0f93be9a8dbd742e7e231dfffb9942f41bbf900ae86cd47b5c25d8",
 intro:"Our main protankonist, taking each blow. Show me, how much you actually know",
 audio:"cam.mp3",
+introBg:"monk.jpg",
 bossName:"Nexus Point Xenos",
 bossBg:"cambossfight.png"
 }
@@ -903,9 +916,9 @@ puzzles:[
 name:"The War Within",
 music:["TWW.mp3","tww.mp3","Tww.mp3"],
 puzzles:[
-{hash:"842295872e7c01b1d6218d199704c108c52cc017ce22189c9fd3822cd12c7ff9", clue:"Deep titan domain.", bg:"twwbg1.jpg"},
-{hash:"0ffba2399387565b6a5999f09aa289efd839a8dfee4c2ac0d0f939aa665f328d", clue:"City of earth.", bg:"twwbg2.jpg"},
-{hash:"37f9eae4de3be04eb02c1432d29339cfb9281f79cf28c227490017521857bfc6", clue:"New titan race.", bg:"twwbg3.jpg"}
+{hash:"2444be257a42801531561fab8123e2f18acb6e4df8f1177d4bc2cb371033bf36", clue:"Back where we began it all\nCovered in Crystals, I shit you not.\nLevel 79 and quite small.\nThe earthen sits in silence near his spot.", bg:"twwbg1.jpg"},
+{hash:"41024084d2e27b7db74265a6252083ac949cdb22496e9c91a1154715f4baed64", clue:"I used to do these two for a living,\nGearing my chars up to the teeth.\nMore hints than a cave I'm not giving\nSo what do these mythical beasts breath?", bg:"twwbg2.jpg"},
+{hash:"62969a397c89fe32e57237041513b6372aaebfab8dd8c8076c2224b2724ef4f3", clue:"The importance of this one, I need to underline.\nGoblin's gallore, they're all mine.\nIt's time for the main course indeed!\nBut why am I the one that bleeds?", bg:"twwbg3.jpg"}
 ]
 },
 {
@@ -1091,10 +1104,12 @@ pendingUser=null;
 document.getElementById("game").style.display="none";
 document.getElementById("transition").style.display="none";
 document.getElementById("introScreen").style.display="none";
+document.getElementById("introScreen").style.backgroundImage="";
 document.getElementById("fouteScreen").style.display="none";
 document.getElementById("bossScreen").style.display="none";
 document.getElementById("secretBossScreen").style.display="none";
 document.getElementById("killScreen").style.display="none";
+document.getElementById("killScreen").style.backgroundImage="";
 document.getElementById("creditsScreen").style.display="none";
 document.getElementById("helpBtn").style.display="none";
 document.getElementById("helpBox").style.display="none";
@@ -1249,6 +1264,9 @@ const user=users[currentUser];
 const screen=document.getElementById("introScreen");
 const text=document.getElementById("introText");
 const audio=document.getElementById("introMusic");
+
+screen.style.backgroundImage =
+`linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.78)), url('${user.introBg}')`;
 
 text.innerText=user.intro;
 screen.style.display="flex";
@@ -1933,7 +1951,15 @@ const badWords=["kick","yell","scream","flame","blame","complain","moan","not"];
 
 if(textIncludesAny(input,badWords)){
 healerCruelty++;
-stunBossPlayer("Teamwork makes the dreamwork! You chose not to help the healer. Stunned for 60 seconds.",60000);
+
+bossHp=260;
+document.getElementById("bossHpBar").style.width="100%";
+
+stunBossPlayer(
+"Healer died. Everyone had to jump off and reset. The boss heals to full. That'll teach you.",
+60000
+);
+
 return;
 }
 
@@ -2336,7 +2362,12 @@ cam:"Cam survived Nexus Point Xenos, carried the weight of every hit, and showed
 };
 
 document.getElementById("killText").innerText=lines[currentUser] || "The boss falls. Against all odds, victory is yours.";
-document.getElementById("killScreen").style.display="flex";
+
+const killScreen=document.getElementById("killScreen");
+killScreen.style.backgroundImage =
+`linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.82)), url('${users[currentUser].introBg}')`;
+
+killScreen.style.display="flex";
 playKillMusic();
 }
 
