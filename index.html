@@ -211,6 +211,36 @@ width:auto;
 z-index:30;
 }
 
+#helpBtn {
+position:fixed;
+top:52px;
+right:10px;
+background:rgba(20,14,8,0.9);
+border:1px solid #c9a227;
+color:#f5e6c8;
+padding:8px 13px;
+border-radius:50%;
+cursor:pointer;
+width:auto;
+z-index:30;
+}
+
+#helpBox {
+position:fixed;
+top:92px;
+right:10px;
+display:none;
+width:300px;
+background:rgba(20,14,8,0.96);
+border:1px solid #c9a227;
+border-radius:12px;
+padding:15px;
+z-index:31;
+font-size:14px;
+line-height:1.5;
+box-shadow:0 0 20px rgba(0,0,0,0.8);
+}
+
 #resetBtn {
 position:fixed;
 top:10px;
@@ -240,6 +270,7 @@ animation:shake 0.3s;
 #introScreen,
 #fouteScreen,
 #bossScreen,
+#killScreen,
 #creditsScreen {
 position:fixed;
 inset:0;
@@ -263,10 +294,12 @@ z-index:15;
 #bossScreen {
 z-index:18;
 background:
-linear-gradient(rgba(0,0,0,0.50), rgba(0,0,0,0.88)),
+linear-gradient(rgba(0,0,0,0.20), rgba(0,0,0,0.68)),
 radial-gradient(circle, rgba(85,0,0,0.65), rgba(0,0,0,0.96));
 background-size:cover;
 background-position:center;
+align-items:flex-end;
+padding-bottom:40px;
 }
 
 .raid-warning {
@@ -284,12 +317,57 @@ text-shadow:0 0 8px rgba(181,108,255,0.7);
 }
 
 #bossStats {
-font-size:14px;
-opacity:0.95;
-line-height:1.6;
-margin-top:14px;
-border-top:1px solid rgba(201,162,39,0.35);
-padding-top:10px;
+display:none;
+}
+
+#bossTitleOverlay {
+position:absolute;
+top:42px;
+left:50%;
+transform:translateX(-50%);
+width:90%;
+text-align:center;
+z-index:19;
+text-shadow:0 0 18px black, 0 0 24px #c9a227;
+pointer-events:none;
+}
+
+#bossTitleOverlay h1 {
+font-size:42px;
+margin:0;
+}
+
+#bossTitleOverlay h2 {
+font-size:34px;
+margin:8px 0 0;
+color:#f5e6c8;
+}
+
+#killScreen {
+position:fixed;
+inset:0;
+display:none;
+justify-content:center;
+align-items:center;
+text-align:center;
+background:rgba(0,0,0,0.94);
+z-index:21;
+padding:30px;
+}
+
+.kill-box {
+border:2px solid #c9a227;
+border-radius:14px;
+padding:35px;
+background:rgba(20,14,8,0.94);
+box-shadow:0 0 35px rgba(201,162,39,0.35);
+max-width:780px;
+}
+
+#killText {
+font-size:24px;
+line-height:1.5;
+margin-bottom:20px;
 }
 
 #creditsScreen {
@@ -338,6 +416,12 @@ background:rgba(20,14,8,0.95);
 box-shadow:0 0 30px rgba(201,162,39,0.3);
 max-width:780px;
 animation:transitionPulse 2s infinite;
+}
+
+.boss-box {
+margin-top:190px;
+padding:24px 32px;
+background:rgba(20,14,8,0.82);
 }
 
 @keyframes transitionPulse {
@@ -444,6 +528,12 @@ margin:8px 0;
 
 <button id="resetBtn" onclick="resetProgress()">Reset Progress</button>
 <button id="muteBtn" onclick="toggleMute()">🔊</button>
+<button id="helpBtn" onclick="toggleHelp()">?</button>
+
+<div id="helpBox">
+<strong>Raid Hint</strong><br>
+Correct answers open a parry window. Perfect parries deal more damage. Slightly off parries still help. Late parries stun you.
+</div>
 
 <div id="login">
 <div class="box">
@@ -529,11 +619,13 @@ margin:8px 0;
 </div>
 
 <div id="bossScreen">
-<div class="boss-box">
+<div id="bossTitleOverlay">
 <h1>⚔ Raid Boss Encounter ⚔</h1>
 <h2 id="bossName">The Final Gatekeeper</h2>
-<div class="hp-wrap"><div id="bossHpBar"></div></div>
-<p id="bossHpText"></p>
+</div>
+<div class="boss-box">
+<div class="hp-wrap" style="display:none;"><div id="bossHpBar"></div></div>
+<p id="bossHpText" style="display:none;"></p>
 
 <div id="bossQuestion"></div>
 <input id="bossInput" autocomplete="off">
@@ -551,7 +643,14 @@ margin:8px 0;
 
 <div id="bossMessage"></div>
 <div id="bossStats"></div>
-<p class="small">Correct answers open a parry window. Perfect parries deal huge damage. Late or missed parries stun you.</p>
+<p class="small"></p>
+</div>
+</div>
+
+<div id="killScreen">
+<div class="kill-box">
+<div id="killText"></div>
+<button onclick="lootBoss()">Loot?</button>
 </div>
 </div>
 
@@ -605,6 +704,7 @@ margin:8px 0;
 const STANDARD_MUSIC = "standardbgmusic.mp3";
 const BOSS_MUSIC = "bossfight.mp3";
 const CREDITS_MUSIC = "credits.mp3";
+const KILL_MUSIC = "killboss.mp3";
 const TRAVEL_DURATION_MS = 15000;
 const INTRO_DURATION_MS = 10000;
 const CREDITS_DURATION_MS = 120000;
@@ -719,6 +819,9 @@ let criticalMechanics=0;
 let perfectParries=0;
 let stunsTaken=0;
 let finalHealerSolved=false;
+let tauntPunishments=0;
+let healerCruelty=0;
+let waitingForFirstTransition=false;
 
 function normalize(value){
 return value.toLowerCase().trim().replace(/\s+/g," ");
@@ -834,6 +937,8 @@ criticalMechanics=0;
 perfectParries=0;
 stunsTaken=0;
 finalHealerSolved=false;
+tauntPunishments=0;
+healerCruelty=0;
 activeMechanic=null;
 mechanicIndex=0;
 gameCompleted=false;
@@ -847,6 +952,7 @@ document.getElementById("transition").style.display="none";
 document.getElementById("introScreen").style.display="none";
 document.getElementById("fouteScreen").style.display="none";
 document.getElementById("bossScreen").style.display="none";
+document.getElementById("killScreen").style.display="none";
 document.getElementById("creditsScreen").style.display="none";
 document.getElementById("login").style.display="flex";
 document.getElementById("landingStep").style.display="block";
@@ -984,7 +1090,7 @@ audio.play().catch(()=>{});
 setTimeout(()=>{
 screen.style.display="none";
 stopAllAudio();
-startGame();
+startGame(true);
 },INTRO_DURATION_MS);
 }
 
@@ -1375,7 +1481,7 @@ warning:"THE BOSS STARTS TO FOCUS A HEALER",
 prompt:"Type PROTECT, HELP, ASSIST, DISTRACT or AID.",
 valid:["protect","help","assist","distract","aid"],
 bonus:["taunt"],
-bonusDamage:45,
+bonusDamage:18,
 qte:"normal"
 },
 {
@@ -1386,7 +1492,7 @@ warning:"THE BOSS SUDDENLY GOES INVISIBLE",
 prompt:"Type DETECT, FIND, AOE, or anything involving the word REAL.",
 valid:["detect","find","aoe","real"],
 bonus:["spectral sight","use spectral sight"],
-bonusDamage:45,
+bonusDamage:18,
 qte:"average"
 },
 {
@@ -1397,7 +1503,7 @@ warning:"THE BOSS STARTS TO CHARGE INTO YOUR DIRECTION",
 prompt:"Type DODGE.",
 valid:["dodge"],
 bonus:["feign","feign death"],
-bonusDamage:45,
+bonusDamage:18,
 qte:"hard"
 },
 {
@@ -1408,7 +1514,7 @@ warning:"THE HARDEST PHASE BEGINS. THE BOSS BEGINS CASTING DOOM [2s]",
 prompt:"Type INTERRUPT.",
 valid:["interrupt"],
 bonus:["fury"],
-bonusDamage:55,
+bonusDamage:20,
 qte:"hardest"
 }
 ];
@@ -1423,9 +1529,9 @@ document.getElementById("bossScreen").style.backgroundImage=
 `linear-gradient(rgba(0,0,0,0.50), rgba(0,0,0,0.88)), url('${user.bossBg}')`;
 
 document.getElementById("bossName").innerText=user.bossName;
-document.getElementById("bossMessage").innerHTML="Oh no, it's your worst enemy! Quickly!";
+document.getElementById("bossMessage").innerHTML="";
 
-bossHp=120;
+bossHp=260;
 bossQuestionsAnswered=0;
 bossWrongAnswers=0;
 qteActive=false;
@@ -1471,31 +1577,6 @@ const questions=[
 {q:"In Big Hero 6, Baymax's movements were modeled after what?", a:["baby","diaper","babies","a baby"]},
 {q:"Who was the first Disney princess with a tattoo?", a:["pocahontas"]},
 
-{q:"First player rule TRUE/FALSE: Patchwork — the player who most recently used a needle.", a:["true"]},
-{q:"First player rule TRUE/FALSE: Power Grid — the player who most recently powered a major city.", a:["false"]},
-{q:"First player rule TRUE/FALSE: Honey Buzz — the player who woke up first today.", a:["true"]},
-{q:"First player rule TRUE/FALSE: Blood Rage — the player who most recently led a Viking clan.", a:["false"]},
-{q:"First player rule TRUE/FALSE: Pandemic — the player who was most recently sick.", a:["true"]},
-{q:"First player rule TRUE/FALSE: Kingdomino — the player who most recently built something.", a:["true"]},
-{q:"First player rule TRUE/FALSE: Agricola — the player who most recently plowed a field.", a:["false"]},
-{q:"First player rule TRUE/FALSE: Spyfall — the most suspicious-looking player.", a:["true"]},
-{q:"First player rule TRUE/FALSE: Ticket to Ride — the player who most recently conducted a train.", a:["false"]},
-{q:"First player rule TRUE/FALSE: Wingspan — the player who most recently saw a bird.", a:["true"]},
-{q:"First player rule TRUE/FALSE: The Resistance — the player who most recently sabotaged something.", a:["false"]},
-{q:"First player rule TRUE/FALSE: Love Letter — the player who most recently went on a date.", a:["true"]},
-{q:"First player rule TRUE/FALSE: Food Chain Magnate — most recently ate fast-food.", a:["false"]},
-{q:"First player rule TRUE/FALSE: Ghost Stories — most recently watched a kung-fu movie.", a:["true"]},
-{q:"First player rule TRUE/FALSE: Camel Up — most recently visited a desert.", a:["true"]},
-{q:"First player rule TRUE/FALSE: Catan — most recently traded something for a brick.", a:["false"]},
-{q:"First player rule TRUE/FALSE: Meadow — most recently stung by a bee.", a:["true"]},
-{q:"First player rule TRUE/FALSE: Bears vs Babies — the hairiest player.", a:["true"]},
-{q:"First player rule TRUE/FALSE: King of Tokyo — most recently visited Tokyo or closest city nearby.", a:["false"]},
-{q:"First player rule TRUE/FALSE: Parks — most recently went on a hike.", a:["true"]},
-{q:"First player rule TRUE/FALSE: Munchkin — roll the dice and argue about the sentence.", a:["true"]},
-{q:"First player rule TRUE/FALSE: Gloom — the player who has had the worst day.", a:["true"]},
-{q:"First player rule TRUE/FALSE: Forbidden Desert — the thirstiest person.", a:["true"]},
-{q:"First player rule TRUE/FALSE: Hive — the player who most recently trapped a bee.", a:["false"]},
-{q:"First player rule TRUE/FALSE: Azul — the player who most recently visited Portugal.", a:["true"]},
 
 {q:"Which missive gives Versatility and Critical Strike?", a:["quickblade","of the quickblade"]},
 {q:"Which missive gives Critical Strike and Mastery?", a:["peerless","of the peerless"]},
@@ -1524,8 +1605,8 @@ startMechanic(nextMechanic);
 return;
 }
 
-document.getElementById("bossHpBar").style.width=Math.max(0,(bossHp/120)*100)+"%";
-document.getElementById("bossHpText").innerText=`Boss HP: ${bossHp}/120`;
+document.getElementById("bossHpBar").style.width=Math.max(0,(bossHp/260)*100)+"%";
+document.getElementById("bossHpText").innerText=`Boss HP: ${bossHp}/260`;
 const picked=generateBossQuestion();
 document.getElementById("bossQuestion").innerHTML=escapeHtml(picked.q);
 document.getElementById("bossQuestion").dataset.wrong=picked.wrong || "";
@@ -1570,11 +1651,10 @@ const whisper = activeMechanic.owner===currentUser
 ? `<div class="whisper">[Whisper] Foute -> ${users[currentUser].display}: What can your class do to help out?</div>`
 : "";
 
-document.getElementById("bossHpBar").style.width=Math.max(0,(bossHp/120)*100)+"%";
-document.getElementById("bossHpText").innerText=`Boss HP: ${bossHp}/120`;
+document.getElementById("bossHpBar").style.width=Math.max(0,(bossHp/260)*100)+"%";
+document.getElementById("bossHpText").innerText=`Boss HP: ${bossHp}/260`;
 document.getElementById("bossQuestion").innerHTML=
 `<div class="raid-warning">⚠ ${escapeHtml(activeMechanic.warning)} ⚠</div>`+
-`<div>${escapeHtml(activeMechanic.prompt)}</div>`+
 whisper;
 
 document.getElementById("bossInput").style.display="inline-block";
@@ -1614,6 +1694,7 @@ inputEl.value="";
 if(!input) return;
 
 if(currentUser!=="cam" && input.includes("taunt")){
+tauntPunishments++;
 stunBossPlayer("You try to TAUNT the boss. Unfortunately, you are not equipped to tank bosses! Stunned for 30 seconds.",30000);
 return;
 }
@@ -1632,8 +1713,7 @@ startQte("normal");
 }else{
 bossWrongAnswers++;
 const customWrong=document.getElementById("bossQuestion").dataset.wrong;
-document.getElementById("bossMessage").innerText=customWrong || "Wrong! The boss changes tactics.";
-setTimeout(()=>renderBoss(),1000);
+stunBossPlayer(customWrong || "Wrong answer! Stunned for 5 seconds.",5000);
 }
 }
 
@@ -1642,6 +1722,7 @@ if(activeMechanic.id==="finalhealer"){
 const badWords=["kick","yell","scream","flame","blame","complain","moan","not"];
 
 if(textIncludesAny(input,badWords)){
+healerCruelty++;
 stunBossPlayer("Teamwork makes the dreamwork! You chose not to help the healer. Stunned for 60 seconds.",60000);
 return;
 }
@@ -1670,6 +1751,10 @@ criticalMechanics++;
 mechanicsSolved++;
 bossQuestionsAnswered++;
 bossHp=Math.max(1,bossHp-activeMechanic.bonusDamage);
+const next=bossMechanics[mechanicIndex+1];
+if(next && bossHp<=next.threshold){
+bossHp=next.threshold+8;
+}
 document.getElementById("bossMessage").innerText="Critical class play! Foute is almost proud.";
 activeMechanic=null;
 mechanicIndex++;
@@ -1748,17 +1833,17 @@ let damage=0;
 let message="";
 
 if(progress>=0.475 && progress<=0.525){
-damage=38;
+damage=15;
 perfectParries++;
 message="Perfect parry! Massive counterattack!";
 }else if(progress>=0.40 && progress<=0.60){
-damage=22;
+damage=10;
 message="Good parry! Solid damage!";
 }else if(progress>=0.30 && progress<=0.70){
-damage=12;
+damage=6;
 message="Glancing parry! Some damage.";
 }else if(progress<0.30){
-damage=5;
+damage=3;
 message="Too early! You barely scratch the boss.";
 }else{
 bossWrongAnswers++;
@@ -1767,8 +1852,8 @@ return;
 }
 
 bossHp=Math.max(0,bossHp-damage);
-document.getElementById("bossHpBar").style.width=Math.max(0,(bossHp/120)*100)+"%";
-document.getElementById("bossHpText").innerText=`Boss HP: ${bossHp}/120`;
+document.getElementById("bossHpBar").style.width=Math.max(0,(bossHp/260)*100)+"%";
+document.getElementById("bossHpText").innerText=`Boss HP: ${bossHp}/260`;
 document.getElementById("bossMessage").innerText=message;
 updateBossStats();
 
@@ -1856,6 +1941,8 @@ mechanicsSolved:mechanicsSolved,
 criticalMechanics:criticalMechanics,
 perfectParries:perfectParries,
 stunsTaken:stunsTaken,
+tauntPunishments:tauntPunishments,
+healerCruelty:healerCruelty,
 completedAt:new Date().toLocaleString()
 };
 
@@ -1863,6 +1950,42 @@ localStorage.setItem(resultKey(), JSON.stringify(result));
 saveGame();
 
 document.getElementById("bossScreen").style.display="none";
+showKillScene();
+}
+
+function playKillMusic(){
+const m=document.getElementById("music");
+
+m.pause();
+m.currentTime=0;
+m.onended=null;
+m.onerror=null;
+m.src=KILL_MUSIC;
+m.loop=true;
+m.volume=0;
+m.muted=muted;
+m.load();
+m.play().catch(()=>{});
+fadeAudio(m,0.85,1200);
+}
+
+function showKillScene(){
+stopAllAudio();
+
+const lines={
+fellicity:"Fellicity stared down The Hook Boss and finally proved that no chain, hook, or cursed mechanic could drag her away from victory.",
+lariath:"Lariath faced The Wheel of Enormous Proportions and defeated the one thing no competitor can truly prepare for: pure, stupid RNG.",
+alistia:"Alistia stood before Choosing a Main and, for one glorious moment, committed to the only spec that mattered: winning.",
+cam:"Cam survived Nexus Point Xenos, carried the weight of every hit, and showed that even the worst dungeon can be tanked with enough stubbornness."
+};
+
+document.getElementById("killText").innerText=lines[currentUser] || "The boss falls. Against all odds, victory is yours.";
+document.getElementById("killScreen").style.display="flex";
+playKillMusic();
+}
+
+function lootBoss(){
+document.getElementById("killScreen").style.display="none";
 showCredits();
 }
 
@@ -1913,6 +2036,8 @@ document.getElementById("resultText").innerHTML =
 `<div class="result-line">Critical answers found: ${result.criticalMechanics || 0}</div>`+
 `<div class="result-line">Perfect parries: ${result.perfectParries || 0}</div>`+
 `<div class="result-line">Stuns taken: ${result.stunsTaken || result.bossWrongAnswers || 0}</div>`+
+`<div class="result-line">Tried to taunt without being Cam: ${result.tauntPunishments || 0}</div>`+
+`<div class="result-line">Was mean to the healer: ${result.healerCruelty || 0}</div>`+
 `<div class="result-line">Completed: ${escapeHtml(result.completedAt)}</div>`;
 }else{
 document.getElementById("resultText").innerHTML =
@@ -1941,6 +2066,8 @@ criticalMechanics=0;
 perfectParries=0;
 stunsTaken=0;
 finalHealerSolved=false;
+tauntPunishments=0;
+healerCruelty=0;
 activeMechanic=null;
 mechanicIndex=0;
 gameCompleted=false;
@@ -1948,6 +2075,11 @@ gameCompleted=false;
 document.getElementById("resultStep").style.display="none";
 document.getElementById("landingStep").style.display="block";
 document.getElementById("landingButton").innerText="just.. one... more... quest...";
+}
+
+function toggleHelp(){
+const box=document.getElementById("helpBox");
+box.style.display = box.style.display==="block" ? "none" : "block";
 }
 
 document.addEventListener("DOMContentLoaded", ()=>{
