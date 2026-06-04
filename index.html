@@ -963,7 +963,6 @@ let waitingForFirstTransition=false;
 let usedBossQuestions=[];
 let secretPhaseActive=false;
 let secretQteReady=false;
-let bossRegenTimer=null;
 
 function normalize(value){
 return value.toLowerCase().trim().replace(/\s+/g," ");
@@ -1085,7 +1084,6 @@ activeMechanic=null;
 mechanicIndex=0;
 gameCompleted=false;
 
-stopBossRegen();
 stopAllAudio();
 currentUser=null;
 pendingUser=null;
@@ -1703,36 +1701,6 @@ qte:"hardest"
 }
 ];
 
-function startBossRegen(){
-if(bossRegenTimer){
-clearInterval(bossRegenTimer);
-}
-
-bossRegenTimer=setInterval(()=>{
-const bossVisible=document.getElementById("bossScreen").style.display==="flex";
-const stunned=document.getElementById("bossSubmitBtn").disabled;
-const inQte=qteActive;
-const inSecret=secretPhaseActive;
-
-if(!bossVisible || inSecret || bossHp<=0) return;
-
-const maxHp=260;
-const amount=bossHp<=65 ? 2 : 1;
-
-bossHp=Math.min(maxHp,bossHp+amount);
-document.getElementById("bossHpBar").style.width=Math.max(0,(bossHp/260)*100)+"%";
-
-if(stunned || inQte){
-setBossFeedback(`The boss regenerates ${amount} HP...`);
-}
-},1000);
-}
-
-function stopBossRegen(){
-if(bossRegenTimer){
-clearInterval(bossRegenTimer);
-bossRegenTimer=null;
-}
 }
 
 function startBossEncounter(){
@@ -1762,8 +1730,6 @@ finalHealerSolved=false;
 usedBossQuestions=[];
 
 playBossMusic();
-startBossRegen();
-
 setTimeout(()=>renderBoss(),1800);
 }
 
@@ -2172,11 +2138,14 @@ clearQte();
 
 stunsTaken++;
 
+bossHp=Math.min(260,bossHp+5);
+document.getElementById("bossHpBar").style.width=Math.max(0,(bossHp/260)*100)+"%";
+
 const btn=document.getElementById("bossSubmitBtn");
 const input=document.getElementById("bossInput");
 
 document.getElementById("qteArea").style.display="none";
-setBossFeedback(message);
+setBossFeedback(message + " The boss recovers 5 HP from your mistake.");
 
 input.style.display="inline-block";
 btn.style.display="inline-block";
@@ -2198,6 +2167,11 @@ btn.innerText=activeMechanic ? "Respond" : "Open Parry Window";
 
 if(activeMechanic){
 showMechanic();
+}else{
+renderBoss();
+}
+}
+},1000);
 }else{
 renderBoss();
 }
@@ -2243,7 +2217,6 @@ startSecretBossPhase();
 }
 
 function startSecretBossPhase(){
-stopBossRegen();
 secretPhaseActive=true;
 secretQteReady=false;
 stopAllAudio();
@@ -2360,7 +2333,6 @@ fadeAudio(m,0.85,1200);
 }
 
 function showKillScene(){
-stopBossRegen();
 stopAllAudio();
 
 const lines={
