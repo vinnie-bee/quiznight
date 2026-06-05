@@ -630,6 +630,35 @@ opacity:0.8;
 .result-line {
 margin:8px 0;
 }
+
+.highscore-card {
+background:rgba(20,14,8,0.78);
+border:2px solid #c9a227;
+border-radius:16px;
+padding:24px;
+box-shadow:0 0 30px rgba(0,0,0,0.9);
+}
+
+.highscore-name {
+font-size:36px;
+color:#c9a227;
+text-shadow:0 0 12px black;
+margin-bottom:8px;
+}
+
+.highscore-score {
+font-size:42px;
+color:#f5e6c8;
+text-shadow:0 0 16px #c9a227;
+margin:12px 0;
+}
+
+.feat-list {
+text-align:left;
+margin:18px auto;
+max-width:520px;
+line-height:1.6;
+}
 </style>
 </head>
 
@@ -865,7 +894,8 @@ intro:"Cute as a button, Excellent wit. Forgive me for not allowing your main, a
 audio:"fellicity.mp3",
 introBg:"demonhunter.jpg",
 bossName:"The Hook Boss",
-bossBg:"fellicitybossfight.jpg"
+bossBg:"fellicitybossfight.jpg",
+highscoreBg:"fellicityhighscore.jpg"
 },
 lariath:{
 display:"Lariath",
@@ -875,7 +905,8 @@ intro:"Some people might need a hint or some extra luck, you surely don't you co
 audio:"lariath.mp3",
 introBg:"hunter.jpg",
 bossName:"The Wheel of Enormous Proportions",
-bossBg:"lariathbossfight.jpg"
+bossBg:"lariathbossfight.jpg",
+highscoreBg:"lariathhighscore.jpg"
 },
 alistia:{
 display:"Alistia",
@@ -885,7 +916,8 @@ intro:"The rest won't be so eas.. STOP PLAYING RUNESCAPE ALREADY! Sigh.. go on t
 audio:"alistia.mp3",
 introBg:"evoker.jpg",
 bossName:"Choosing a Main",
-bossBg:"alistiabossfight.jpg"
+bossBg:"alistiabossfight.jpg",
+highscoreBg:"alistiahighscore.jpg"
 },
 cam:{
 display:"Cam",
@@ -895,7 +927,8 @@ intro:"Our main protankonist, taking each blow. Show me, how much you actually k
 audio:"cam.mp3",
 introBg:"monk.jpg",
 bossName:"Nexus Point Xenos",
-bossBg:"cambossfight.png"
+bossBg:"cambossfight.png",
+highscoreBg:"camhighscore.jpg"
 }
 };
 
@@ -1115,6 +1148,8 @@ document.getElementById("killScreen").style.backgroundImage="";
 document.getElementById("creditsScreen").style.display="none";
 document.getElementById("helpBtn").style.display="none";
 document.getElementById("helpBox").style.display="none";
+document.getElementById("login").style.background =
+"linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0.15)), url('login.png') center/cover";
 document.getElementById("login").style.display="flex";
 document.getElementById("landingStep").style.display="block";
 document.getElementById("nameStep").style.display="none";
@@ -2306,6 +2341,9 @@ healerCruelty:healerCruelty,
 completedAt:new Date().toLocaleString()
 };
 
+result.score=calculateFinalScore(result);
+result.feats=buildFeats(result);
+
 localStorage.setItem(resultKey(), JSON.stringify(result));
 saveGame();
 
@@ -2353,17 +2391,17 @@ secretQteReady=true;
 const area=document.getElementById("secretQteArea");
 const marker=document.getElementById("secretQteMarker");
 
-area.style.setProperty("--perfect-width","99%");
-area.style.setProperty("--perfect-left","0.5%");
-area.style.setProperty("--good-width","99%");
-area.style.setProperty("--good-left","0.5%");
-area.dataset.perfectMin="0.005";
-area.dataset.perfectMax="0.995";
+area.style.setProperty("--perfect-width","10%");
+area.style.setProperty("--perfect-left","45%");
+area.style.setProperty("--good-width","30%");
+area.style.setProperty("--good-left","35%");
+area.dataset.perfectMin="0.45";
+area.dataset.perfectMax="0.55";
 area.style.display="block";
 
 qteActive=true;
 qteStart=performance.now();
-qteDuration=5200;
+qteDuration=30000;
 marker.style.left="0%";
 
 function animate(now){
@@ -2394,7 +2432,7 @@ const progress=(now-qteStart)/qteDuration;
 
 clearQte();
 
-if(progress>=0.005 && progress<=0.995){
+if(progress>=0.45 && progress<=0.55){
 secretPhaseActive=false;
 document.getElementById("secretBossScreen").style.display="none";
 showKillScene();
@@ -2473,6 +2511,59 @@ showResultOnLogin();
 },CREDITS_DURATION_MS);
 }
 
+function calculateFinalScore(result){
+let score=25000;
+
+const timeSeconds=Math.floor((result.time || 0) / 1000);
+score += Math.max(0, 12000 - timeSeconds * 8);
+score += (result.bossQuestionsAnswered || 0) * 420;
+score += (result.mechanicsSolved || 0) * 2500;
+score += (result.criticalMechanics || 0) * 4200;
+score += (result.perfectParries || 0) * 900;
+
+score -= (result.stunsTaken || 0) * 1600;
+score -= (result.tauntPunishments || 0) * 3500;
+score -= (result.healerCruelty || 0) * 8000;
+score -= (result.bossWrongAnswers || 0) * 550;
+
+score = Math.max(10000, Math.min(50000, score));
+return Math.round(score);
+}
+
+function buildFeats(result){
+const feats=[];
+
+if((result.criticalMechanics || 0)>0){
+feats.push("Discovered a class-specific answer when it mattered.");
+}
+
+if((result.mechanicsSolved || 0)>=5){
+feats.push("Handled every major raid mechanic.");
+}
+
+if((result.perfectParries || 0)>=3){
+feats.push("Landed multiple perfect parries under pressure.");
+}
+
+if((result.stunsTaken || 0)===0){
+feats.push("Never got stunned. Suspiciously competent.");
+}
+
+if((result.tauntPunishments || 0)>0){
+feats.push("Tried to taunt without being Cam. Bold. Wrong, but bold.");
+}
+
+if((result.healerCruelty || 0)>0){
+feats.push("Let the healer die. The logs will remember this.");
+}
+
+if(feats.length===0){
+feats.push("Survived the night, which is honestly enough.");
+}
+
+return feats;
+}
+
 function showResultOnLogin(){
 stopAllAudio();
 playLoginMusic();
@@ -2493,89 +2584,26 @@ document.getElementById("securityStep").style.display="none";
 document.getElementById("resultStep").style.display="block";
 
 if(result){
+const user=users[currentUser] || {};
+const feats=result.feats || buildFeats(result);
+const score=result.score || calculateFinalScore(result);
+
+document.getElementById("login").style.background =
+`linear-gradient(rgba(0,0,0,0.20), rgba(0,0,0,0.78)), url('${user.highscoreBg}') center/cover`;
+
 document.getElementById("resultText").innerHTML =
-`<div class="result-line">Player: ${escapeHtml(result.player)}</div>`+
+`<div class="highscore-card">`+
+`<div class="highscore-name">${escapeHtml(result.player)}</div>`+
+`<div>overcame</div>`+
+`<div class="result-line"><strong>${escapeHtml(user.bossName || "their rival")}</strong></div>`+
+`<div class="highscore-score">${score}</div>`+
+`<div class="result-line">Final score</div>`+
 `<div class="result-line">Total time: ${escapeHtml(result.timeText)}</div>`+
-`<div class="result-line">Boss correct answers: ${result.bossQuestionsAnswered}</div>`+
-`<div class="result-line">Mechanics solved: ${result.mechanicsSolved || 0}/5</div>`+
-`<div class="result-line">Critical answers found: ${result.criticalMechanics || 0}</div>`+
-`<div class="result-line">Perfect parries: ${result.perfectParries || 0}</div>`+
-`<div class="result-line">Stuns taken: ${result.stunsTaken || result.bossWrongAnswers || 0}</div>`+
-`<div class="result-line">Tried to taunt without being Cam: ${result.tauntPunishments || 0}</div>`+
-`<div class="result-line">Was mean to the healer: ${result.healerCruelty || 0}</div>`+
-`<div class="result-line">Completed: ${escapeHtml(result.completedAt)}</div>`;
-}else{
-document.getElementById("resultText").innerHTML =
-`<div class="result-line">Your result could not be loaded.</div>`;
-}
-}
-
-function restartAdventure(){
-if(currentUser){
-localStorage.removeItem(saveKey());
-localStorage.removeItem(resultKey());
-}
-
-z=0;
-p=0;
-attempts=[];
-locked=false;
-elapsedBefore=0;
-startedAt=null;
-finishedTime=0;
-bossHp=100;
-bossQuestionsAnswered=0;
-bossWrongAnswers=0;
-mechanicsSolved=0;
-criticalMechanics=0;
-perfectParries=0;
-stunsTaken=0;
-finalHealerSolved=false;
-tauntPunishments=0;
-healerCruelty=0;
-alistiaHealUsed=false;
-activeMechanic=null;
-mechanicIndex=0;
-gameCompleted=false;
-
-document.getElementById("resultStep").style.display="none";
-document.getElementById("landingStep").style.display="block";
-document.getElementById("landingButton").innerText="just.. one... more... quest...";
-}
-
-function toggleHelp(){
-const box=document.getElementById("helpBox");
-box.style.display = box.style.display==="block" ? "none" : "block";
-}
-
-document.addEventListener("DOMContentLoaded", ()=>{
-playLoginMusic();
-
-document.getElementById("input").addEventListener("keydown", e=>{
-if(e.key==="Enter") submit();
-});
-
-document.getElementById("bossInput").addEventListener("keydown", e=>{
-if(e.key==="Enter") submitBossAnswer();
-});
-
-document.getElementById("name").addEventListener("keydown", e=>{
-if(e.key==="Enter") checkName();
-});
-
-document.getElementById("securityAnswer").addEventListener("keydown", e=>{
-if(e.key==="Enter") checkSecurityAnswer();
-});
-
-document.getElementById("secretBossInput").addEventListener("keydown", e=>{
-if(e.key==="Enter") submitSecretBoss();
-});
-
-document.addEventListener("keydown", e=>{
-if(e.code==="Space" && qteActive){
-e.preventDefault();
-if(secretPhaseActive){
-secretParry();
+`<div class="result-line">Mechanics solved: ${result.mechanicsSolved || 0}/5 · Critical answers: ${result.criticalMechanics || 0} · Perfect parries: ${result.perfectParries || 0}</div>`+
+`<div class="result-line">Stuns: ${result.stunsTaken || result.bossWrongAnswers || 0} · Bad taunts: ${result.tauntPunishments || 0} · Healer incidents: ${result.healerCruelty || 0}</div>`+
+`<div class="feat-list">${feats.map(f=>"✦ "+escapeHtml(f)).join("<br>")}</div>`+
+`<div class="result-line">Completed: ${escapeHtml(result.completedAt)}</div>`+
+`</div>`;
 }else{
 parryBoss();
 }
