@@ -1042,7 +1042,7 @@ question:"What's my favorite Maroon 5 song?",
 hash:"8044aae1f86875d993f20d7fe3815306b640d6e039c4512cd7a2f8453207b4cd",
 intro:"Forgive me for not accepting your main, but there is only one druid allowed in this game. Your vast knowledge will be of great aid, show them how this game is meant to be played",
 audio:"fellicity.mp3",
-introBg:"demonhunter.jpg",
+introBg:"demonhunter.png",
 bossName:"The Hook Boss",
 bossBg:"fellicitybossfight.jpg",
 highscoreBg:"fellicityhighscore.png",
@@ -1066,7 +1066,7 @@ question:"Johnny is?",
 hash:"4c458ada6c7b8d9ad84ae71c8e77d93685030c62d45a5e82c796ef0caabbb374",
 intro:"The rest won't be so eas.. STOP PLAYING RUNESCAPE ALREADY! Sigh.. go on then",
 audio:"alistia.mp3",
-introBg:"evoker.jpg",
+introBg:"evoker.png",
 bossName:"Choosing a Main",
 bossBg:"alistiabossfight.jpg",
 highscoreBg:"alistiahighscore.png",
@@ -1078,7 +1078,7 @@ question:"whenever someone sends me 1 video and then 3 more, I?",
 hash:"b006a012ff0f93be9a8dbd742e7e231dfffb9942f41bbf900ae86cd47b5c25d8",
 intro:"Our main protankonist, taking each blow. Show me, how much you actually know",
 audio:"cam.mp3",
-introBg:"monk.jpg",
+introBg:"monk.png",
 bossName:"Nexus Point Xenas",
 bossBg:"cambossfight.png",
 highscoreBg:"camhighscore.png",
@@ -1131,7 +1131,7 @@ mapLabel:"?"
 name:"Pokemon",
 music:"pokemon.mp3",
 puzzles:[
-{hash:"43999461d22f67840fcd9b8824293eaa4f18146e57b2c651bcd925e3b3e4e429", clue:"Ash's electric partner.", bg:"pokemonbg1.jpg"},
+{starterChoice:true, hashes:["8cbfa8573683626c1609d1373f23b63bbfa5692fccad285e0306a500fa4b28f9","43c9d997f68ee54a55f7a22062c895312250751d3505ef2da40d2a7cf32b39fe","b5b5652a5dd3d781e2f6f412223e843cacbf2872091f485ed5fd61aa967a3719"], clue:"Professor Oak offers you your first Pokémon.\nChoose your starter: Charmander, Squirtle, or Bulbasaur.", bg:"pokemonbg1.jpg"},
 {hash:"73e512eccd9639bf632f1675f6a34a116f0abe5404dcebe98bf023be0e329d10", clue:"Fire lizard final evolution.", bg:"pokemonbg2.jpg"},
 {hash:"b3011a26f0f5047f91e14a8ae0daf2ea26de4a4cb831fb0ffe6d1060fd006ac0", clue:"Legendary psychic clone.", bg:"pokemonbg3.jpg"}
 ]
@@ -1164,6 +1164,8 @@ let bossCurrentAnswer=0;
 let bossQuestionsAnswered=0;
 let bossWrongAnswers=0;
 let gameCompleted=false;
+chosenStarter="";
+let chosenStarter="";
 let qteActive=false;
 let qteStart=0;
 let qteDuration=1800;
@@ -1260,6 +1262,7 @@ attempts:attempts,
 muted:muted,
 elapsedBefore:currentElapsed(),
 gameCompleted:gameCompleted,
+chosenStarter:chosenStarter,
 multiSolved:zones.map(zone=>zone.puzzles.map(puzzle=>puzzle.solved || null))
 }));
 }
@@ -1276,6 +1279,7 @@ attempts=data.attempts || [];
 muted=!!data.muted;
 elapsedBefore=data.elapsedBefore || 0;
 gameCompleted=!!data.gameCompleted;
+chosenStarter=data.chosenStarter || "";
 
 if(data.multiSolved){
 data.multiSolved.forEach((zoneData, zi)=>{
@@ -1403,7 +1407,8 @@ perfectParries:4,
 stunsTaken:2,
 tauntPunishments:0,
 healerCruelty:0,
-completedAt:new Date().toLocaleString()
+completedAt:new Date().toLocaleString(),
+starter:"Charmander"
 };
 
 fake.score=calculateFinalScore(fake);
@@ -2062,6 +2067,29 @@ return;
 }
 
 const inputHash=await sha256(value);
+
+if(zones[z].puzzles[p].starterChoice && zones[z].puzzles[p].hashes.includes(inputHash)){
+chosenStarter=normalize(value);
+chosenStarter=chosenStarter.charAt(0).toUpperCase()+chosenStarter.slice(1);
+attempts=[];
+
+p++;
+
+if(p>=zones[z].puzzles.length){
+const oldWorld=z;
+z++;
+p=0;
+
+if(z<zones.length){
+saveGame();
+travelToNextWorld(oldWorld,z);
+return;
+}
+}
+
+render();
+return;
+}
 
 if(inputHash===zones[z].puzzles[p].hash){
 attempts=[];
@@ -2756,7 +2784,8 @@ perfectParries:perfectParries,
 stunsTaken:stunsTaken,
 tauntPunishments:tauntPunishments,
 healerCruelty:healerCruelty,
-completedAt:new Date().toLocaleString()
+completedAt:new Date().toLocaleString(),
+starter:chosenStarter
 };
 
 result.score=calculateFinalScore(result);
@@ -3021,6 +3050,7 @@ document.getElementById("resultText").innerHTML =
 `<div class="highscore-score">${score}</div>`+
 `<div class="result-line">Final score</div>`+
 `<div class="result-line">Total time: ${escapeHtml(result.timeText)}</div>`+
+`<div class="result-line">Starter Pokémon: ${escapeHtml(result.starter || "Not recorded")}</div>`+
 `<div class="result-line">Mechanics solved: ${result.mechanicsSolved || 0}/5 · Critical answers: ${result.criticalMechanics || 0} · Perfect parries: ${result.perfectParries || 0}</div>`+
 `<div class="result-line">Stuns: ${result.stunsTaken || result.bossWrongAnswers || 0} · Bad taunts: ${result.tauntPunishments || 0} · Healer incidents: ${result.healerCruelty || 0}</div>`+
 `<div class="feat-list">${feats.map(f=>"✦ "+escapeHtml(f)).join("<br>")}</div>`+
