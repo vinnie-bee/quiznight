@@ -264,9 +264,29 @@ width:auto;
 z-index:30;
 }
 
+#sideScreenshotBtn {
+display:none;
+position:fixed;
+top:134px;
+right:10px;
+background:rgba(20,14,8,0.9);
+border:1px solid #c9a227;
+color:#f5e6c8;
+padding:8px 10px;
+border-radius:8px;
+cursor:pointer;
+width:auto;
+z-index:30;
+}
+
+body.game-screen #sideScreenshotBtn,
+body.highscore-screen #sideScreenshotBtn {
+display:block;
+}
+
 #eggTracker {
 position:fixed;
-top:138px;
+top:178px;
 right:10px;
 z-index:30;
 display:flex;
@@ -305,14 +325,19 @@ animation:eggTrackerFlash 1.2s ease;
 }
 
 #eggTracker.possible {
-animation:eggTrackerHintPulse 1.4s ease-in-out infinite;
 border-color:#f5e6c8;
 }
 
-@keyframes eggTrackerHintPulse {
-0%{transform:scale(1); box-shadow:0 0 10px rgba(201,162,39,0.35)}
-50%{transform:scale(1.08); box-shadow:0 0 24px rgba(201,162,39,0.95)}
-100%{transform:scale(1); box-shadow:0 0 10px rgba(201,162,39,0.35)}
+.node.egg-possible {
+animation:eggNodePulse 1.2s ease-in-out infinite;
+box-shadow:0 0 16px #c9a227, 0 0 28px #f5e6c8;
+border-color:#f5e6c8;
+}
+
+@keyframes eggNodePulse {
+0%{transform:scale(1)}
+50%{transform:scale(1.42)}
+100%{transform:scale(1)}
 }
 
 @keyframes eggTrackerFlash {
@@ -323,7 +348,7 @@ border-color:#f5e6c8;
 
 #eggPopup {
 position:fixed;
-top:180px;
+top:220px;
 right:10px;
 z-index:45;
 display:none;
@@ -351,7 +376,7 @@ animation:eggPopupAnim 2s ease forwards;
 
 #helpBox {
 position:fixed;
-top:214px;
+top:254px;
 right:10px;
 display:none;
 width:310px;
@@ -969,12 +994,6 @@ max-height:86vh;
 overflow:visible;
 }
 
-#screenshotBtn {
-width:220px;
-font-size:18px;
-padding:13px;
-margin-top:16px;
-}
 
 body.game-screen #highscoreToggleBtn,
 body.highscore-screen #highscoreToggleBtn {
@@ -1007,6 +1026,7 @@ display:block;
 <button id="muteBtn" onclick="toggleMute()">🔊</button>
 <button id="helpBtn" onclick="toggleHelp()">?</button>
 <button id="highscoreToggleBtn" onclick="toggleHighscoreBox()">Hide UI</button>
+<button id="sideScreenshotBtn" onclick="downloadScreenshot()">Screenshot</button>
 <div id="eggTracker" title="Easter eggs found">
 <span class="egg-title">🥚</span>
 <span class="egg-slot"></span>
@@ -1468,6 +1488,7 @@ function showNameStep(){
 document.body.classList.remove("game-screen");
 document.body.classList.remove("game-ui-hidden");
 document.body.classList.remove("highscore-screen");
+document.body.classList.remove("highscore-ui-hidden");
 document.body.classList.remove("game-screen");
 document.body.classList.remove("game-ui-hidden");
 document.getElementById("login").classList.remove("highscore-hidden");
@@ -1575,6 +1596,7 @@ localStorage.removeItem(resultKey());
 z=0;
 p=0;
 attempts=[];
+foundEasterEggs=[];
 resetMultiPuzzles();
 locked=false;
 elapsedBefore=0;
@@ -1631,6 +1653,8 @@ document.getElementById("nameMessage").innerText="";
 document.getElementById("securityMessage").innerText="";
 document.getElementById("landingButton").innerText="Begin Journey";
 document.getElementById("muteBtn").innerText=muted ? "🔇" : "🔊";
+updateEasterEggTracker(false);
+updateEasterEggHint();
 
 playLoginMusic();
 }
@@ -2170,12 +2194,22 @@ return null;
 
 function updateEasterEggHint(){
 const tracker=document.getElementById("eggTracker");
-if(!tracker) return;
+const nodes=document.querySelectorAll(".node.egg-possible");
+nodes.forEach(node=>node.classList.remove("egg-possible"));
 
 const currentEgg=getCurrentEasterEggId();
 const available=currentEgg && !foundEasterEggs.includes(currentEgg);
 
+if(tracker){
 tracker.classList.toggle("possible", !!available);
+}
+
+if(!available || z>=zones.length) return;
+
+const worldNodes=document.querySelectorAll(".node.world");
+if(worldNodes[z]){
+worldNodes[z].classList.add("egg-possible");
+}
 }
 
 function updateEasterEggTracker(flash=false){
@@ -2183,8 +2217,10 @@ const tracker=document.getElementById("eggTracker");
 if(!tracker) return;
 
 const slots=tracker.querySelectorAll(".egg-slot");
+const count=Array.isArray(foundEasterEggs) ? foundEasterEggs.length : 0;
+
 slots.forEach((slot,index)=>{
-slot.classList.toggle("found", index < foundEasterEggs.length);
+slot.classList.toggle("found", index < count);
 });
 
 if(flash){
@@ -2339,6 +2375,7 @@ document.getElementById("progress").innerText =
 }
 
 renderMap();
+updateEasterEggHint();
 updateQuestLog();
 updateEasterEggTracker();
 updateEasterEggHint();
@@ -3541,7 +3578,7 @@ return `<div class="score-item ${cls}"><span>${escapeHtml(item.label)}</span><st
 `<div class="feat-list">${feats.map(f=>"<div>✦ "+escapeHtml(f)+"</div>").join("")}</div>`+
 `<div class="result-line">Completed: ${escapeHtml(result.completedAt)}</div>`+
 `<div class="highscore-actions">`+
-`<button id="screenshotBtn" onclick="downloadScreenshot()">Screenshot</button>`+
+
 
 `<button onclick="restartAdventure()">just.. one... more... quest...</button>`+
 `</div>`+
@@ -3596,6 +3633,9 @@ link.click();
 }
 
 function restartAdventure(){
+if(!confirm("You will not be able to return here, got everything you need?")){
+return;
+}
 document.body.classList.remove("highscore-screen");
 if(currentUser){
 localStorage.removeItem(saveKey());
@@ -3605,6 +3645,7 @@ localStorage.removeItem(resultKey());
 z=0;
 p=0;
 attempts=[];
+foundEasterEggs=[];
 locked=false;
 elapsedBefore=0;
 startedAt=null;
