@@ -122,6 +122,9 @@ background:rgba(0,0,0,0.75);
 padding:20px;
 border-left:2px solid #c9a227;
 overflow-y:auto;
+overflow-x:hidden;
+min-width:230px;
+word-break:break-word;
 }
 
 .map {
@@ -636,6 +639,29 @@ align-items:center;
 display:none;
 }
 
+#attempts {
+max-width:100%;
+overflow-wrap:anywhere;
+word-break:break-word;
+line-height:1.45;
+}
+
+body.riddle-room #game {
+width:1050px;
+}
+
+body.riddle-room .right {
+flex:1.15;
+padding:18px;
+}
+
+body.riddle-room #attempts {
+max-height:240px;
+overflow-y:auto;
+overflow-x:hidden;
+padding-right:6px;
+}
+
 #clue {
 white-space:pre-line;
 line-height:1.6;
@@ -1019,7 +1045,7 @@ audio:"fellicity.mp3",
 introBg:"demonhunter.jpg",
 bossName:"The Hook Boss",
 bossBg:"fellicitybossfight.jpg",
-highscoreBg:"fellicityhighscore.jpg",
+highscoreBg:"fellicityhighscore.png",
 resultTitle:"Hook, Line and Sinker? Not Today."
 },
 lariath:{
@@ -1028,10 +1054,10 @@ question:"What do I mean by wwd?",
 hash:"9d7021c600025846dc58eb6e47b55a80109d70bee800ac196fbb689cb80b0a33",
 intro:"Some people might need a hint or some extra luck, you surely don't you competitive fuck <3",
 audio:"lariath.mp3",
-introBg:"hunter.jpg",
+introBg:"hunter.png",
 bossName:"The Wheel of Enormous Proportions",
 bossBg:"lariathbossfight.jpg",
-highscoreBg:"lariathhighscore.jpg",
+highscoreBg:"lariathhighscore.png",
 resultTitle:"Bigger Isn’t Always Better."
 },
 alistia:{
@@ -1043,7 +1069,7 @@ audio:"alistia.mp3",
 introBg:"evoker.jpg",
 bossName:"Choosing a Main",
 bossBg:"alistiabossfight.jpg",
-highscoreBg:"alistiahighscore.jpg",
+highscoreBg:"alistiahighscore.png",
 resultTitle:"Main Character Energy, Finally."
 },
 cam:{
@@ -1055,7 +1081,7 @@ audio:"cam.mp3",
 introBg:"monk.jpg",
 bossName:"Nexus Point Xenas",
 bossBg:"cambossfight.png",
-highscoreBg:"camhighscore.jpg",
+highscoreBg:"camhighscore.png",
 resultTitle:"Nexus Point? More Like Nexus Disappointed."
 }
 };
@@ -1084,7 +1110,7 @@ puzzles:[
 },
 {
 name:"The Hidden Riddle",
-music:STANDARD_MUSIC,
+music:"riddle.mp3",
 puzzles:[
 {
 type:"multi",
@@ -1327,6 +1353,7 @@ stopAllAudio();
 currentUser=null;
 pendingUser=null;
 
+document.body.classList.remove("riddle-room");
 document.getElementById("game").style.display="none";
 document.getElementById("transition").style.display="none";
 document.getElementById("introScreen").style.display="none";
@@ -1843,6 +1870,7 @@ document.body.classList.remove("fade");
 document.getElementById("zone").innerText=zones[z].name;
 
 const currentPuzzle=zones[z].puzzles[p];
+document.body.classList.toggle("riddle-room", currentPuzzle.type==="multi");
 document.getElementById("clue").innerText=currentPuzzle.clue;
 
 if(currentPuzzle.type==="multi"){
