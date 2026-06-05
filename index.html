@@ -1,3 +1,6 @@
+
+document.body.classList.remove("boss-fight-active");
+document.getElementById("bossScreen").style.display="none";
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -604,6 +607,26 @@ top:-5px;
 body.boss-fight-active #qteArea.enraged {
 border-color:#ff3333;
 box-shadow:0 0 26px rgba(255,51,51,0.95);
+}
+
+body.qte-active #bossQuestion,
+body.qte-active #bossInput,
+body.qte-active #bossSubmitBtn {
+visibility:hidden;
+}
+
+body.qte-active #bossFeedback {
+visibility:hidden;
+}
+
+body.qte-active #qteArea {
+z-index:80;
+}
+
+body.qte-active .boss-box {
+background:rgba(0,0,0,0.18);
+border-color:rgba(201,162,39,0.35);
+box-shadow:none;
 }
 
 #bossTitleOverlay {
@@ -1547,6 +1570,7 @@ let waitingForFirstTransition=false;
 let usedBossQuestions=[];
 let secretPhaseActive=false;
 let secretQteReady=false;
+let bossVictoryStarted=false;
 let foundEasterEggs=[];
 updateEasterEggTracker();
 
@@ -2918,6 +2942,7 @@ document.getElementById("bossName").innerText=user.bossName;
 document.getElementById("bossMessage").innerHTML="";
 
 bossHp=260;
+bossVictoryStarted=false;
 updateBossHpBar();
 bossQuestionsAnswered=0;
 bossWrongAnswers=0;
@@ -3110,6 +3135,7 @@ document.getElementById("bossInput").disabled=false;
 document.getElementById("bossSubmitBtn").innerText="Open Parry Window";
 document.getElementById("bossInput").value="";
 document.getElementById("bossInput").focus();
+document.body.classList.remove("qte-active");
 document.getElementById("qteArea").style.display="none";
 document.getElementById("qteArea").classList.remove("active");
 setBossFeedback("");
@@ -3162,6 +3188,7 @@ document.getElementById("bossInput").disabled=false;
 document.getElementById("bossSubmitBtn").innerText="Respond";
 document.getElementById("bossInput").value="";
 document.getElementById("bossInput").focus();
+document.body.classList.remove("qte-active");
 document.getElementById("qteArea").style.display="none";
 document.getElementById("qteArea").classList.remove("active");
 setBossFeedback("The boss keeps casting until you solve the mechanic.");
@@ -3220,7 +3247,7 @@ updateBossHpBar();
 setBossFeedback(`${starter} uses ${element}: It's super effective! The boss takes ${damage} damage!`);
 
 if(bossHp<=0){
-finishAdventure();
+startBossVictorySequence();
 return;
 }
 
@@ -3433,6 +3460,7 @@ qteArea.dataset.goodMin=String(0.5-goodWidth/200);
 qteArea.dataset.goodMax=String(0.5+goodWidth/200);
 qteArea.dataset.glancingMin=String(0.5-glancingWidth/200);
 qteArea.dataset.glancingMax=String(0.5+glancingWidth/200);
+document.body.classList.add("qte-active");
 qteArea.style.display="block";
 qteArea.classList.add("active");
 marker.style.left="0%";
@@ -3550,6 +3578,7 @@ updateBossHpBar();
 const btn=document.getElementById("bossSubmitBtn");
 const input=document.getElementById("bossInput");
 
+document.body.classList.remove("qte-active");
 document.getElementById("qteArea").style.display="none";
 document.getElementById("qteArea").classList.remove("active");
 setBossFeedback(message + " The boss recovers 5 HP from your mistake.");
@@ -3622,6 +3651,26 @@ saveGame();
 
 document.getElementById("bossScreen").style.display="none";
 startSecretBossPhase();
+}
+
+function startBossVictorySequence(){
+if(bossVictoryStarted) return;
+bossVictoryStarted=true;
+clearQte();
+document.body.classList.remove("qte-active");
+
+stopAllAudio();
+playOneShot("victory.mp3",1);
+
+setBossFeedback("Victory! The boss collapses. Enjoy the silence before something smaller and angrier appears...");
+document.getElementById("bossInput").style.display="none";
+document.getElementById("bossSubmitBtn").style.display="none";
+document.getElementById("qteArea").style.display="none";
+document.getElementById("qteArea").classList.remove("active");
+
+setTimeout(()=>{
+startSecretBoss();
+},10000);
 }
 
 function startSecretBossPhase(){
