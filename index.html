@@ -2605,6 +2605,80 @@ document.getElementById("resultText").innerHTML =
 `<div class="result-line">Completed: ${escapeHtml(result.completedAt)}</div>`+
 `</div>`;
 }else{
+document.getElementById("resultText").innerHTML =
+`<div class="result-line">Your result could not be loaded.</div>`;
+}
+}
+
+function restartAdventure(){
+if(currentUser){
+localStorage.removeItem(saveKey());
+localStorage.removeItem(resultKey());
+}
+
+z=0;
+p=0;
+attempts=[];
+locked=false;
+elapsedBefore=0;
+startedAt=null;
+finishedTime=0;
+bossHp=100;
+bossQuestionsAnswered=0;
+bossWrongAnswers=0;
+mechanicsSolved=0;
+criticalMechanics=0;
+perfectParries=0;
+stunsTaken=0;
+finalHealerSolved=false;
+tauntPunishments=0;
+healerCruelty=0;
+alistiaHealUsed=false;
+activeMechanic=null;
+mechanicIndex=0;
+gameCompleted=false;
+
+document.getElementById("resultStep").style.display="none";
+document.getElementById("login").style.background =
+"linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0.15)), url('login.png') center/cover";
+document.getElementById("landingStep").style.display="block";
+document.getElementById("landingButton").innerText="just.. one... more... quest...";
+}
+
+function toggleHelp(){
+const box=document.getElementById("helpBox");
+box.style.display = box.style.display==="block" ? "none" : "block";
+}
+
+document.addEventListener("DOMContentLoaded", ()=>{
+playLoginMusic();
+
+document.getElementById("input").addEventListener("keydown", e=>{
+if(e.key==="Enter") submit();
+});
+
+document.getElementById("bossInput").addEventListener("keydown", e=>{
+if(e.key==="Enter") submitBossAnswer();
+});
+
+document.getElementById("name").addEventListener("keydown", e=>{
+if(e.key==="Enter") checkName();
+});
+
+document.getElementById("securityAnswer").addEventListener("keydown", e=>{
+if(e.key==="Enter") checkSecurityAnswer();
+});
+
+document.getElementById("secretBossInput").addEventListener("keydown", e=>{
+if(e.key==="Enter") submitSecretBoss();
+});
+
+document.addEventListener("keydown", e=>{
+if(e.code==="Space" && qteActive){
+e.preventDefault();
+if(secretPhaseActive){
+secretParry();
+}else{
 parryBoss();
 }
 }
