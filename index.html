@@ -162,6 +162,16 @@ opacity:1;
 box-shadow:0 0 14px #c9a227;
 }
 
+.node.question {
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:11px;
+color:#1b1208;
+font-weight:bold;
+opacity:0.85;
+}
+
 @keyframes pulse {
 0%{transform:scale(1)}
 50%{transform:scale(1.35)}
@@ -637,8 +647,8 @@ border:2px solid #c9a227;
 border-radius:16px;
 padding:24px 34px;
 box-shadow:0 0 30px rgba(0,0,0,0.9);
-width:min(760px, 88vw);
-max-height:78vh;
+width:min(920px, 90vw);
+max-height:72vh;
 overflow-y:auto;
 margin:0 auto;
 }
@@ -723,7 +733,6 @@ You can press <strong>spacebar</strong> instead of clicking, for easier timings!
 <div id="resultStep">
 <h2>Quest Complete</h2>
 <div id="resultText"></div>
-<button onclick="restartAdventure()">just.. one... more... quest...</button>
 </div>
 
 </div>
@@ -873,7 +882,7 @@ You can press <strong>spacebar</strong> instead of clicking, for easier timings!
 <p>Emergency Hook Avoidance Department<br><strong>Foute & Chat</strong></p>
 <p>Wheel RNG Complaints Desk<br><strong>Foute & Chat</strong></p>
 <p>Choosing A Main Prevention Team<br><strong>Foute & Chat</strong></p>
-<p>Nexus Point Xenos Trauma Support<br><strong>Foute & Chat</strong></p>
+<p>Nexus Point Xenas Trauma Support<br><strong>Foute & Chat</strong></p>
 <p>Mandatory Two-Minute Credits Enforcement<br><strong>Foute & Chat</strong></p>
 <p>More Titles Just To Complete Two Minutes Of This Bullshit<br><strong>Foute & Chat</strong></p>
 <p>Wait, Why's Everybody Grabbing A Drink? LOOK AT MY CREDITS!<br><strong>Foute & Chat</strong></p>
@@ -912,7 +921,8 @@ audio:"fellicity.mp3",
 introBg:"demonhunter.jpg",
 bossName:"The Hook Boss",
 bossBg:"fellicitybossfight.jpg",
-highscoreBg:"fellicityhighscore.jpg"
+highscoreBg:"fellicityhighscore.jpg",
+resultTitle:"Hook, Line and Sinker? Not Today."
 },
 lariath:{
 display:"Lariath",
@@ -923,7 +933,8 @@ audio:"lariath.mp3",
 introBg:"hunter.jpg",
 bossName:"The Wheel of Enormous Proportions",
 bossBg:"lariathbossfight.jpg",
-highscoreBg:"lariathhighscore.jpg"
+highscoreBg:"lariathhighscore.jpg",
+resultTitle:"Bigger Isn’t Always Better."
 },
 alistia:{
 display:"Alistia",
@@ -934,7 +945,8 @@ audio:"alistia.mp3",
 introBg:"evoker.jpg",
 bossName:"Choosing a Main",
 bossBg:"alistiabossfight.jpg",
-highscoreBg:"alistiahighscore.jpg"
+highscoreBg:"alistiahighscore.jpg",
+resultTitle:"Main Character Energy, Finally."
 },
 cam:{
 display:"Cam",
@@ -943,9 +955,10 @@ hash:"b006a012ff0f93be9a8dbd742e7e231dfffb9942f41bbf900ae86cd47b5c25d8",
 intro:"Our main protankonist, taking each blow. Show me, how much you actually know",
 audio:"cam.mp3",
 introBg:"monk.jpg",
-bossName:"Nexus Point Xenos",
+bossName:"Nexus Point Xenas",
 bossBg:"cambossfight.png",
-highscoreBg:"camhighscore.jpg"
+highscoreBg:"camhighscore.jpg",
+resultTitle:"Nexus Point? More Like Nexus Disappointed."
 }
 };
 
@@ -987,6 +1000,25 @@ puzzles:[
 {hash:"78d08e34cc71174c32522caad2b7bc1739a1f00121261cc3c3ca55e021256c59", clue:"Elven homeland.", bg:"midnightbg1.jpg"},
 {hash:"132255778e32a21db5059929e9f96596a56b8051543de45fcb99a7bc034a2b16", clue:"Arcane source.", bg:"midnightbg2.jpg"},
 {hash:"fcc31d9c7c7bcfb67928fa9a0f212910de2e5592c5acf6df6f4856aae7370357", clue:"Undead threat.", bg:"midnightbg3.jpg"}
+]
+},
+{
+name:"The Hidden Riddle",
+music:STANDARD_MUSIC,
+puzzles:[
+{
+type:"multi",
+answers:[
+{label:"1", hash:"42c9cfc1a317a5a9946b33af0755233741b00b939fd33b42e768d33c25d42ad1"},
+{label:"2", hash:"d537bc9c04d322df18388944bb0f7da74969857d482b4bb6955b95cc10478489"},
+{label:"3", hash:"3ba8d02b16fd2a01c1a8ba1a1f036d7ce386ed953696fa57331c2ac48a80b255"},
+{label:"4", hash:"1b16b1df538ba12dc3f97edbb85caa7050d46c148134290feba80f8236c83db9"}
+],
+solved:[false,false,false,false],
+clue:"A locked riddle waits on the road.\nSubmit four answers as numbered commands.\nExample: 1 edam",
+bg:"riddlebg.png",
+mapLabel:"?"
+}
 ]
 }
 ];
@@ -1099,7 +1131,8 @@ p:p,
 attempts:attempts,
 muted:muted,
 elapsedBefore:currentElapsed(),
-gameCompleted:gameCompleted
+gameCompleted:gameCompleted,
+multiSolved:zones.map(zone=>zone.puzzles.map(puzzle=>puzzle.solved || null))
 }));
 }
 
@@ -1115,10 +1148,33 @@ attempts=data.attempts || [];
 muted=!!data.muted;
 elapsedBefore=data.elapsedBefore || 0;
 gameCompleted=!!data.gameCompleted;
+
+if(data.multiSolved){
+data.multiSolved.forEach((zoneData, zi)=>{
+if(zones[zi]){
+zoneData.forEach((puzzleData, pi)=>{
+if(puzzleData && zones[zi].puzzles[pi]){
+zones[zi].puzzles[pi].solved=puzzleData;
+}
+});
+}
+});
+}
+
 return true;
 }catch(e){
 return false;
 }
+}
+
+function resetMultiPuzzles(){
+zones.forEach(zone=>{
+zone.puzzles.forEach(puzzle=>{
+if(puzzle.type==="multi"){
+puzzle.solved=[false,false,false,false];
+}
+});
+});
 }
 
 function resetProgress(){
@@ -1130,6 +1186,7 @@ localStorage.removeItem(resultKey());
 z=0;
 p=0;
 attempts=[];
+resetMultiPuzzles();
 locked=false;
 elapsedBefore=0;
 startedAt=null;
@@ -1182,6 +1239,33 @@ document.getElementById("muteBtn").innerText=muted ? "🔇" : "🔊";
 playLoginMusic();
 }
 
+function showFakeHighscoreForTesting(){
+if(!currentUser){
+currentUser="cam";
+}
+
+const fake={
+player:users[currentUser].display,
+time:1234567,
+timeText:"20:34",
+bossQuestionsAnswered:18,
+bossWrongAnswers:2,
+mechanicsSolved:5,
+criticalMechanics:2,
+perfectParries:4,
+stunsTaken:2,
+tauntPunishments:0,
+healerCruelty:0,
+completedAt:new Date().toLocaleString()
+};
+
+fake.score=calculateFinalScore(fake);
+fake.feats=buildFeats(fake);
+
+localStorage.setItem("questResult_" + currentUser, JSON.stringify(fake));
+showResultOnLogin();
+}
+
 function teleportToBossForTesting(){
 if(!currentUser){
 currentUser="cam";
@@ -1213,6 +1297,11 @@ const key=normalize(rawName);
 document.getElementById("nameMessage").innerText="";
 
 if(!rawName) return;
+
+if(key==="veryhighscore"){
+showFakeHighscoreForTesting();
+return;
+}
 
 if(key==="veryendgame"){
 teleportToBossForTesting();
@@ -1261,6 +1350,7 @@ pendingUser=null;
 z=0;
 p=0;
 attempts=[];
+resetMultiPuzzles();
 elapsedBefore=0;
 startedAt=null;
 gameCompleted=false;
@@ -1571,9 +1661,14 @@ worldNode.classList.add("current");
 
 map.appendChild(worldNode);
 
-zone.puzzles.forEach(()=>{
+zone.puzzles.forEach((puzzle)=>{
 const qNode=document.createElement("div");
 qNode.className="node";
+
+if(puzzle.mapLabel){
+qNode.classList.add("question");
+qNode.innerText=puzzle.mapLabel;
+}
 
 if(questionIndex<currentIndex){
 qNode.classList.add("completed");
@@ -1623,10 +1718,18 @@ document.body.classList.remove("fade");
 },250);
 
 document.getElementById("zone").innerText=zones[z].name;
-document.getElementById("clue").innerText=zones[z].puzzles[p].clue;
 
+const currentPuzzle=zones[z].puzzles[p];
+document.getElementById("clue").innerText=currentPuzzle.clue;
+
+if(currentPuzzle.type==="multi"){
+const solvedCount=currentPuzzle.solved.filter(Boolean).length;
+document.getElementById("progress").innerText =
+`Chapter ${z+1}/${zones.length}: ${solvedCount}/4`;
+}else{
 document.getElementById("progress").innerText =
 `Chapter ${z+1}/${zones.length}: ${p+1}/${zones[z].puzzles.length}`;
+}
 
 renderMap();
 updateQuestLog();
@@ -1664,6 +1767,11 @@ const value=input.value;
 input.value="";
 
 if(!normalize(value)) return;
+
+if(normalize(value)==="veryhighscore"){
+showFakeHighscoreForTesting();
+return;
+}
 
 if(normalize(value)==="veryendgame"){
 teleportToBossForTesting();
@@ -1972,6 +2080,11 @@ const input=normalize(inputEl.value);
 inputEl.value="";
 
 if(!input) return;
+
+if(input==="veryhighscore"){
+showFakeHighscoreForTesting();
+return;
+}
 
 if(input==="veryendgame"){
 teleportToBossForTesting();
@@ -2491,7 +2604,7 @@ const lines={
 fellicity:"Fellicity stared down The Hook Boss and finally proved that no chain, hook, or cursed mechanic could drag her away from victory.",
 lariath:"Lariath faced The Wheel of Enormous Proportions and defeated the one thing no competitor can truly prepare for: pure, stupid RNG.",
 alistia:"Alistia stood before Choosing a Main and, for one glorious moment, committed to the only spec that mattered: winning.",
-cam:"Cam survived Nexus Point Xenos, carried the weight of every hit, and showed that even the worst dungeon can be tanked with enough stubbornness."
+cam:"Cam survived Nexus Point Xenas, carried the weight of every hit, and showed that even the worst dungeon can be tanked with enough stubbornness."
 };
 
 document.getElementById("killText").innerText=lines[currentUser] || "The boss falls. Against all odds, victory is yours.";
@@ -2611,6 +2724,7 @@ document.getElementById("login").style.background =
 document.getElementById("resultText").innerHTML =
 `<div id="screenshotArea">`+
 `<div class="highscore-card">`+
+`<div class="highscore-title">${escapeHtml(user.resultTitle || "Quest Complete")}</div>`+
 `<div class="highscore-name">${escapeHtml(result.player)}</div>`+
 `<div>overcame</div>`+
 `<div class="result-line"><strong>${escapeHtml(user.bossName || "their rival")}</strong></div>`+
@@ -2621,9 +2735,12 @@ document.getElementById("resultText").innerHTML =
 `<div class="result-line">Stuns: ${result.stunsTaken || result.bossWrongAnswers || 0} · Bad taunts: ${result.tauntPunishments || 0} · Healer incidents: ${result.healerCruelty || 0}</div>`+
 `<div class="feat-list">${feats.map(f=>"✦ "+escapeHtml(f)).join("<br>")}</div>`+
 `<div class="result-line">Completed: ${escapeHtml(result.completedAt)}</div>`+
+`<div class="highscore-actions">`+
+`<button id="screenshotBtn" onclick="downloadScreenshot()">Screenshot</button>`+
+`<button onclick="restartAdventure()">just.. one... more... quest...</button>`+
 `</div>`+
 `</div>`+
-`<button id="screenshotBtn" onclick="downloadScreenshot()">Screenshot</button>`;
+`</div>`;
 }else{
 document.getElementById("resultText").innerHTML =
 `<div class="result-line">Your result could not be loaded.</div>`;
