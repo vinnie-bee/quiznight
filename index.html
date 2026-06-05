@@ -249,9 +249,24 @@ width:auto;
 z-index:30;
 }
 
+#highscoreToggleBtn {
+display:none;
+position:fixed;
+top:94px;
+right:10px;
+background:rgba(20,14,8,0.9);
+border:1px solid #c9a227;
+color:#f5e6c8;
+padding:8px 10px;
+border-radius:8px;
+cursor:pointer;
+width:auto;
+z-index:30;
+}
+
 #helpBox {
 position:fixed;
-top:92px;
+top:132px;
 right:10px;
 display:none;
 width:310px;
@@ -875,6 +890,18 @@ font-size:18px;
 padding:13px;
 margin-top:16px;
 }
+
+body.highscore-screen #highscoreToggleBtn {
+display:block;
+}
+
+body.highscore-ui-hidden #login .box {
+display:none;
+}
+
+body.highscore-ui-hidden #highscoreToggleBtn {
+display:block;
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
@@ -884,17 +911,11 @@ margin-top:16px;
 <button id="resetBtn" onclick="resetProgress()">Reset Progress</button>
 <button id="muteBtn" onclick="toggleMute()">🔊</button>
 <button id="helpBtn" onclick="toggleHelp()">?</button>
-<button id="helpBtn" onclick="toggleHelp()">?</button>
+<button id="highscoreToggleBtn" onclick="toggleHighscoreBox()">Hide UI</button>
 
 <div id="helpBox">
 <strong>Raid Hint</strong><br>
 Correct answers open a parry window. Perfect parries deal more damage. Slightly off parries still help. Late parries stun you.<br><br>You can press <strong>spacebar</strong> instead of clicking, for easier timings!
-</div>
-
-<div id="helpBox">
-<strong>Raid Hint</strong><br>
-Correct answers open a parry window. Perfect parries deal more damage. Slightly off parries still help. Late parries stun you.<br><br>You can press <strong>spacebar</strong> instead of clicking, for easier timings!<br><br>
-You can press <strong>spacebar</strong> instead of clicking, for easier timings!
 </div>
 
 <div id="login">
@@ -926,7 +947,6 @@ You can press <strong>spacebar</strong> instead of clicking, for easier timings!
 </div>
 
 </div>
-<button id="showScoreBtn" onclick="showHighscoreBox()">Show Highscore</button>
 </div>
 
 <div id="game">
@@ -1185,21 +1205,21 @@ const foutePrompt =
 
 const zones = [
 {
-name:"Overwatch",
-music:"Overwatch.mp3",
-puzzles:[
-{hash:"1e6243a2b17026f8b37bdaa6db841aa1d68733ac98dce46ef9aee051f38c1772", clue:"Fastest hero.", bg:"overwatchbg1.jpg"},
-{hash:"fc8db96bab2a414d1db52c4177a15d3e292fb9d4354d0992f29bfc3f4715825e", clue:"Death walks again.", bg:"overwatchbg2.jpg"},
-{hash:"6df983c20df2ddf0c981c8978d526cf0a5b4fd8369759fee4419fdf31d6b22cb", clue:"Hero organization.", bg:"overwatchbg3.jpg"}
-]
-},
-{
 name:"The War Within",
 music:["TWW.mp3","tww.mp3","Tww.mp3"],
 puzzles:[
 {hash:"2444be257a42801531561fab8123e2f18acb6e4df8f1177d4bc2cb371033bf36", clue:"Back where we began it all\nCovered in Crystals, I shit you not.\nLevel 79 and quite small.\nThe earthen sits in silence near his spot.", bg:"twwbg1.jpg"},
 {hash:"41024084d2e27b7db74265a6252083ac949cdb22496e9c91a1154715f4baed64", clue:"I used to do these two for a living,\nGearing my chars up to the teeth.\nMore hints than a cave I'm not giving\nSo what do these mythical beasts breath?", bg:"twwbg2.jpg"},
 {hash:"62969a397c89fe32e57237041513b6372aaebfab8dd8c8076c2224b2724ef4f3", clue:"The importance of this one, I need to underline.\nGoblin's gallore, they're all mine.\nIt's time for the main course indeed!\nBut why am I the one that bleeds?", bg:"twwbg3.jpg"}
+]
+},
+{
+name:"Pokemon",
+music:"pokemon.mp3",
+puzzles:[
+{starterChoice:true, hashes:["8cbfa8573683626c1609d1373f23b63bbfa5692fccad285e0306a500fa4b28f9","43c9d997f68ee54a55f7a22062c895312250751d3505ef2da40d2a7cf32b39fe","b5b5652a5dd3d781e2f6f412223e843cacbf2872091f485ed5fd61aa967a3719"], clue:"Professor Oak offers you your first Pokémon.\nChoose your starter: Charmander, Squirtle, or Bulbasaur.", bg:"pokemonbg1.jpg"},
+{hash:"73e512eccd9639bf632f1675f6a34a116f0abe5404dcebe98bf023be0e329d10", clue:"Fire lizard final evolution.", bg:"pokemonbg2.jpg"},
+{hash:"b3011a26f0f5047f91e14a8ae0daf2ea26de4a4cb831fb0ffe6d1060fd006ac0", clue:"Legendary psychic clone.", bg:"pokemonbg3.jpg"}
 ]
 },
 {
@@ -1222,12 +1242,12 @@ mapLabel:"?"
 ]
 },
 {
-name:"Pokemon",
-music:"pokemon.mp3",
+name:"Overwatch",
+music:"Overwatch.mp3",
 puzzles:[
-{starterChoice:true, hashes:["8cbfa8573683626c1609d1373f23b63bbfa5692fccad285e0306a500fa4b28f9","43c9d997f68ee54a55f7a22062c895312250751d3505ef2da40d2a7cf32b39fe","b5b5652a5dd3d781e2f6f412223e843cacbf2872091f485ed5fd61aa967a3719"], clue:"Professor Oak offers you your first Pokémon.\nChoose your starter: Charmander, Squirtle, or Bulbasaur.", bg:"pokemonbg1.jpg"},
-{hash:"73e512eccd9639bf632f1675f6a34a116f0abe5404dcebe98bf023be0e329d10", clue:"Fire lizard final evolution.", bg:"pokemonbg2.jpg"},
-{hash:"b3011a26f0f5047f91e14a8ae0daf2ea26de4a4cb831fb0ffe6d1060fd006ac0", clue:"Legendary psychic clone.", bg:"pokemonbg3.jpg"}
+{hash:"1e6243a2b17026f8b37bdaa6db841aa1d68733ac98dce46ef9aee051f38c1772", clue:"Fastest hero.", bg:"overwatchbg1.jpg"},
+{hash:"fc8db96bab2a414d1db52c4177a15d3e292fb9d4354d0992f29bfc3f4715825e", clue:"Death walks again.", bg:"overwatchbg2.jpg"},
+{hash:"6df983c20df2ddf0c981c8978d526cf0a5b4fd8369759fee4419fdf31d6b22cb", clue:"Hero organization.", bg:"overwatchbg3.jpg"}
 ]
 },
 {
@@ -1290,6 +1310,7 @@ let waitingForFirstTransition=false;
 let usedBossQuestions=[];
 let secretPhaseActive=false;
 let secretQteReady=false;
+let foundEasterEggs=[];
 
 function normalize(value){
 return value.toLowerCase().trim().replace(/\s+/g," ");
@@ -1370,6 +1391,7 @@ muted:muted,
 elapsedBefore:currentElapsed(),
 gameCompleted:gameCompleted,
 chosenStarter:chosenStarter,
+foundEasterEggs:foundEasterEggs,
 multiSolved:zones.map(zone=>zone.puzzles.map(puzzle=>puzzle.solved || null))
 }));
 }
@@ -1387,6 +1409,7 @@ muted=!!data.muted;
 elapsedBefore=data.elapsedBefore || 0;
 gameCompleted=!!data.gameCompleted;
 chosenStarter=data.chosenStarter || "";
+foundEasterEggs=data.foundEasterEggs || [];
 
 if(data.multiSolved){
 data.multiSolved.forEach((zoneData, zi)=>{
@@ -1519,7 +1542,8 @@ stunsTaken:2,
 tauntPunishments:0,
 healerCruelty:0,
 completedAt:new Date().toLocaleString(),
-starter:"Charmander"
+starter:"Charmander",
+easterEggs:["overwatch-code","pokemon-ash","boss-execute"]
 };
 
 fake.score=calculateFinalScore(fake);
@@ -2005,6 +2029,67 @@ return;
 log.innerHTML=attempts.map(a=>"• "+escapeHtml(a)).join("<br>");
 }
 
+function playEasterEggSound(){
+const egg=new Audio("easteregg.mp3");
+egg.volume=muted ? 0 : 0.9;
+egg.play().catch(()=>{});
+}
+
+function unlockEasterEgg(id,label){
+if(foundEasterEggs.includes(id)){
+if(document.getElementById("bossScreen").style.display==="flex"){
+setBossFeedback("Easter egg already found: " + label);
+}
+return true;
+}
+
+foundEasterEggs.push(id);
+playEasterEggSound();
+
+const msg="🥚 Easter egg unlocked: " + label;
+
+if(document.getElementById("bossScreen").style.display==="flex"){
+setBossFeedback(msg);
+}else{
+const log=document.getElementById("attempts");
+if(log){
+log.innerHTML=escapeHtml(msg);
+}
+}
+
+saveGame();
+return true;
+}
+
+function checkWorldEasterEgg(value){
+const v=normalize(value);
+if(z>=zones.length) return false;
+
+const world=zones[z].name;
+
+if(world==="Overwatch" && v==="65488445612"){
+return unlockEasterEgg("overwatch-code","Overwatch numbers");
+}
+
+if(world==="The War Within" && v==="dornogal"){
+return unlockEasterEgg("tww-dornogal","Dornogal");
+}
+
+if(world==="Pokemon" && v==="ashketchum"){
+return unlockEasterEgg("pokemon-ash","Ash Ketchum");
+}
+
+if(world==="Midnight" && v==="silvermoon"){
+return unlockEasterEgg("midnight-silvermoon","Silvermoon");
+}
+
+if(world==="The Hidden Riddle" && v==="hint"){
+return unlockEasterEgg("riddle-hint","Suspicious hint");
+}
+
+return false;
+}
+
 function escapeHtml(text){
 return text
 .replace(/&/g,"&amp;")
@@ -2034,9 +2119,8 @@ document.body.classList.toggle("riddle-room", currentPuzzle.type==="multi");
 document.getElementById("clue").innerText=currentPuzzle.clue;
 
 if(currentPuzzle.starterChoice){
-document.getElementById("standardInputArea").style.display="flex";
+document.getElementById("standardInputArea").style.display="none";
 document.getElementById("riddleInputArea").style.display="none";
-document.getElementById("starterChoiceArea").style.display="none";
 document.getElementById("starterChoiceArea").style.display="flex";
 }else if(currentPuzzle.type==="multi"){
 document.getElementById("standardInputArea").style.display="none";
@@ -2107,6 +2191,11 @@ const value=normalize(input.value);
 
 if(!value) return;
 
+if(checkWorldEasterEgg(value)){
+input.value="";
+return;
+}
+
 const inputHash=await sha256(value);
 
 if(inputHash===currentPuzzle.answers[index].hash){
@@ -2159,6 +2248,7 @@ if(!currentPuzzle || !currentPuzzle.starterChoice) return;
 
 chosenStarter=starter;
 attempts=[];
+document.getElementById("starterChoiceArea").style.display="none";
 
 p++;
 
@@ -2187,6 +2277,10 @@ const value=input.value;
 input.value="";
 
 if(!normalize(value)) return;
+
+if(checkWorldEasterEgg(value)){
+return;
+}
 
 if(normalize(value)==="veryhighscore"){
 showFakeHighscoreForTesting();
@@ -2544,6 +2638,11 @@ const input=normalize(inputEl.value);
 inputEl.value="";
 
 if(!input) return;
+
+if(input==="execute"){
+unlockEasterEgg("boss-execute","Execute phase");
+return;
+}
 
 if(input==="veryhighscore"){
 showFakeHighscoreForTesting();
@@ -2938,7 +3037,8 @@ stunsTaken:stunsTaken,
 tauntPunishments:tauntPunishments,
 healerCruelty:healerCruelty,
 completedAt:new Date().toLocaleString(),
-starter:chosenStarter
+starter:chosenStarter,
+easterEggs:foundEasterEggs.slice()
 };
 
 result.score=calculateFinalScore(result);
@@ -3128,6 +3228,7 @@ add("Boss answers", (result.bossQuestionsAnswered || 0) * 450, "plus");
 add("Mechanics solved", (result.mechanicsSolved || 0) * 2200, "plus");
 add("Class critical answers", (result.criticalMechanics || 0) * 3500, "plus");
 add("Perfect parries", (result.perfectParries || 0) * 850, "plus");
+add("Easter eggs", ((result.easterEggs || []).length) * 1250, "plus");
 
 const starter=(result.starter || "").toLowerCase();
 
@@ -3208,6 +3309,8 @@ document.getElementById("landingStep").style.display="none";
 document.getElementById("nameStep").style.display="none";
 document.getElementById("securityStep").style.display="none";
 document.body.classList.add("highscore-screen");
+document.body.classList.remove("highscore-ui-hidden");
+document.getElementById("highscoreToggleBtn").innerText="Hide UI";
 document.getElementById("login").classList.remove("highscore-hidden");
 document.getElementById("resultStep").style.display="block";
 
@@ -3225,13 +3328,13 @@ document.getElementById("login").style.background =
 document.getElementById("resultText").innerHTML =
 `<div id="screenshotArea">`+
 `<div class="highscore-card">`+
-`<div class="highscore-title">${escapeHtml(user.resultTitle || "Quest Complete")}</div>`+
+`<div class="highscore-title">⚡ ARCADE CLEAR ⚡<br>${escapeHtml(user.resultTitle || "Quest Complete")}</div>`+
 `<div class="highscore-name">${escapeHtml(result.player)}</div>`+
 `<div>overcame</div>`+
 `<div class="result-line"><strong>${escapeHtml(user.bossName || "their rival")}</strong></div>`+
 `<div class="highscore-score">${score}</div>`+
 `<div class="arcade-label">FINAL SCORE</div>`+
-`<div class="result-line">Total time: ${escapeHtml(result.timeText)} · Starter: ${escapeHtml(result.starter || "Not recorded")}</div>`+
+`<div class="result-line">Total time: ${escapeHtml(result.timeText)} · Starter: ${escapeHtml(result.starter || "Not recorded")} · Easter eggs found: ${(result.easterEggs || []).length}/6</div>`+
 `<div class="score-breakdown">`+
 breakdown.items.map(item=>{
 const cls=item.type==="minus" ? "score-minus" : item.type==="plus" ? "score-plus" : "score-neutral";
@@ -3253,12 +3356,19 @@ document.getElementById("resultText").innerHTML =
 `<div class="result-line">Your result could not be loaded.</div>`;
 }
 }
+function toggleHighscoreBox(){
+const hidden=document.body.classList.toggle("highscore-ui-hidden");
+document.getElementById("highscoreToggleBtn").innerText=hidden ? "Show UI" : "Hide UI";
+}
+
 function hideHighscoreBox(){
-document.getElementById("login").classList.add("highscore-hidden");
+document.body.classList.add("highscore-ui-hidden");
+document.getElementById("highscoreToggleBtn").innerText="Show UI";
 }
 
 function showHighscoreBox(){
-document.getElementById("login").classList.remove("highscore-hidden");
+document.body.classList.remove("highscore-ui-hidden");
+document.getElementById("highscoreToggleBtn").innerText="Hide UI";
 }
 
 function downloadScreenshot(){
