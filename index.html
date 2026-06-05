@@ -548,6 +548,20 @@ color:#c9a227;
 text-shadow:0 0 8px black;
 }
 
+#critBurst {
+position:fixed;
+left:50%;
+top:50%;
+transform:translate(-50%,-50%);
+width:260px;
+height:260px;
+background:url('crit.gif') center/contain no-repeat;
+z-index:50;
+display:none;
+pointer-events:none;
+filter:drop-shadow(0 0 14px rgba(255,0,0,0.85));
+}
+
 #bossTitleOverlay {
 position:absolute;
 top:42px;
@@ -1046,6 +1060,7 @@ display:block;
 <button id="resetBtn" onclick="resetProgress()">Reset Progress</button>
 <button id="muteBtn" onclick="toggleMute()">🔊</button>
 <button id="helpBtn" onclick="toggleHelp()">?</button>
+<div id="critBurst"></div>
 <button id="highscoreToggleBtn" onclick="toggleHighscoreBox()">Hide UI</button>
 <button id="sideScreenshotBtn" onclick="downloadScreenshot()">Screenshot</button>
 <div id="eggTracker" title="Easter eggs found">
@@ -1328,7 +1343,7 @@ intro:"The rest won't be so eas.. STOP PLAYING RUNESCAPE ALREADY! Sigh.. go on t
 audio:"alistia.mp3",
 introBg:"evoker.png",
 bossName:"Choosing a Main",
-bossBg:"alistiabossfight.jpg",
+bossBg:"alistiabossfight.png",
 highscoreBg:"alistiahighscore.png",
 resultTitle:"Main Character Energy, Finally."
 },
@@ -2019,8 +2034,8 @@ return;
 
 m.pause();
 m.currentTime=0;
-m.loop=false;
-m.onended=()=>playStandardFallback();
+m.loop=true;
+m.onended=null;
 m.onerror=()=>tryPlayWorldMusic(candidates,index+1);
 m.src=candidates[index];
 m.volume=0;
@@ -2664,7 +2679,6 @@ updateQuestLog();
 saveGame();
 document.body.classList.add("shake");
 setTimeout(()=>document.body.classList.remove("shake"),300);
-startLockout();
 return;
 }
 
@@ -2724,6 +2738,13 @@ overlay.style.display="none";
 playWorldMusic();
 render();
 },TRAVEL_DURATION_MS);
+}
+
+function showCritBurst(){
+const burst=document.getElementById("critBurst");
+if(!burst) return;
+burst.style.display="block";
+setTimeout(()=>{ burst.style.display="none"; },900);
 }
 
 function setBossFeedback(message){
@@ -2997,7 +3018,19 @@ element="Vine Whip";
 }
 
 unlockEasterEgg("boss-execute","Pokémon assist");
-setBossFeedback(`${starter} uses ${element}: It's super effective!`);
+showCritBurst();
+
+const damage=20;
+bossHp=Math.max(1,bossHp-damage);
+document.getElementById("bossHpBar").style.width=Math.max(0,(bossHp/260)*100)+"%";
+
+setBossFeedback(`${starter} uses ${element}: It's super effective! The boss takes ${damage} damage!`);
+
+if(bossHp<=0){
+finishAdventure();
+return;
+}
+
 return;
 }
 
