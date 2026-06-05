@@ -304,6 +304,17 @@ box-shadow:0 0 10px #c9a227, inset 0 0 4px #fff2a8;
 animation:eggTrackerFlash 1.2s ease;
 }
 
+#eggTracker.possible {
+animation:eggTrackerHintPulse 1.4s ease-in-out infinite;
+border-color:#f5e6c8;
+}
+
+@keyframes eggTrackerHintPulse {
+0%{transform:scale(1); box-shadow:0 0 10px rgba(201,162,39,0.35)}
+50%{transform:scale(1.08); box-shadow:0 0 24px rgba(201,162,39,0.95)}
+100%{transform:scale(1); box-shadow:0 0 10px rgba(201,162,39,0.35)}
+}
+
 @keyframes eggTrackerFlash {
 0%{transform:scale(1); box-shadow:0 0 12px rgba(0,0,0,0.7)}
 35%{transform:scale(1.12); box-shadow:0 0 28px #c9a227}
@@ -965,12 +976,22 @@ padding:13px;
 margin-top:16px;
 }
 
+body.game-screen #highscoreToggleBtn,
 body.highscore-screen #highscoreToggleBtn {
 display:block;
 }
 
 body.highscore-ui-hidden #login .box {
 display:none;
+}
+
+body.game-ui-hidden #game {
+opacity:0;
+pointer-events:none;
+}
+
+body.game-ui-hidden #highscoreToggleBtn {
+display:block;
 }
 
 body.highscore-ui-hidden #highscoreToggleBtn {
@@ -1244,7 +1265,7 @@ introBg:"demonhunter.png",
 bossName:"The Hook Boss",
 bossBg:"fellicitybossfight.jpg",
 highscoreBg:"fellicityhighscore.png",
-resultTitle:"Hook, Line and Sinker? Not Today."
+resultTitle:"The Hook Missed. The Legend Didn’t."
 },
 lariath:{
 display:"Lariath",
@@ -1444,7 +1465,11 @@ startedAt=null;
 }
 
 function showNameStep(){
+document.body.classList.remove("game-screen");
+document.body.classList.remove("game-ui-hidden");
 document.body.classList.remove("highscore-screen");
+document.body.classList.remove("game-screen");
+document.body.classList.remove("game-ui-hidden");
 document.getElementById("login").classList.remove("highscore-hidden");
 document.querySelector("#login .box").classList.remove("result-mode");
 document.getElementById("login").style.background =
@@ -1661,6 +1686,11 @@ gameCompleted=false;
 zones[z].puzzles[p].solved=[false,false,false,false];
 resetRiddleInputs();
 
+document.body.classList.add("game-screen");
+document.body.classList.remove("game-ui-hidden");
+document.body.classList.remove("highscore-screen");
+document.body.classList.remove("highscore-ui-hidden");
+document.getElementById("highscoreToggleBtn").innerText="Hide UI";
 document.getElementById("login").style.display="none";
 document.getElementById("game").style.display="flex";
 document.getElementById("transition").style.display="none";
@@ -1846,6 +1876,11 @@ startGame(true);
 }
 
 function startGame(){
+document.body.classList.add("game-screen");
+document.body.classList.remove("game-ui-hidden");
+document.body.classList.remove("highscore-screen");
+document.body.classList.remove("highscore-ui-hidden");
+document.getElementById("highscoreToggleBtn").innerText="Hide UI";
 document.getElementById("login").style.display="none";
 document.getElementById("game").style.display="flex";
 document.getElementById("playerName").innerText=users[currentUser].display;
@@ -2115,6 +2150,34 @@ return;
 log.innerHTML=attempts.map(a=>"• "+escapeHtml(a)).join("<br>");
 }
 
+function getCurrentEasterEggId(){
+if(document.getElementById("bossScreen") && document.getElementById("bossScreen").style.display==="flex"){
+return "boss-execute";
+}
+
+if(z>=zones.length) return null;
+
+const world=zones[z].name;
+
+if(world==="Overwatch") return "overwatch-code";
+if(world==="The War Within") return "tww-dornogal";
+if(world==="Pokemon") return "pokemon-ash";
+if(world==="Midnight") return "midnight-silvermoon";
+if(world==="The Hidden Riddle") return "riddle-hint";
+
+return null;
+}
+
+function updateEasterEggHint(){
+const tracker=document.getElementById("eggTracker");
+if(!tracker) return;
+
+const currentEgg=getCurrentEasterEggId();
+const available=currentEgg && !foundEasterEggs.includes(currentEgg);
+
+tracker.classList.toggle("possible", !!available);
+}
+
 function updateEasterEggTracker(flash=false){
 const tracker=document.getElementById("eggTracker");
 if(!tracker) return;
@@ -2129,6 +2192,8 @@ tracker.classList.remove("flash");
 tracker.offsetHeight;
 tracker.classList.add("flash");
 }
+
+updateEasterEggHint();
 }
 
 function showEasterEggPopup(label){
@@ -2145,10 +2210,14 @@ popup.classList.remove("show");
 },2100);
 }
 
+function playOneShot(src, volume=0.9){
+const sound=new Audio(src);
+sound.volume=muted ? 0 : volume;
+sound.play().catch(()=>{});
+}
+
 function playEasterEggSound(){
-const egg=new Audio("easteregg.mp3");
-egg.volume=muted ? 0 : 0.9;
-egg.play().catch(()=>{});
+playOneShot("easteregg.mp3",0.9);
 }
 
 function unlockEasterEgg(id,label){
@@ -2162,6 +2231,7 @@ return true;
 foundEasterEggs.push(id);
 playEasterEggSound();
 updateEasterEggTracker(true);
+updateEasterEggHint();
 showEasterEggPopup(label);
 
 const msg="🥚 Easter egg unlocked: " + label;
@@ -2271,6 +2341,7 @@ document.getElementById("progress").innerText =
 renderMap();
 updateQuestLog();
 updateEasterEggTracker();
+updateEasterEggHint();
 saveGame();
 }
 
@@ -2318,6 +2389,9 @@ return;
 const inputHash=await sha256(value);
 
 if(inputHash===currentPuzzle.answers[index].hash){
+const willComplete=currentPuzzle.solved.filter(Boolean).length===currentPuzzle.answers.length-1;
+playOneShot(willComplete ? "riddleunlock.mp3" : "riddleanswer.mp3",0.9);
+
 currentPuzzle.solved[index]=true;
 input.disabled=true;
 input.value="✓";
@@ -2562,6 +2636,7 @@ function startBossEncounter(){
 document.getElementById("game").style.display="none";
 document.getElementById("bossScreen").style.display="flex";
 document.getElementById("helpBtn").style.display="block";
+updateEasterEggHint();
 
 const user=users[currentUser];
 
@@ -3427,6 +3502,8 @@ document.getElementById("login").style.display="flex";
 document.getElementById("landingStep").style.display="none";
 document.getElementById("nameStep").style.display="none";
 document.getElementById("securityStep").style.display="none";
+document.body.classList.remove("game-screen");
+document.body.classList.remove("game-ui-hidden");
 document.body.classList.add("highscore-screen");
 document.body.classList.remove("highscore-ui-hidden");
 document.getElementById("highscoreToggleBtn").innerText="Hide UI";
@@ -3447,7 +3524,7 @@ document.getElementById("login").style.background =
 document.getElementById("resultText").innerHTML =
 `<div id="screenshotArea">`+
 `<div class="highscore-card">`+
-`<div class="highscore-title">⚡ ARCADE CLEAR ⚡<br>${escapeHtml(user.resultTitle || "Quest Complete")}</div>`+
+`<div class="highscore-title">Quest completed!<br>${escapeHtml(user.resultTitle || "Quest Complete")}</div>`+
 `<div class="highscore-name">${escapeHtml(result.player)}</div>`+
 `<div>overcame</div>`+
 `<div class="result-line"><strong>${escapeHtml(user.bossName || "their rival")}</strong></div>`+
@@ -3476,17 +3553,21 @@ document.getElementById("resultText").innerHTML =
 }
 }
 function toggleHighscoreBox(){
-const hidden=document.body.classList.toggle("highscore-ui-hidden");
+const isHighscore=document.body.classList.contains("highscore-screen");
+const cls=isHighscore ? "highscore-ui-hidden" : "game-ui-hidden";
+const hidden=document.body.classList.toggle(cls);
 document.getElementById("highscoreToggleBtn").innerText=hidden ? "Show UI" : "Hide UI";
 }
 
 function hideHighscoreBox(){
 document.body.classList.add("highscore-ui-hidden");
+document.body.classList.remove("game-ui-hidden");
 document.getElementById("highscoreToggleBtn").innerText="Show UI";
 }
 
 function showHighscoreBox(){
 document.body.classList.remove("highscore-ui-hidden");
+document.body.classList.remove("game-ui-hidden");
 document.getElementById("highscoreToggleBtn").innerText="Hide UI";
 }
 
