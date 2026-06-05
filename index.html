@@ -573,20 +573,6 @@ width:230px;
 font-size:17px;
 }
 
-#critBurst {
-position:fixed;
-left:50%;
-top:50%;
-transform:translate(-50%,-50%);
-width:260px;
-height:260px;
-background:url('crit.gif') center/contain no-repeat;
-z-index:50;
-display:none;
-pointer-events:none;
-filter:drop-shadow(0 0 14px rgba(255,0,0,0.85));
-}
-
 #bossTitleOverlay {
 position:absolute;
 top:42px;
@@ -1104,7 +1090,6 @@ display:block;
 <button id="resetBtn" onclick="resetProgress()">Reset Progress</button>
 <button id="muteBtn" onclick="toggleMute()">🔊</button>
 <button id="helpBtn" onclick="toggleHelp()">?</button>
-<div id="critBurst"></div>
 <button id="highscoreToggleBtn" onclick="toggleHighscoreBox()">Hide UI</button>
 <button id="sideScreenshotBtn" onclick="downloadScreenshot()">Screenshot</button>
 <div id="eggTracker" title="Easter eggs found">
@@ -1254,12 +1239,6 @@ Correct answers open a parry window. Perfect parries deal more damage. Slightly 
 <p id="bossHpText" style="display:none;"></p>
 
 <div id="bossQuestion"></div>
-
-<div id="doomCast">
-<div class="cast-title">DOOOOOOOM</div>
-<div class="castbar"><div id="doomCastFill"></div></div>
-</div>
-
 <input id="bossInput" autocomplete="off">
 <button id="bossSubmitBtn" onclick="submitBossAnswer()">Open Parry Window</button>
 
@@ -1414,6 +1393,15 @@ resultTitle:"Nexus Point? More Like Nexus Disappointed."
 const foutePrompt =
 "You put on your deepest voice and start taking the lead. Acting like you created all this huh? It's a good thing nobody can see your sad attempt. Now, let's try that again shall we?";
 
+const EASTER_EGG_LABELS = {
+"tww-dornogal":"The War Within: Dornogal",
+"pokemon-ash":"Pokémon: Ash Ketchum",
+"riddle-hint":"Riddle Room: Hint",
+"overwatch-code":"Overwatch: The Number",
+"midnight-silvermoon":"Midnight: Silvermoon",
+"boss-execute":"Raid Boss: Pokémon Assist"
+};
+
 const zones = [
 {
 name:"The War Within",
@@ -1519,9 +1507,6 @@ let criticalMechanics=0;
 let perfectParries=0;
 let stunsTaken=0;
 let finalHealerSolved=false;
-let doomTimer=null;
-let doomTicks=0;
-let doomCursed=false;
 let tauntPunishments=0;
 let healerCruelty=0;
 let alistiaHealUsed=false;
@@ -1698,6 +1683,7 @@ resetRiddleInputs();
 }
 
 function resetProgress(){
+document.body.classList.remove("boss-fight-active");
 document.body.classList.remove("highscore-screen");
 if(currentUser){
 localStorage.removeItem(saveKey());
@@ -1743,9 +1729,7 @@ document.getElementById("introScreen").style.display="none";
 document.getElementById("introScreen").style.backgroundImage="";
 document.getElementById("fouteScreen").style.display="none";
 document.body.classList.remove("boss-fight-active");
-clearDoomCast();
-doomCursed=false;
-updateCurseDebuff();
+document.body.classList.remove("boss-fight-active");
 document.getElementById("bossScreen").style.display="none";
 document.getElementById("secretBossScreen").style.display="none";
 document.getElementById("killScreen").style.display="none";
@@ -2800,12 +2784,7 @@ render();
 },TRAVEL_DURATION_MS);
 }
 
-function showCritBurst(){
-const burst=document.getElementById("critBurst");
-if(!burst) return;
-burst.style.display="block";
-setTimeout(()=>{ burst.style.display="none"; },900);
-}
+
 
 function setBossFeedback(message){
 const fb=document.getElementById("bossFeedback");
@@ -2850,7 +2829,7 @@ qte:"hard"
 id:"doom",
 threshold:65,
 owner:"alistia",
-warning:"THE HARDEST PHASE BEGINS. THE BOSS BEGINS CASTING DOOM [2s]",
+warning:"THE HARDEST PHASE BEGINS. THE BOSS BEGINS CASTING DOOM",
 prompt:"Type INTERRUPT.",
 valid:["interrupt"],
 bonus:["fury"],
@@ -2860,6 +2839,7 @@ qte:"hardest"
 ];
 
 function startBossEncounter(){
+document.body.classList.add("boss-fight-active");
 document.getElementById("game").style.display="none";
 document.body.classList.add("boss-fight-active");
 document.getElementById("bossScreen").style.display="flex";
@@ -2875,9 +2855,6 @@ document.getElementById("bossName").innerText=user.bossName;
 document.getElementById("bossMessage").innerHTML="";
 
 bossHp=260;
-clearDoomCast();
-doomCursed=false;
-updateCurseDebuff();
 bossQuestionsAnswered=0;
 bossWrongAnswers=0;
 qteActive=false;
@@ -3039,7 +3016,6 @@ return item.q;
 
 function renderBoss(){
 clearQte();
-clearDoomCast();
 
 if(shouldTriggerFinalHealer()){
 startFinalHealerMechanic();
@@ -3117,12 +3093,6 @@ document.getElementById("bossInput").focus();
 document.getElementById("qteArea").style.display="none";
 setBossFeedback("The boss keeps casting until you solve the mechanic.");
 
-if(activeMechanic && activeMechanic.id==="doom"){
-if(!doomTimer) startDoomCast();
-}else{
-clearDoomCast();
-}
-
 updateBossStats();
 }
 
@@ -3168,7 +3138,6 @@ element="Vine Whip";
 }
 
 unlockEasterEgg("boss-execute","Pokémon assist");
-showCritBurst();
 
 const damage=20;
 bossHp=Math.max(1,bossHp-damage);
@@ -3334,8 +3303,6 @@ const isBonus = activeMechanic.owner===currentUser && isAccepted(input,activeMec
 const isValid = isAccepted(input,activeMechanic.valid || []);
 
 if(isBonus){
-clearDoomCast();
-showCritBurst();
 criticalMechanics++;
 mechanicsSolved++;
 bossQuestionsAnswered++;
@@ -3352,7 +3319,6 @@ return;
 }
 
 if(isValid){
-clearDoomCast();
 mechanicsSolved++;
 bossQuestionsAnswered++;
 const difficulty=activeMechanic.qte || "normal";
@@ -3384,13 +3350,6 @@ qteDuration=1250;
 qteDuration=2000;
 }else{
 qteDuration=1700;
-}
-
-if(doomCursed){
-qteDuration=Math.max(120, Math.floor(qteDuration/10));
-doomCursed=false;
-updateCurseDebuff();
-setBossFeedback("The DOOM curse twists time. This QTE is insanely fast!");
 }
 
 const qteArea=document.getElementById("qteArea");
@@ -3931,6 +3890,40 @@ document.body.classList.remove("game-ui-hidden");
 document.getElementById("highscoreToggleBtn").innerText="Hide UI";
 }
 
+function showMissedEasterEggs(){
+const raw=localStorage.getItem(resultKey());
+let result=null;
+
+try{
+result=raw ? JSON.parse(raw) : null;
+}catch(e){}
+
+const panel=document.getElementById("triviaReviewPanel");
+if(!panel) return;
+
+if(panel.dataset.mode==="eggs" && panel.style.display==="block"){
+panel.style.display="none";
+panel.dataset.mode="";
+return;
+}
+
+const found=(result && result.easterEggs) ? result.easterEggs : foundEasterEggs;
+const allIds=Object.keys(EASTER_EGG_LABELS);
+const missed=allIds.filter(id=>!found.includes(id));
+
+panel.dataset.mode="eggs";
+
+if(missed.length===0){
+panel.innerHTML="<strong>🥚 Easter eggs</strong><br>You found them all. Disgustingly thorough.";
+}else{
+panel.innerHTML=
+`<strong>🥚 Missed Easter Eggs (${missed.length}/${allIds.length})</strong><br><br>`+
+missed.map(id=>`<div class="review-item">○ ${escapeHtml(EASTER_EGG_LABELS[id])}</div>`).join("");
+}
+
+panel.style.display="block";
+}
+
 function showTriviaReview(){
 const raw=localStorage.getItem(resultKey());
 let result=null;
@@ -3965,13 +3958,25 @@ panel.style.display="block";
 function continueTriviaAfterScore(){
 document.body.classList.remove("highscore-screen");
 document.body.classList.remove("highscore-ui-hidden");
+document.body.classList.remove("game-ui-hidden");
+
 document.getElementById("login").style.display="none";
 document.getElementById("resultStep").style.display="none";
-document.getElementById("bossScreen").style.display="flex";
-document.body.classList.add("boss-fight-active");
-document.getElementById("helpBtn").style.display="block";
-playBossMusic();
-renderBoss();
+
+bossHp=260;
+bossQuestionsAnswered=0;
+bossWrongAnswers=0;
+mechanicsSolved=0;
+criticalMechanics=0;
+perfectParries=0;
+stunsTaken=0;
+finalHealerSolved=false;
+activeMechanic=null;
+mechanicIndex=0;
+usedBossQuestions=[];
+bossTriviaHistory=[];
+
+startBossEncounter();
 }
 
 function downloadScreenshot(){
