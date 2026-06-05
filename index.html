@@ -1912,7 +1912,7 @@ if(!pendingUser) return;
 const answerHash=await sha256(document.getElementById("securityAnswer").value);
 
 if(answerHash===users[pendingUser].hash){
-document.getElementById("securityMessage").innerText="You know me <3";
+document.getElementById("securityMessage").innerText="You know it! <3";
 
 setTimeout(()=>{
 currentUser=pendingUser;
@@ -1936,7 +1936,7 @@ showUserIntro();
 },700);
 
 }else{
-document.getElementById("securityMessage").innerText="I thought you knew me >3";
+document.getElementById("securityMessage").innerText="I thought you knew it! >3";
 document.getElementById("securityAnswer").value="";
 }
 }
