@@ -635,8 +635,12 @@ margin:8px 0;
 background:rgba(20,14,8,0.78);
 border:2px solid #c9a227;
 border-radius:16px;
-padding:24px;
+padding:24px 34px;
 box-shadow:0 0 30px rgba(0,0,0,0.9);
+width:min(760px, 88vw);
+max-height:78vh;
+overflow-y:auto;
+margin:0 auto;
 }
 
 .highscore-name {
@@ -656,10 +660,23 @@ margin:12px 0;
 .feat-list {
 text-align:left;
 margin:18px auto;
-max-width:520px;
+max-width:640px;
 line-height:1.6;
 }
+
+#resultStep {
+max-height:86vh;
+overflow:visible;
+}
+
+#screenshotBtn {
+width:220px;
+font-size:18px;
+padding:13px;
+margin-top:16px;
+}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 
 <body>
@@ -2592,6 +2609,7 @@ document.getElementById("login").style.background =
 `linear-gradient(rgba(0,0,0,0.20), rgba(0,0,0,0.78)), url('${user.highscoreBg}') center/cover`;
 
 document.getElementById("resultText").innerHTML =
+`<div id="screenshotArea">`+
 `<div class="highscore-card">`+
 `<div class="highscore-name">${escapeHtml(result.player)}</div>`+
 `<div>overcame</div>`+
@@ -2603,11 +2621,37 @@ document.getElementById("resultText").innerHTML =
 `<div class="result-line">Stuns: ${result.stunsTaken || result.bossWrongAnswers || 0} · Bad taunts: ${result.tauntPunishments || 0} · Healer incidents: ${result.healerCruelty || 0}</div>`+
 `<div class="feat-list">${feats.map(f=>"✦ "+escapeHtml(f)).join("<br>")}</div>`+
 `<div class="result-line">Completed: ${escapeHtml(result.completedAt)}</div>`+
-`</div>`;
+`</div>`+
+`</div>`+
+`<button id="screenshotBtn" onclick="downloadScreenshot()">Screenshot</button>`;
 }else{
 document.getElementById("resultText").innerHTML =
 `<div class="result-line">Your result could not be loaded.</div>`;
 }
+}
+
+function downloadScreenshot(){
+const target=document.getElementById("login");
+
+if(!window.html2canvas){
+alert("Screenshot tool is still loading. Try again in a second.");
+return;
+}
+
+html2canvas(target,{
+useCORS:true,
+allowTaint:true,
+backgroundColor:null,
+scale:2,
+windowWidth:window.innerWidth,
+windowHeight:window.innerHeight
+}).then(canvas=>{
+const link=document.createElement("a");
+const player=currentUser ? users[currentUser].display : "player";
+link.download=`quest-result-${player}.png`;
+link.href=canvas.toDataURL("image/png");
+link.click();
+});
 }
 
 function restartAdventure(){
