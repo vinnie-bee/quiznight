@@ -1,6 +1,3 @@
-
-document.body.classList.remove("boss-fight-active");
-document.getElementById("bossScreen").style.display="none";
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -579,54 +576,6 @@ padding:14px;
 body.boss-fight-active #bossSubmitBtn {
 width:230px;
 font-size:17px;
-}
-
-body.boss-fight-active #qteArea {
-display:none;
-position:fixed;
-left:50%;
-top:50%;
-transform:translate(-50%,-50%);
-width:min(620px,86vw);
-height:34px;
-z-index:46;
-background:rgba(0,0,0,0.86);
-border:2px solid #c9a227;
-box-shadow:0 0 22px rgba(201,162,39,0.75);
-}
-
-body.boss-fight-active #qteArea.active {
-display:block;
-}
-
-body.boss-fight-active #qteMarker {
-height:44px;
-top:-5px;
-}
-
-body.boss-fight-active #qteArea.enraged {
-border-color:#ff3333;
-box-shadow:0 0 26px rgba(255,51,51,0.95);
-}
-
-body.qte-active #bossQuestion,
-body.qte-active #bossInput,
-body.qte-active #bossSubmitBtn {
-visibility:hidden;
-}
-
-body.qte-active #bossFeedback {
-visibility:hidden;
-}
-
-body.qte-active #qteArea {
-z-index:80;
-}
-
-body.qte-active .boss-box {
-background:rgba(0,0,0,0.18);
-border-color:rgba(201,162,39,0.35);
-box-shadow:none;
 }
 
 #bossTitleOverlay {
@@ -1570,7 +1519,6 @@ let waitingForFirstTransition=false;
 let usedBossQuestions=[];
 let secretPhaseActive=false;
 let secretQteReady=false;
-let bossVictoryStarted=false;
 let foundEasterEggs=[];
 updateEasterEggTracker();
 
@@ -1969,7 +1917,7 @@ if(!pendingUser) return;
 const answerHash=await sha256(document.getElementById("securityAnswer").value);
 
 if(answerHash===users[pendingUser].hash){
-document.getElementById("securityMessage").innerText="know it";
+document.getElementById("securityMessage").innerText="You know me <3";
 
 setTimeout(()=>{
 currentUser=pendingUser;
@@ -1993,7 +1941,7 @@ showUserIntro();
 },700);
 
 }else{
-document.getElementById("securityMessage").innerText="knew it";
+document.getElementById("securityMessage").innerText="I thought you knew me >3";
 document.getElementById("securityAnswer").value="";
 }
 }
@@ -2406,12 +2354,7 @@ popup.classList.remove("show");
 function playOneShot(src, volume=0.9){
 const sound=new Audio(src);
 sound.volume=muted ? 0 : volume;
-sound.currentTime=0;
 sound.play().catch(()=>{});
-}
-
-function playBossSfx(src){
-playOneShot(src,1);
 }
 
 function playEasterEggSound(){
@@ -2555,17 +2498,6 @@ updateQuestLog();
 updateEasterEggTracker();
 updateEasterEggHint();
 saveGame();
-}
-
-function shouldLockoutQuestion(){
-if(z>=zones.length) return false;
-
-const world=zones[z].name;
-
-return (
-(world==="Overwatch" && (p===0 || p===1)) ||
-(world==="Midnight" && p===0)
-);
 }
 
 function startLockout(){
@@ -2835,9 +2767,7 @@ saveGame();
 document.body.classList.add("shake");
 setTimeout(()=>document.body.classList.remove("shake"),300);
 
-if(shouldLockoutQuestion()){
 startLockout();
-}
 }
 }
 
@@ -2936,13 +2866,12 @@ updateEasterEggHint();
 const user=users[currentUser];
 
 document.getElementById("bossScreen").style.backgroundImage=
-`linear-gradient(rgba(0,0,0,0.05), rgba(0,0,0,0.35)), url('${user.bossBg}')`;
+`linear-gradient(rgba(0,0,0,0.50), rgba(0,0,0,0.88)), url('${user.bossBg}')`;
 
 document.getElementById("bossName").innerText=user.bossName;
 document.getElementById("bossMessage").innerHTML="";
 
 bossHp=260;
-bossVictoryStarted=false;
 updateBossHpBar();
 bossQuestionsAnswered=0;
 bossWrongAnswers=0;
@@ -3135,9 +3064,7 @@ document.getElementById("bossInput").disabled=false;
 document.getElementById("bossSubmitBtn").innerText="Open Parry Window";
 document.getElementById("bossInput").value="";
 document.getElementById("bossInput").focus();
-document.body.classList.remove("qte-active");
 document.getElementById("qteArea").style.display="none";
-document.getElementById("qteArea").classList.remove("active");
 setBossFeedback("");
 updateBossStats();
 }
@@ -3147,7 +3074,6 @@ return bossHp<=13 && !finalHealerSolved;
 }
 
 function startFinalHealerMechanic(){
-playBossSfx("warning.mp3");
 activeMechanic={
 id:"finalhealer",
 owner:null,
@@ -3164,7 +3090,6 @@ showMechanic();
 }
 
 function startMechanic(mechanic){
-playBossSfx("warning.mp3");
 activeMechanic=mechanic;
 showMechanic();
 }
@@ -3188,9 +3113,7 @@ document.getElementById("bossInput").disabled=false;
 document.getElementById("bossSubmitBtn").innerText="Respond";
 document.getElementById("bossInput").value="";
 document.getElementById("bossInput").focus();
-document.body.classList.remove("qte-active");
 document.getElementById("qteArea").style.display="none";
-document.getElementById("qteArea").classList.remove("active");
 setBossFeedback("The boss keeps casting until you solve the mechanic.");
 
 updateBossStats();
@@ -3238,7 +3161,6 @@ element="Vine Whip";
 }
 
 unlockEasterEgg("boss-execute","Pokémon assist");
-playBossSfx("crit.mp3");
 
 const damage=20;
 bossHp=Math.max(1,bossHp-damage);
@@ -3247,7 +3169,7 @@ updateBossHpBar();
 setBossFeedback(`${starter} uses ${element}: It's super effective! The boss takes ${damage} damage!`);
 
 if(bossHp<=0){
-startBossVictorySequence();
+finishAdventure();
 return;
 }
 
@@ -3270,7 +3192,6 @@ return;
 }
 
 if(input.includes("ignore")){
-playBossSfx("wronganswer.mp3");
 bossWrongAnswers++;
 stunBossPlayer("Ignoring the boss does not make it go away. Stunned for 5 seconds.",5000);
 return;
@@ -3290,7 +3211,6 @@ return;
 if(currentUser==="alistia"){
 if(!alistiaHealUsed){
 alistiaHealUsed=true;
-playBossSfx("hit.mp3");
 bossHp=Math.max(1,bossHp-8);
 updateBossHpBar();
 setBossFeedback("Fine. One heal. Do not make a habit of this.");
@@ -3303,7 +3223,6 @@ return;
 }
 
 if(currentUser!=="cam" && input.includes("taunt")){
-playBossSfx("wronganswer.mp3");
 tauntPunishments++;
 stunBossPlayer("You try to TAUNT the boss. Unfortunately, you are not equipped to tank bosses! Stunned for 30 seconds.",30000);
 return;
@@ -3315,14 +3234,12 @@ return;
 }
 
 if(isNormalAnswerCorrect(input)){
-playBossSfx("goodanswer.mp3");
 bossQuestionsAnswered++;
 setBossFeedback("The boss attacks! Time your parry!");
 document.getElementById("bossInput").style.display="none";
 document.getElementById("bossSubmitBtn").style.display="none";
 startQte("normal");
 }else{
-playBossSfx("wronganswer.mp3");
 bossWrongAnswers++;
 const customWrong=document.getElementById("bossQuestion").dataset.wrong;
 stunBossPlayer(customWrong || "Wrong answer! Stunned for 5 seconds.",5000);
@@ -3360,7 +3277,6 @@ setTimeout(()=>renderBoss(),1200);
 return;
 }
 
-playBossSfx("wronganswer.mp3");
 stunBossPlayer("The healer is still gasping for mana. Try actually helping.",5000);
 return;
 }
@@ -3369,7 +3285,6 @@ const isBonus = activeMechanic.owner===currentUser && isAccepted(input,activeMec
 const isValid = isAccepted(input,activeMechanic.valid || []);
 
 if(isBonus){
-playBossSfx("crit.mp3");
 criticalMechanics++;
 mechanicsSolved++;
 bossQuestionsAnswered++;
@@ -3386,7 +3301,6 @@ return;
 }
 
 if(isValid){
-playBossSfx("goodanswer.mp3");
 mechanicsSolved++;
 bossQuestionsAnswered++;
 const difficulty=activeMechanic.qte || "normal";
@@ -3438,7 +3352,6 @@ setBossFeedback("ENRAGE! The boss lashes out faster. The perfect parry window sh
 }
 
 const qteArea=document.getElementById("qteArea");
-qteArea.classList.toggle("enraged", isBossEnraged());
 const marker=document.getElementById("qteMarker");
 let hpRatio=Math.max(0.01,bossHp/260);
 
@@ -3460,9 +3373,7 @@ qteArea.dataset.goodMin=String(0.5-goodWidth/200);
 qteArea.dataset.goodMax=String(0.5+goodWidth/200);
 qteArea.dataset.glancingMin=String(0.5-glancingWidth/200);
 qteArea.dataset.glancingMax=String(0.5+glancingWidth/200);
-document.body.classList.add("qte-active");
 qteArea.style.display="block";
-qteArea.classList.add("active");
 marker.style.left="0%";
 
 function animate(now){
@@ -3521,7 +3432,6 @@ const glancingMax=Number(qteArea.dataset.glancingMax || 0.70);
 if(progress>=perfectMin && progress<=perfectMax){
 damage=15;
 perfectParries++;
-playBossSfx("crit.mp3");
 message="Perfect parry! Massive counterattack!";
 }else if(progress>=goodMin && progress<=goodMax){
 damage=10;
@@ -3534,7 +3444,6 @@ damage=3;
 message="Too early! You barely scratch the boss.";
 }else{
 bossWrongAnswers++;
-playBossSfx("wronganswer.mp3");
 stunBossPlayer("Too late! Stunned for 5 seconds.",5000);
 return;
 }
@@ -3578,9 +3487,7 @@ updateBossHpBar();
 const btn=document.getElementById("bossSubmitBtn");
 const input=document.getElementById("bossInput");
 
-document.body.classList.remove("qte-active");
 document.getElementById("qteArea").style.display="none";
-document.getElementById("qteArea").classList.remove("active");
 setBossFeedback(message + " The boss recovers 5 HP from your mistake.");
 
 input.style.display="inline-block";
@@ -3651,26 +3558,6 @@ saveGame();
 
 document.getElementById("bossScreen").style.display="none";
 startSecretBossPhase();
-}
-
-function startBossVictorySequence(){
-if(bossVictoryStarted) return;
-bossVictoryStarted=true;
-clearQte();
-document.body.classList.remove("qte-active");
-
-stopAllAudio();
-playOneShot("victory.mp3",1);
-
-setBossFeedback("Victory! The boss collapses. Enjoy the silence before something smaller and angrier appears...");
-document.getElementById("bossInput").style.display="none";
-document.getElementById("bossSubmitBtn").style.display="none";
-document.getElementById("qteArea").style.display="none";
-document.getElementById("qteArea").classList.remove("active");
-
-setTimeout(()=>{
-startSecretBoss();
-},10000);
 }
 
 function startSecretBossPhase(){
@@ -3870,6 +3757,8 @@ add("Illegal taunts", -((result.tauntPunishments || 0) * 3000), "minus");
 add("Healer incidents", -((result.healerCruelty || 0) * 7500), "minus");
 
 let total=items.reduce((sum,item)=>sum+item.value,0);
+total=Math.max(10000, Math.min(50000, total));
+
 return {items:items,total:Math.round(total)};
 }
 
@@ -3969,6 +3858,7 @@ return `<div class="score-item ${cls}"><span>${escapeHtml(item.label)}</span><st
 `<div class="highscore-actions">`+
 
 
+`<button onclick="showTriviaReview()">Show boss answer review</button>`+
 `<button onclick="continueTriviaAfterScore()">Continue trivia</button>`+
 `<button onclick="restartAdventure()">just.. one... more... quest...</button>`+
 `</div>`+
@@ -4028,6 +3918,37 @@ panel.innerHTML="<strong>🥚 Easter eggs</strong><br>You found them all. Disgus
 panel.innerHTML=
 `<strong>🥚 Missed Easter Eggs (${missed.length}/${allIds.length})</strong><br><br>`+
 missed.map(id=>`<div class="review-item">○ ${escapeHtml(EASTER_EGG_LABELS[id])}</div>`).join("");
+}
+
+panel.style.display="block";
+}
+
+function showTriviaReview(){
+const raw=localStorage.getItem(resultKey());
+let result=null;
+
+try{
+result=raw ? JSON.parse(raw) : null;
+}catch(e){}
+
+const panel=document.getElementById("triviaReviewPanel");
+
+if(!panel) return;
+
+if(panel.style.display==="block"){
+panel.style.display="none";
+return;
+}
+
+const history=(result && result.triviaHistory) ? result.triviaHistory : bossTriviaHistory;
+
+if(!history || history.length===0){
+panel.innerHTML="<em>No boss trivia answers recorded.</em>";
+}else{
+panel.innerHTML=history.map(item=>{
+const ok=item.correct ? "✅" : "❌";
+return `<div class="review-item">${ok} <strong>${escapeHtml(item.question)}</strong><br>Your answer: ${escapeHtml(item.given || "-")}<br>Correct: ${escapeHtml(item.correctAnswer || "-")}</div>`;
+}).join("");
 }
 
 panel.style.display="block";
