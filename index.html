@@ -541,11 +541,36 @@ box-shadow:0 0 6px rgba(245,230,200,0.8);
 }
 
 #bossFeedback {
-min-height:28px;
-margin-top:10px;
-font-size:18px;
-color:#c9a227;
-text-shadow:0 0 8px black;
+min-height:38px;
+margin-top:12px;
+font-size:26px;
+font-weight:600;
+color:#ffd95c;
+text-shadow:0 0 10px black, 0 0 14px rgba(255,217,92,0.75);
+}
+
+body.boss-fight-active #bossScreen {
+align-items:center;
+padding-bottom:30px;
+}
+
+body.boss-fight-active .boss-box {
+margin-top:130px;
+}
+
+body.boss-fight-active #bossQuestion {
+font-size:32px;
+}
+
+body.boss-fight-active #bossInput {
+width:360px;
+font-size:20px;
+padding:14px;
+}
+
+body.boss-fight-active #bossSubmitBtn {
+width:230px;
+font-size:17px;
 }
 
 #critBurst {
@@ -1029,6 +1054,25 @@ max-height:86vh;
 overflow:visible;
 }
 
+#triviaReviewPanel {
+display:none;
+margin-top:14px;
+max-height:220px;
+overflow-y:auto;
+text-align:left;
+background:rgba(0,0,0,0.48);
+border:1px solid rgba(201,162,39,0.55);
+border-radius:12px;
+padding:12px;
+}
+
+.review-item {
+padding:8px 0;
+border-bottom:1px solid rgba(201,162,39,0.25);
+font-size:13px;
+line-height:1.45;
+}
+
 
 body.game-screen #highscoreToggleBtn,
 body.highscore-screen #highscoreToggleBtn {
@@ -1210,6 +1254,12 @@ Correct answers open a parry window. Perfect parries deal more damage. Slightly 
 <p id="bossHpText" style="display:none;"></p>
 
 <div id="bossQuestion"></div>
+
+<div id="doomCast">
+<div class="cast-title">DOOOOOOOM</div>
+<div class="castbar"><div id="doomCastFill"></div></div>
+</div>
+
 <input id="bossInput" autocomplete="off">
 <button id="bossSubmitBtn" onclick="submitBossAnswer()">Open Parry Window</button>
 
@@ -1451,6 +1501,8 @@ let elapsedBefore=0;
 let finishedTime=0;
 let bossHp=100;
 let bossCurrentAnswer=0;
+let bossCurrentQuestionText="";
+let bossTriviaHistory=[];
 let bossQuestionsAnswered=0;
 let bossWrongAnswers=0;
 let gameCompleted=false;
@@ -1467,6 +1519,9 @@ let criticalMechanics=0;
 let perfectParries=0;
 let stunsTaken=0;
 let finalHealerSolved=false;
+let doomTimer=null;
+let doomTicks=0;
+let doomCursed=false;
 let tauntPunishments=0;
 let healerCruelty=0;
 let alistiaHealUsed=false;
@@ -1661,6 +1716,7 @@ finishedTime=0;
 bossHp=100;
 bossQuestionsAnswered=0;
 bossWrongAnswers=0;
+bossTriviaHistory=[];
 mechanicsSolved=0;
 criticalMechanics=0;
 perfectParries=0;
@@ -1686,6 +1742,10 @@ document.getElementById("transition").style.display="none";
 document.getElementById("introScreen").style.display="none";
 document.getElementById("introScreen").style.backgroundImage="";
 document.getElementById("fouteScreen").style.display="none";
+document.body.classList.remove("boss-fight-active");
+clearDoomCast();
+doomCursed=false;
+updateCurseDebuff();
 document.getElementById("bossScreen").style.display="none";
 document.getElementById("secretBossScreen").style.display="none";
 document.getElementById("killScreen").style.display="none";
@@ -2801,6 +2861,7 @@ qte:"hardest"
 
 function startBossEncounter(){
 document.getElementById("game").style.display="none";
+document.body.classList.add("boss-fight-active");
 document.getElementById("bossScreen").style.display="flex";
 document.getElementById("helpBtn").style.display="block";
 updateEasterEggHint();
@@ -2814,6 +2875,9 @@ document.getElementById("bossName").innerText=user.bossName;
 document.getElementById("bossMessage").innerHTML="";
 
 bossHp=260;
+clearDoomCast();
+doomCursed=false;
+updateCurseDebuff();
 bossQuestionsAnswered=0;
 bossWrongAnswers=0;
 qteActive=false;
@@ -2831,6 +2895,13 @@ usedBossQuestions=[];
 
 playBossMusic();
 setTimeout(()=>renderBoss(),1800);
+}
+
+function bossCorrectAnswerText(){
+if(Array.isArray(bossCurrentAnswer)){
+return bossCurrentAnswer.join(" / ");
+}
+return String(bossCurrentAnswer || "");
 }
 
 function generateBossQuestion(){
@@ -2878,7 +2949,77 @@ const questions=[
 {q:"What is 7 × 12?", a:["84"]},
 {q:"What is 144 / 12?", a:["12"]},
 {q:"What is 19 + 26?", a:["45"]},
-{q:"What is 90 - 54?", a:["36"]}
+{q:"What is 90 - 54?", a:["36"]},
+{q:"In Samoa, it is illegal to forget your own wife's birthday. TRUE or FALSE?", a:["true"]},
+{q:"In Australia, it is illegal to wear hot pink pants after midday on a Sunday. TRUE or FALSE?", a:["false"]},
+{q:"In Thailand, it is illegal to leave your house without wearing underwear. TRUE or FALSE?", a:["true"]},
+{q:"In Switzerland, it is illegal to own just one guinea pig. TRUE or FALSE?", a:["true"]},
+{q:"In Japan, it is illegal to be fat. TRUE or FALSE?", a:["false"]},
+{q:"In Denmark, it is illegal to start your car without checking for sleeping cats underneath it. TRUE or FALSE?", a:["true"]},
+{q:"In France, it is illegal to name your pig Napoleon. TRUE or FALSE?", a:["true"]},
+{q:"In Canada, it is illegal to pay for items over $5 with only pennies. TRUE or FALSE?", a:["true"]},
+{q:"In the United Kingdom, it is illegal to handle a salmon in suspicious circumstances. TRUE or FALSE?", a:["true"]},
+{q:"In the United States, it is illegal to hunt camels in Arizona. TRUE or FALSE?", a:["true"]},
+{q:"Which world famous art gallery was robbed in October this year?", a:["the louvre", "louvre"]},
+{q:"How many hearts do octopuses have?", a:["three", "3"]},
+{q:"What is the capital city of the Night Elves?", a:["darnassus"]},
+{q:"Which dragon aspect was known as the Earth-Warder?", a:["neltharion", "deathwing"]},
+{q:"Which race starts in Mulgore?", a:["tauren"]},
+{q:"What is the name of Arthas's cursed runeblade?", a:["frostmourne"]},
+{q:"Which city is known as the City of Light?", a:["silvermoon"]},
+{q:"Which Old God was imprisoned beneath Ahn'Qiraj?", a:["c'thun", "cthun"]},
+{q:"What is the name of the titan world-soul inside Azeroth?", a:["azeroth"]},
+{q:"What is Tracer's real first name?", a:["lena"]},
+{q:"What is Genji's brother's name?", a:["hanzo"]},
+{q:"What is D.Va's real first name?", a:["hana"]},
+{q:"What nationality is Ana?", a:["egyptian"]},
+{q:"What is the best-selling video game of all time?", a:["minecraft"]},
+{q:"Which game popularized the battle royale genre?", a:["pubg"]},
+{q:"Which Pok\u00e9mon has the Pok\u00e9dex number 001?", a:["bulbasaur"]},
+{q:"Which game franchise features Vault Hunters?", a:["borderlands"]},
+{q:"Which game has the location Summoner's Rift?", a:["league of legends"]},
+{q:"What is the capital of Australia?", a:["canberra"]},
+{q:"Who painted the Mona Lisa?", a:["leonardo da vinci", "da vinci"]},
+{q:"Which chess piece can only move diagonally?", a:["bishop"]},
+{q:"What is the chemical symbol for Iron?", a:["fe"]},
+{q:"What color pill does Neo take in The Matrix?", a:["red"]},
+{q:"What is the name of the kingdom in Frozen?", a:["arendelle"]},
+{q:"In Home Alone, where is the family going for Christmas?", a:["paris"]},
+{q:"In The Big Lebowski, what is the main character's nickname?", a:["the dude", "dude"]},
+{q:"Who played the Joker in The Dark Knight?", a:["heath ledger"]},
+{q:"What city is Gotham based on stylistically?", a:["new york"]},
+{q:"What is the name of Thor's hammer?", a:["mjolnir"]},
+{q:"What was the first feature film to earn more than $1 billion worldwide?", a:["titanic"]},
+{q:"Which expansion introduced Mythic+?", a:["legion"]},
+{q:"Which dungeon was notorious for players using invisibility potions to skip large portions during Legion?", a:["court of stars"]},
+{q:"Which seasonal affix spawned mini-bosses throughout dungeons in Shadowlands Season 1?", a:["prideful"]},
+{q:"Which seasonal affix allowed players to enter portals to fight lieutenants?", a:["tormented"]},
+{q:"Which dungeon contains Hakkar?", a:["de other side"]},
+{q:"Which dungeon features Tred'ova?", a:["mists"]},
+{q:"Which dungeon contains Chrono-Lord Deios?", a:["dawn of the infinite"]},
+{q:"What was the first seasonal affix ever added to Mythic+?", a:["infested"]},
+{q:"Which expansion introduced seasonal affixes?", a:["bfa", "battle for azeroth"]},
+{q:"What was the name of the endlessly scaling tower introduced in Shadowlands?", a:["torghast"]},
+{q:"At what trash percentages did the affix spawn during S1 of Shadowlands?", a:["20%", "20"]},
+{q:"Who was the final boss of Sanctum of Domination?", a:["sylvanas"]},
+{q:"What mount dropped from Mythic Sylvanas?", a:["vengeance"]},
+{q:"What race was introduced in Dragonflight?", a:["dracthyr"]},
+{q:"What is the name of Nozdormu's corrupted future self?", a:["murozond"]},
+{q:"Who was the final boss of Vault of the Incarnates?", a:["raszageth"]},
+{q:"What was the name of Fyrakk's axe?", a:["fyr'alath", "fyralath"]},
+{q:"Which Dragon Aspect is known as the Spell-Weaver?", a:["malygos"]},
+{q:"What was the strongest PvP title in Vanilla for Horde?", a:["high warlord"]},
+{q:"What item starts the quest chain for Onyxia?", a:["drakefire"]},
+{q:"What class had the famous weapon Benediction?", a:["priest"]},
+{q:"In Classic, what killed the most players in WoW history?", a:["elevator", "the elevator"]},
+{q:"Which champion says DEMACIA?", a:["garen"]},
+{q:"What is the maximum level in a League game?", a:["18"]},
+{q:"Which champion carries a giant lamppost?", a:["jax"]},
+{q:"What is Yasuo's brother's name?", a:["yone"]},
+{q:"Which champion's ultimate is called Curtain Call?", a:["jhin"]},
+{q:"What year was League of Legends released?", a:["2009"]},
+{q:"Who is considered the greatest League player of all time?", a:["faker"]},
+{q:"Which European player became famous for the backdoor?", a:["xpeke"]}
 ];
 
 if(usedBossQuestions.length>=questions.length){
@@ -2898,6 +3039,7 @@ return item.q;
 
 function renderBoss(){
 clearQte();
+clearDoomCast();
 
 if(shouldTriggerFinalHealer()){
 startFinalHealerMechanic();
@@ -2913,6 +3055,7 @@ return;
 document.getElementById("bossHpBar").style.width=Math.max(0,(bossHp/260)*100)+"%";
 document.getElementById("bossHpText").innerText=`Boss HP: ${bossHp}/260`;
 const picked=generateBossQuestion();
+bossCurrentQuestionText=picked.q;
 document.getElementById("bossQuestion").innerHTML=escapeHtml(picked.q);
 document.getElementById("bossQuestion").dataset.wrong=picked.wrong || "";
 document.getElementById("bossInput").style.display="inline-block";
@@ -2973,6 +3116,13 @@ document.getElementById("bossInput").value="";
 document.getElementById("bossInput").focus();
 document.getElementById("qteArea").style.display="none";
 setBossFeedback("The boss keeps casting until you solve the mechanic.");
+
+if(activeMechanic && activeMechanic.id==="doom"){
+if(!doomTimer) startDoomCast();
+}else{
+clearDoomCast();
+}
+
 updateBossStats();
 }
 
@@ -3184,6 +3334,8 @@ const isBonus = activeMechanic.owner===currentUser && isAccepted(input,activeMec
 const isValid = isAccepted(input,activeMechanic.valid || []);
 
 if(isBonus){
+clearDoomCast();
+showCritBurst();
 criticalMechanics++;
 mechanicsSolved++;
 bossQuestionsAnswered++;
@@ -3200,6 +3352,7 @@ return;
 }
 
 if(isValid){
+clearDoomCast();
 mechanicsSolved++;
 bossQuestionsAnswered++;
 const difficulty=activeMechanic.qte || "normal";
@@ -3231,6 +3384,13 @@ qteDuration=1250;
 qteDuration=2000;
 }else{
 qteDuration=1700;
+}
+
+if(doomCursed){
+qteDuration=Math.max(120, Math.floor(qteDuration/10));
+doomCursed=false;
+updateCurseDebuff();
+setBossFeedback("The DOOM curse twists time. This QTE is insanely fast!");
 }
 
 const qteArea=document.getElementById("qteArea");
@@ -3428,7 +3588,8 @@ tauntPunishments:tauntPunishments,
 healerCruelty:healerCruelty,
 completedAt:new Date().toLocaleString(),
 starter:chosenStarter,
-easterEggs:foundEasterEggs.slice()
+easterEggs:foundEasterEggs.slice(),
+triviaHistory:bossTriviaHistory.slice()
 };
 
 result.score=calculateFinalScore(result);
@@ -3739,8 +3900,11 @@ return `<div class="score-item ${cls}"><span>${escapeHtml(item.label)}</span><st
 `<div class="highscore-actions">`+
 
 
+`<button onclick="showTriviaReview()">Show boss answer review</button>`+
+`<button onclick="continueTriviaAfterScore()">Continue trivia</button>`+
 `<button onclick="restartAdventure()">just.. one... more... quest...</button>`+
 `</div>`+
+`<div id="triviaReviewPanel"></div>`+
 `</div>`+
 `</div>`;
 }else{
@@ -3765,6 +3929,49 @@ function showHighscoreBox(){
 document.body.classList.remove("highscore-ui-hidden");
 document.body.classList.remove("game-ui-hidden");
 document.getElementById("highscoreToggleBtn").innerText="Hide UI";
+}
+
+function showTriviaReview(){
+const raw=localStorage.getItem(resultKey());
+let result=null;
+
+try{
+result=raw ? JSON.parse(raw) : null;
+}catch(e){}
+
+const panel=document.getElementById("triviaReviewPanel");
+
+if(!panel) return;
+
+if(panel.style.display==="block"){
+panel.style.display="none";
+return;
+}
+
+const history=(result && result.triviaHistory) ? result.triviaHistory : bossTriviaHistory;
+
+if(!history || history.length===0){
+panel.innerHTML="<em>No boss trivia answers recorded.</em>";
+}else{
+panel.innerHTML=history.map(item=>{
+const ok=item.correct ? "✅" : "❌";
+return `<div class="review-item">${ok} <strong>${escapeHtml(item.question)}</strong><br>Your answer: ${escapeHtml(item.given || "-")}<br>Correct: ${escapeHtml(item.correctAnswer || "-")}</div>`;
+}).join("");
+}
+
+panel.style.display="block";
+}
+
+function continueTriviaAfterScore(){
+document.body.classList.remove("highscore-screen");
+document.body.classList.remove("highscore-ui-hidden");
+document.getElementById("login").style.display="none";
+document.getElementById("resultStep").style.display="none";
+document.getElementById("bossScreen").style.display="flex";
+document.body.classList.add("boss-fight-active");
+document.getElementById("helpBtn").style.display="block";
+playBossMusic();
+renderBoss();
 }
 
 function downloadScreenshot(){
