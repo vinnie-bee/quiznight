@@ -765,6 +765,27 @@ align-items:center;
 display:none;
 }
 
+.pokemon-counter {
+font-size:22px;
+color:#c9a227;
+text-shadow:0 0 10px black;
+margin:12px 0 4px;
+}
+
+.pokemon-found-list {
+max-width:640px;
+max-height:120px;
+overflow-y:auto;
+font-size:13px;
+line-height:1.45;
+opacity:0.9;
+margin-top:10px;
+padding:8px;
+border:1px solid rgba(201,162,39,0.4);
+border-radius:10px;
+background:rgba(0,0,0,0.45);
+}
+
 .starter-choice-area {
 display:none;
 flex-direction:column;
@@ -1343,8 +1364,8 @@ name:"Pokemon",
 music:"pokemon.mp3",
 puzzles:[
 {starterChoice:true, hashes:["8cbfa8573683626c1609d1373f23b63bbfa5692fccad285e0306a500fa4b28f9","43c9d997f68ee54a55f7a22062c895312250751d3505ef2da40d2a7cf32b39fe","b5b5652a5dd3d781e2f6f412223e843cacbf2872091f485ed5fd61aa967a3719"], clue:"Professor Oak offers you your first Pokémon.\nChoose your starter: Charmander, Squirtle, or Bulbasaur.", bg:"pokemonbg1.jpg"},
-{hash:"73e512eccd9639bf632f1675f6a34a116f0abe5404dcebe98bf023be0e329d10", clue:"Fire lizard final evolution.", bg:"pokemonbg2.jpg"},
-{hash:"b3011a26f0f5047f91e14a8ae0daf2ea26de4a4cb831fb0ffe6d1060fd006ac0", clue:"Legendary psychic clone.", bg:"pokemonbg3.jpg"}
+{hash:"99f7479927c0c23ba4ea932475934ff775b075a6e58352291024b0732c758900", clue:"Who's making Onyx look so happy?", bg:"pokemonbg2.jpg"},
+{type:"pokemonList", required:50, found:[], clue:"Name 50 out of 151 Pokémon.", bg:"pokemonbg3.jpg"}
 ]
 },
 {
@@ -1397,6 +1418,9 @@ bg:"midnightbg3.jpg"
 ]
 }
 ];
+
+const GEN1_POKEMON = ["bulbasaur", "ivysaur", "venusaur", "charmander", "charmeleon", "charizard", "squirtle", "wartortle", "blastoise", "caterpie", "metapod", "butterfree", "weedle", "kakuna", "beedrill", "pidgey", "pidgeotto", "pidgeot", "rattata", "raticate", "spearow", "fearow", "ekans", "arbok", "pikachu", "raichu", "sandshrew", "sandslash", "nidoran♀", "nidorina", "nidoqueen", "nidoran♂", "nidorino", "nidoking", "clefairy", "clefable", "vulpix", "ninetales", "jigglypuff", "wigglytuff", "zubat", "golbat", "oddish", "gloom", "vileplume", "paras", "parasect", "venonat", "venomoth", "diglett", "dugtrio", "meowth", "persian", "psyduck", "golduck", "mankey", "primeape", "growlithe", "arcanine", "poliwag", "poliwhirl", "poliwrath", "abra", "kadabra", "alakazam", "machop", "machoke", "machamp", "bellsprout", "weepinbell", "victreebel", "tentacool", "tentacruel", "geodude", "graveler", "golem", "ponyta", "rapidash", "slowpoke", "slowbro", "magnemite", "magneton", "farfetch'd", "doduo", "dodrio", "seel", "dewgong", "grimer", "muk", "shellder", "cloyster", "gastly", "haunter", "gengar", "onix", "drowzee", "hypno", "krabby", "kingler", "voltorb", "electrode", "exeggcute", "exeggutor", "cubone", "marowak", "hitmonlee", "hitmonchan", "lickitung", "koffing", "weezing", "rhyhorn", "rhydon", "chansey", "tangela", "kangaskhan", "horsea", "seadra", "goldeen", "seaking", "staryu", "starmie", "mr. mime", "scyther", "jynx", "electabuzz", "magmar", "pinsir", "tauros", "magikarp", "gyarados", "lapras", "ditto", "eevee", "vaporeon", "jolteon", "flareon", "porygon", "omanyte", "omastar", "kabuto", "kabutops", "aerodactyl", "snorlax", "articuno", "zapdos", "moltres", "dratini", "dragonair", "dragonite", "mewtwo", "mew"];
+
 
 let z=0;
 let p=0;
@@ -1523,7 +1547,8 @@ elapsedBefore:currentElapsed(),
 gameCompleted:gameCompleted,
 chosenStarter:chosenStarter,
 foundEasterEggs:foundEasterEggs,
-multiSolved:zones.map(zone=>zone.puzzles.map(puzzle=>puzzle.solved || null))
+multiSolved:zones.map(zone=>zone.puzzles.map(puzzle=>puzzle.solved || null)),
+pokemonFound:zones.map(zone=>zone.puzzles.map(puzzle=>puzzle.found || null))
 }));
 }
 
@@ -1548,6 +1573,18 @@ if(zones[zi]){
 zoneData.forEach((puzzleData, pi)=>{
 if(puzzleData && zones[zi].puzzles[pi]){
 zones[zi].puzzles[pi].solved=puzzleData;
+}
+});
+}
+});
+}
+
+if(data.pokemonFound){
+data.pokemonFound.forEach((zoneData, zi)=>{
+if(zones[zi]){
+zoneData.forEach((puzzleData, pi)=>{
+if(puzzleData && zones[zi].puzzles[pi]){
+zones[zi].puzzles[pi].found=puzzleData;
 }
 });
 }
@@ -1580,6 +1617,10 @@ zones.forEach(zone=>{
 zone.puzzles.forEach(puzzle=>{
 if(puzzle.type==="multi"){
 puzzle.solved=[false,false,false,false];
+}
+
+if(puzzle.type==="pokemonList"){
+puzzle.found=[];
 }
 });
 });
@@ -2366,9 +2407,22 @@ input.value="✓";
 const solvedCount=currentPuzzle.solved.filter(Boolean).length;
 document.getElementById("progress").innerText =
 `Chapter ${z+1}/${zones.length}: ${solvedCount}/4`;
+}else if(currentPuzzle.type==="pokemonList"){
+document.getElementById("standardInputArea").style.display="flex";
+document.getElementById("riddleInputArea").style.display="none";
+document.getElementById("starterChoiceArea").style.display="none";
+
+const foundCount=currentPuzzle.found.length;
+document.getElementById("clue").innerHTML =
+`Name 50 out of 151 Pokémon.<div class="pokemon-counter">${foundCount}/50 found</div>`+
+`<div class="pokemon-found-list">${currentPuzzle.found.length ? currentPuzzle.found.map(name=>escapeHtml(name)).join(", ") : "No Pokémon named yet."}</div>`;
+
+document.getElementById("progress").innerText =
+`Chapter ${z+1}/${zones.length}: ${foundCount}/50`;
 }else{
 document.getElementById("standardInputArea").style.display="flex";
 document.getElementById("riddleInputArea").style.display="none";
+document.getElementById("starterChoiceArea").style.display="none";
 
 document.getElementById("progress").innerText =
 `Chapter ${z+1}/${zones.length}: ${p+1}/${zones[z].puzzles.length}`;
@@ -2557,6 +2611,61 @@ return;
 render();
 return;
 }
+}
+
+const currentPuzzleForList=zones[z].puzzles[p];
+
+if(currentPuzzleForList.type==="pokemonList"){
+const answer=normalize(value)
+.replace("nidoran female","nidoran♀")
+.replace("nidoran male","nidoran♂")
+.replace("farfetchd","farfetch'd")
+.replace("mrmime","mr. mime")
+.replace("mr mime","mr. mime");
+
+if(GEN1_POKEMON.includes(answer)){
+if(!currentPuzzleForList.found.includes(answer)){
+currentPuzzleForList.found.push(answer);
+attempts=[];
+
+if(currentPuzzleForList.found.length>=currentPuzzleForList.required){
+p++;
+
+if(p>=zones[z].puzzles.length){
+const oldWorld=z;
+z++;
+p=0;
+
+if(z<zones.length){
+saveGame();
+travelToNextWorld(oldWorld,z);
+return;
+}
+}
+
+render();
+saveGame();
+return;
+}
+
+render();
+saveGame();
+return;
+}
+
+attempts.push(answer + " was already counted");
+updateQuestLog();
+saveGame();
+return;
+}
+
+attempts.push(normalize(value));
+updateQuestLog();
+saveGame();
+document.body.classList.add("shake");
+setTimeout(()=>document.body.classList.remove("shake"),300);
+startLockout();
+return;
 }
 
 const inputHash=await sha256(value);
@@ -2870,8 +2979,25 @@ inputEl.value="";
 
 if(!input) return;
 
-if(input==="execute"){
-unlockEasterEgg("boss-execute","Execute phase");
+if(
+input.includes("pokeball") ||
+input.includes("pokemon") ||
+(input.includes("use ") && input.includes("poke")) ||
+(chosenStarter && input.includes("use ") && input.includes(normalize(chosenStarter)))
+){
+const starter=chosenStarter || "Your Pokémon";
+let element="Tackle";
+
+if(normalize(starter)==="charmander"){
+element="Ember";
+}else if(normalize(starter)==="squirtle"){
+element="Water Gun";
+}else if(normalize(starter)==="bulbasaur"){
+element="Vine Whip";
+}
+
+unlockEasterEgg("boss-execute","Pokémon assist");
+setBossFeedback(`${starter} uses ${element}: It's super effective!`);
 return;
 }
 
