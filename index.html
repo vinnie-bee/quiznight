@@ -1413,6 +1413,45 @@ localStorage.setItem("questResult_" + currentUser, JSON.stringify(fake));
 showResultOnLogin();
 }
 
+function teleportToPuzzleForTesting(){
+if(!currentUser){
+currentUser="cam";
+}
+
+const puzzleIndex=zones.findIndex(zone=>zone.name==="The Hidden Riddle");
+
+if(puzzleIndex===-1){
+alert("Puzzle room not found.");
+return;
+}
+
+z=puzzleIndex;
+p=0;
+attempts=[];
+elapsedBefore=0;
+startedAt=Date.now();
+gameCompleted=false;
+
+zones[z].puzzles[p].solved=[false,false,false,false];
+resetRiddleInputs();
+
+document.getElementById("login").style.display="none";
+document.getElementById("game").style.display="flex";
+document.getElementById("transition").style.display="none";
+document.getElementById("introScreen").style.display="none";
+document.getElementById("fouteScreen").style.display="none";
+document.getElementById("bossScreen").style.display="none";
+document.getElementById("killScreen").style.display="none";
+document.getElementById("creditsScreen").style.display="none";
+
+document.getElementById("playerName").innerText=users[currentUser].display;
+
+playWorldMusic();
+render();
+startTimer();
+saveGame();
+}
+
 function teleportToBossForTesting(){
 if(!currentUser){
 currentUser="cam";
@@ -1447,6 +1486,11 @@ if(!rawName) return;
 
 if(key==="veryhighscore"){
 showFakeHighscoreForTesting();
+return;
+}
+
+if(key==="verypuzzle"){
+teleportToPuzzleForTesting();
 return;
 }
 
@@ -1557,7 +1601,7 @@ const text=document.getElementById("introText");
 const audio=document.getElementById("introMusic");
 
 screen.style.backgroundImage =
-`linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.78)), url('${user.introBg}')`;
+`linear-gradient(rgba(0,0,0,0.05), rgba(0,0,0,0.20)), url('${user.introBg}')`;
 
 text.innerText=user.intro;
 screen.style.display="flex";
@@ -2001,6 +2045,11 @@ showFakeHighscoreForTesting();
 return;
 }
 
+if(normalize(value)==="verypuzzle"){
+teleportToPuzzleForTesting();
+return;
+}
+
 if(normalize(value)==="veryendgame"){
 teleportToBossForTesting();
 return;
@@ -2317,6 +2366,11 @@ if(!input) return;
 
 if(input==="veryhighscore"){
 showFakeHighscoreForTesting();
+return;
+}
+
+if(input==="verypuzzle"){
+teleportToPuzzleForTesting();
 return;
 }
 
@@ -2845,7 +2899,7 @@ document.getElementById("killText").innerText=lines[currentUser] || "The boss fa
 
 const killScreen=document.getElementById("killScreen");
 killScreen.style.backgroundImage =
-`linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.82)), url('${users[currentUser].introBg}')`;
+`linear-gradient(rgba(0,0,0,0.05), rgba(0,0,0,0.20)), url('${users[currentUser].introBg}')`;
 
 killScreen.style.display="flex";
 playKillMusic();
@@ -2955,7 +3009,7 @@ const score=result.score || calculateFinalScore(result);
 document.querySelector("#login .box").classList.add("result-mode");
 
 document.getElementById("login").style.background =
-`linear-gradient(rgba(0,0,0,0.20), rgba(0,0,0,0.78)), url('${user.highscoreBg}') center/cover`;
+`linear-gradient(rgba(0,0,0,0.05), rgba(0,0,0,0.20)), url('${user.highscoreBg}') center/cover`;
 
 document.getElementById("resultText").innerHTML =
 `<div id="screenshotArea">`+
