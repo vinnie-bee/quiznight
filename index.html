@@ -3336,6 +3336,9 @@ function startQte(difficulty="normal"){
 qteActive=true;
 qteStart=performance.now();
 
+const qteArea=document.getElementById("qteArea");
+const marker=document.getElementById("qteMarker");
+
 if(difficulty==="secret"){
 qteDuration=5200;
 }else if(difficulty==="average"){
@@ -3348,34 +3351,23 @@ qteDuration=2000;
 qteDuration=1700;
 }
 
-if(isBossEnraged()){
-qteDuration=Math.max(250, Math.floor(qteDuration/2));
-
-const currentPerfect=parseFloat(area.dataset.perfectMax)-parseFloat(area.dataset.perfectMin);
-const center=(parseFloat(area.dataset.perfectMax)+parseFloat(area.dataset.perfectMin))/2;
-const newPerfect=currentPerfect/2;
-const newMin=center-(newPerfect/2);
-const newMax=center+(newPerfect/2);
-
-area.dataset.perfectMin=String(newMin);
-area.dataset.perfectMax=String(newMax);
-area.style.setProperty("--perfect-left",(newMin*100)+"%");
-area.style.setProperty("--perfect-width",(newPerfect*100)+"%");
-
-setBossFeedback("ENRAGE! The boss lashes out faster. The perfect parry window shrinks.");
-}
-
-const qteArea=document.getElementById("qteArea");
-const marker=document.getElementById("qteMarker");
 let hpRatio=Math.max(0.01,bossHp/260);
 
 if(difficulty==="secret"){
 hpRatio=1;
 }
 
-const perfectWidth = difficulty==="secret" ? 99 : Math.max(1.5, 8 * hpRatio);
-const goodWidth = difficulty==="secret" ? 99 : Math.max(5, 18 * hpRatio);
-const glancingWidth = difficulty==="secret" ? 99 : Math.max(8, 30 * hpRatio);
+let perfectWidth = difficulty==="secret" ? 99 : Math.max(1.5, 8 * hpRatio);
+let goodWidth = difficulty==="secret" ? 99 : Math.max(5, 18 * hpRatio);
+let glancingWidth = difficulty==="secret" ? 99 : Math.max(8, 30 * hpRatio);
+
+if(isBossEnraged()){
+qteDuration=Math.max(250, Math.floor(qteDuration/2));
+perfectWidth=Math.max(0.75, perfectWidth/2);
+goodWidth=Math.max(3, goodWidth/2);
+glancingWidth=Math.max(5, glancingWidth/2);
+setBossFeedback("ENRAGE! The boss lashes out faster. The perfect parry window shrinks.");
+}
 
 qteArea.style.setProperty("--perfect-width",perfectWidth+"%");
 qteArea.style.setProperty("--perfect-left",(50-perfectWidth/2)+"%");
