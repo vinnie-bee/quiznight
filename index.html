@@ -921,6 +921,7 @@ You can press <strong>spacebar</strong> instead of clicking, for easier timings!
 </div>
 
 </div>
+<button id="showScoreBtn" onclick="showHighscoreBox()">Show Highscore</button>
 </div>
 
 <div id="game">
@@ -1320,6 +1321,7 @@ startedAt=null;
 }
 
 function showNameStep(){
+document.getElementById("login").classList.remove("highscore-hidden");
 document.querySelector("#login .box").classList.remove("result-mode");
 document.getElementById("login").style.background =
 "linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0.15)), url('login.png') center/cover";
@@ -3064,23 +3066,49 @@ showResultOnLogin();
 },CREDITS_DURATION_MS);
 }
 
-function calculateFinalScore(result){
-let score=25000;
+function calculateScoreBreakdown(result){
+const items=[];
+
+function add(label,value,type){
+items.push({label:label,value:value,type:type});
+}
+
+add("Base score",20000,"plus");
 
 const timeSeconds=Math.floor((result.time || 0) / 1000);
-score += Math.max(0, 12000 - timeSeconds * 8);
-score += (result.bossQuestionsAnswered || 0) * 420;
-score += (result.mechanicsSolved || 0) * 2500;
-score += (result.criticalMechanics || 0) * 4200;
-score += (result.perfectParries || 0) * 900;
+const timeBonus=Math.max(0, 10000 - timeSeconds * 6);
+add("Time bonus",timeBonus,"plus");
 
-score -= (result.stunsTaken || 0) * 1600;
-score -= (result.tauntPunishments || 0) * 3500;
-score -= (result.healerCruelty || 0) * 8000;
-score -= (result.bossWrongAnswers || 0) * 550;
+add("Boss answers", (result.bossQuestionsAnswered || 0) * 450, "plus");
+add("Mechanics solved", (result.mechanicsSolved || 0) * 2200, "plus");
+add("Class critical answers", (result.criticalMechanics || 0) * 3500, "plus");
+add("Perfect parries", (result.perfectParries || 0) * 850, "plus");
 
-score = Math.max(10000, Math.min(50000, score));
-return Math.round(score);
+const starter=(result.starter || "").toLowerCase();
+
+if(starter==="bulbasaur"){
+add("Bulbasaur supremacy",1000,"plus");
+}else if(starter==="squirtle"){
+add("Squirtle choice",100,"plus");
+}else if(starter==="charmander"){
+add("Charmander choice",100,"plus");
+}else{
+add("Starter not recorded",0,"neutral");
+}
+
+add("Stuns taken", -((result.stunsTaken || 0) * 1300), "minus");
+add("Wrong boss answers", -((result.bossWrongAnswers || 0) * 500), "minus");
+add("Illegal taunts", -((result.tauntPunishments || 0) * 3000), "minus");
+add("Healer incidents", -((result.healerCruelty || 0) * 7500), "minus");
+
+let total=items.reduce((sum,item)=>sum+item.value,0);
+total=Math.max(10000, Math.min(50000, total));
+
+return {items:items,total:Math.round(total)};
+}
+
+function calculateFinalScore(result){
+return calculateScoreBreakdown(result).total;
 }
 
 function buildFeats(result){
@@ -3134,12 +3162,14 @@ document.getElementById("login").style.display="flex";
 document.getElementById("landingStep").style.display="none";
 document.getElementById("nameStep").style.display="none";
 document.getElementById("securityStep").style.display="none";
+document.getElementById("login").classList.remove("highscore-hidden");
 document.getElementById("resultStep").style.display="block";
 
 if(result){
 const user=users[currentUser] || {};
 const feats=result.feats || buildFeats(result);
-const score=result.score || calculateFinalScore(result);
+const breakdown=calculateScoreBreakdown(result);
+const score=breakdown.total;
 
 document.querySelector("#login .box").classList.add("result-mode");
 
@@ -3154,15 +3184,20 @@ document.getElementById("resultText").innerHTML =
 `<div>overcame</div>`+
 `<div class="result-line"><strong>${escapeHtml(user.bossName || "their rival")}</strong></div>`+
 `<div class="highscore-score">${score}</div>`+
-`<div class="result-line">Final score</div>`+
-`<div class="result-line">Total time: ${escapeHtml(result.timeText)}</div>`+
-`<div class="result-line">Starter Pokémon: ${escapeHtml(result.starter || "Not recorded")}</div>`+
-`<div class="result-line">Mechanics solved: ${result.mechanicsSolved || 0}/5 · Critical answers: ${result.criticalMechanics || 0} · Perfect parries: ${result.perfectParries || 0}</div>`+
-`<div class="result-line">Stuns: ${result.stunsTaken || result.bossWrongAnswers || 0} · Bad taunts: ${result.tauntPunishments || 0} · Healer incidents: ${result.healerCruelty || 0}</div>`+
+`<div class="arcade-label">FINAL SCORE</div>`+
+`<div class="result-line">Total time: ${escapeHtml(result.timeText)} · Starter: ${escapeHtml(result.starter || "Not recorded")}</div>`+
+`<div class="score-breakdown">`+
+breakdown.items.map(item=>{
+const cls=item.type==="minus" ? "score-minus" : item.type==="plus" ? "score-plus" : "score-neutral";
+const sign=item.value>0 ? "+" : "";
+return `<div class="${cls}">${escapeHtml(item.label)}</div><div class="${cls}">${sign}${item.value}</div>`;
+}).join("")+
+`</div>`+
 `<div class="feat-list">${feats.map(f=>"✦ "+escapeHtml(f)).join("<br>")}</div>`+
 `<div class="result-line">Completed: ${escapeHtml(result.completedAt)}</div>`+
 `<div class="highscore-actions">`+
 `<button id="screenshotBtn" onclick="downloadScreenshot()">Screenshot</button>`+
+`<button onclick="hideHighscoreBox()">Hide Highscore</button>`+
 `<button onclick="restartAdventure()">just.. one... more... quest...</button>`+
 `</div>`+
 `</div>`+
@@ -3172,6 +3207,14 @@ document.getElementById("resultText").innerHTML =
 `<div class="result-line">Your result could not be loaded.</div>`;
 }
 }
+function hideHighscoreBox(){
+document.getElementById("login").classList.add("highscore-hidden");
+}
+
+function showHighscoreBox(){
+document.getElementById("login").classList.remove("highscore-hidden");
+}
+
 function downloadScreenshot(){
 const target=document.getElementById("login");
 
