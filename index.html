@@ -56,8 +56,9 @@ box-shadow:0 0 30px rgba(201,162,39,0.45);
 }
 
 .box.result-mode {
-width:min(960px, 92vw);
-max-height:86vh;
+width:76vw;
+max-width:1180px;
+max-height:88vh;
 padding:0;
 background:transparent;
 border:none;
@@ -440,7 +441,7 @@ margin:0;
 }
 
 #bossTitleOverlay h2 {
-font-size:34px;
+font-size:30px;
 margin:8px 0 0;
 color:#f5e6c8;
 }
@@ -801,14 +802,14 @@ margin:8px 0;
 }
 
 .highscore-card {
-background:rgba(20,14,8,0.82);
+background:rgba(20,14,8,0.78);
 border:2px solid #c9a227;
 border-radius:16px;
-padding:26px 38px;
+padding:24px 34px;
 box-shadow:0 0 30px rgba(0,0,0,0.9);
-width:min(900px, 90vw);
-max-height:82vh;
-overflow-y:auto;
+width:100%;
+max-height:none;
+overflow:visible;
 margin:0 auto;
 }
 
@@ -827,10 +828,14 @@ margin:12px 0;
 }
 
 .feat-list {
+display:grid;
+grid-template-columns:repeat(2, minmax(0, 1fr));
+gap:6px 18px;
 text-align:left;
-margin:18px auto;
-max-width:640px;
-line-height:1.6;
+margin:14px auto;
+max-width:100%;
+line-height:1.35;
+font-size:14px;
 }
 
 #resultStep > h2 {
@@ -838,7 +843,7 @@ display:none;
 }
 
 .highscore-title {
-font-size:34px;
+font-size:30px;
 color:#c9a227;
 text-shadow:0 0 12px black;
 margin-bottom:12px;
@@ -1229,9 +1234,21 @@ puzzles:[
 name:"Midnight",
 music:"midnight.mp3",
 puzzles:[
-{hash:"78d08e34cc71174c32522caad2b7bc1739a1f00121261cc3c3ca55e021256c59", clue:"Elven homeland.", bg:"midnightbg1.jpg"},
-{hash:"132255778e32a21db5059929e9f96596a56b8051543de45fcb99a7bc034a2b16", clue:"Arcane source.", bg:"midnightbg2.jpg"},
-{hash:"fcc31d9c7c7bcfb67928fa9a0f212910de2e5592c5acf6df6f4856aae7370357", clue:"Undead threat.", bg:"midnightbg3.jpg"}
+{
+requiresWords:["red","blue"],
+clue:"Major city with hunts in red\nthese gems are hidden downstairs between the dead\nsuch a nightmare of a grind each day,\nso tell me their colours, and be on your way",
+bg:"midnightbg1.jpg"
+},
+{
+hash:"3180c432d43cc9d1fdb69a42068cb4aeb56557b9301d267d894911a6830d1200",
+clue:"WANTED is the name of this game\nEvery day again, rising to local fame\nFlying skyhigh towards the Lights of the Vale,\nLet it be! These guys impale.",
+bg:"midnightbg2.jpg"
+},
+{
+hash:"3755b417b0f937026ac1b867a397d6dec80dfd463c232c2daaf1de974b93da82",
+clue:"Near the flanks of the Amani ruins lies a wound of stone,\nA path that reaches onward, yet arrives at none.\nWhat ends above continues in the deep below,\nWhere only those with borrowed breath may go\nBeneath an ancient temple, four silent wardens wait,\nSeek the living sigil with a crown of eight.",
+bg:"midnightbg3.jpg"
+}
 ]
 }
 ];
@@ -1321,6 +1338,7 @@ startedAt=null;
 }
 
 function showNameStep(){
+document.body.classList.remove("highscore-screen");
 document.getElementById("login").classList.remove("highscore-hidden");
 document.querySelector("#login .box").classList.remove("result-mode");
 document.getElementById("login").style.background =
@@ -1414,6 +1432,7 @@ resetRiddleInputs();
 }
 
 function resetProgress(){
+document.body.classList.remove("highscore-screen");
 if(currentUser){
 localStorage.removeItem(saveKey());
 localStorage.removeItem(resultKey());
@@ -2188,6 +2207,32 @@ const currentPuzzle=zones[z].puzzles[p];
 
 if(currentPuzzle.type==="multi"){
 return;
+}
+
+if(zones[z].puzzles[p].requiresWords){
+const answerText=normalize(value);
+const hasAllWords=zones[z].puzzles[p].requiresWords.every(word=>answerText.includes(word));
+
+if(hasAllWords){
+attempts=[];
+
+p++;
+
+if(p>=zones[z].puzzles.length){
+const oldWorld=z;
+z++;
+p=0;
+
+if(z<zones.length){
+saveGame();
+travelToNextWorld(oldWorld,z);
+return;
+}
+}
+
+render();
+return;
+}
 }
 
 const inputHash=await sha256(value);
@@ -3162,6 +3207,7 @@ document.getElementById("login").style.display="flex";
 document.getElementById("landingStep").style.display="none";
 document.getElementById("nameStep").style.display="none";
 document.getElementById("securityStep").style.display="none";
+document.body.classList.add("highscore-screen");
 document.getElementById("login").classList.remove("highscore-hidden");
 document.getElementById("resultStep").style.display="block";
 
@@ -3190,10 +3236,10 @@ document.getElementById("resultText").innerHTML =
 breakdown.items.map(item=>{
 const cls=item.type==="minus" ? "score-minus" : item.type==="plus" ? "score-plus" : "score-neutral";
 const sign=item.value>0 ? "+" : "";
-return `<div class="${cls}">${escapeHtml(item.label)}</div><div class="${cls}">${sign}${item.value}</div>`;
+return `<div class="score-item ${cls}"><span>${escapeHtml(item.label)}</span><strong>${sign}${item.value}</strong></div>`;
 }).join("")+
 `</div>`+
-`<div class="feat-list">${feats.map(f=>"✦ "+escapeHtml(f)).join("<br>")}</div>`+
+`<div class="feat-list">${feats.map(f=>"<div>✦ "+escapeHtml(f)+"</div>").join("")}</div>`+
 `<div class="result-line">Completed: ${escapeHtml(result.completedAt)}</div>`+
 `<div class="highscore-actions">`+
 `<button id="screenshotBtn" onclick="downloadScreenshot()">Screenshot</button>`+
@@ -3240,6 +3286,7 @@ link.click();
 }
 
 function restartAdventure(){
+document.body.classList.remove("highscore-screen");
 if(currentUser){
 localStorage.removeItem(saveKey());
 localStorage.removeItem(resultKey());
