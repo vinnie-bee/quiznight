@@ -55,6 +55,15 @@ text-align:center;
 box-shadow:0 0 30px rgba(201,162,39,0.45);
 }
 
+.box.result-mode {
+width:min(960px, 92vw);
+max-height:86vh;
+padding:0;
+background:transparent;
+border:none;
+box-shadow:none;
+}
+
 #landingStep {
 display:block;
 }
@@ -578,6 +587,60 @@ white-space:pre-line;
 line-height:1.6;
 }
 
+.riddle-panel {
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:14px;
+margin:18px 0;
+}
+
+.riddle-row {
+display:flex;
+align-items:center;
+gap:10px;
+background:rgba(0,0,0,0.55);
+border:1px solid rgba(201,162,39,0.55);
+border-radius:12px;
+padding:10px;
+}
+
+.riddle-row label {
+width:28px;
+color:#c9a227;
+font-weight:600;
+}
+
+.riddle-row input {
+width:170px;
+margin-top:0;
+}
+
+.riddle-row.solved {
+background:rgba(40,120,50,0.55);
+border-color:#68d36f;
+box-shadow:0 0 10px rgba(104,211,111,0.45);
+}
+
+.riddle-row.solved input {
+border-color:#68d36f;
+color:#b7ffbd;
+}
+
+#standardInputArea {
+display:flex;
+flex-direction:column;
+align-items:center;
+}
+
+#riddleInputArea {
+display:none;
+}
+
+#clue {
+white-space:pre-line;
+line-height:1.6;
+}
+
 #qteArea {
 display:none;
 margin-top:20px;
@@ -642,13 +705,13 @@ margin:8px 0;
 }
 
 .highscore-card {
-background:rgba(20,14,8,0.78);
+background:rgba(20,14,8,0.82);
 border:2px solid #c9a227;
 border-radius:16px;
-padding:24px 34px;
+padding:26px 38px;
 box-shadow:0 0 30px rgba(0,0,0,0.9);
-width:min(920px, 90vw);
-max-height:72vh;
+width:min(900px, 90vw);
+max-height:82vh;
 overflow-y:auto;
 margin:0 auto;
 }
@@ -672,6 +735,32 @@ text-align:left;
 margin:18px auto;
 max-width:640px;
 line-height:1.6;
+}
+
+#resultStep > h2 {
+display:none;
+}
+
+.highscore-title {
+font-size:34px;
+color:#c9a227;
+text-shadow:0 0 12px black;
+margin-bottom:12px;
+}
+
+.highscore-actions {
+display:flex;
+gap:14px;
+justify-content:center;
+align-items:center;
+flex-wrap:wrap;
+margin-top:16px;
+}
+
+.highscore-actions button {
+width:230px;
+font-size:16px;
+padding:11px;
 }
 
 #resultStep {
@@ -747,8 +836,17 @@ You can press <strong>spacebar</strong> instead of clicking, for easier timings!
 <h2 id="zone"></h2>
 <p id="clue"></p>
 
+<div id="standardInputArea">
 <input id="input" autocomplete="off">
 <button id="submitBtn" onclick="submit()">Submit</button>
+</div>
+
+<div id="riddleInputArea" class="riddle-panel">
+<div class="riddle-row" id="riddleRow0"><label>1</label><input id="riddleInput0" autocomplete="off"><button onclick="submitRiddleAnswer(0)">Submit</button></div>
+<div class="riddle-row" id="riddleRow1"><label>2</label><input id="riddleInput1" autocomplete="off"><button onclick="submitRiddleAnswer(1)">Submit</button></div>
+<div class="riddle-row" id="riddleRow2"><label>3</label><input id="riddleInput2" autocomplete="off"><button onclick="submitRiddleAnswer(2)">Submit</button></div>
+<div class="riddle-row" id="riddleRow3"><label>4</label><input id="riddleInput3" autocomplete="off"><button onclick="submitRiddleAnswer(3)">Submit</button></div>
+</div>
 
 </div>
 
@@ -916,7 +1014,7 @@ fellicity:{
 display:"Fellicity",
 question:"What's my favorite Maroon 5 song?",
 hash:"8044aae1f86875d993f20d7fe3815306b640d6e039c4512cd7a2f8453207b4cd",
-intro:"Cute as a button, Excellent wit. Forgive me for not allowing your main, alas your sharp mind might win this game",
+intro:"Forgive me for not accepting your main, but there is only one druid allowed in this game. Your vast knowledge will be of great aid, show them how this game is meant to be played",
 audio:"fellicity.mp3",
 introBg:"demonhunter.jpg",
 bossName:"The Hook Boss",
@@ -985,6 +1083,25 @@ puzzles:[
 ]
 },
 {
+name:"The Hidden Riddle",
+music:STANDARD_MUSIC,
+puzzles:[
+{
+type:"multi",
+answers:[
+{label:"1", hash:"42c9cfc1a317a5a9946b33af0755233741b00b939fd33b42e768d33c25d42ad1"},
+{label:"2", hash:"d537bc9c04d322df18388944bb0f7da74969857d482b4bb6955b95cc10478489"},
+{label:"3", hash:"3ba8d02b16fd2a01c1a8ba1a1f036d7ce386ed953696fa57331c2ac48a80b255"},
+{label:"4", hash:"1b16b1df538ba12dc3f97edbb85caa7050d46c148134290feba80f8236c83db9"}
+],
+solved:[false,false,false,false],
+clue:"",
+bg:"riddlebg.png",
+mapLabel:"?"
+}
+]
+},
+{
 name:"Pokemon",
 music:"pokemon.mp3",
 puzzles:[
@@ -1000,25 +1117,6 @@ puzzles:[
 {hash:"78d08e34cc71174c32522caad2b7bc1739a1f00121261cc3c3ca55e021256c59", clue:"Elven homeland.", bg:"midnightbg1.jpg"},
 {hash:"132255778e32a21db5059929e9f96596a56b8051543de45fcb99a7bc034a2b16", clue:"Arcane source.", bg:"midnightbg2.jpg"},
 {hash:"fcc31d9c7c7bcfb67928fa9a0f212910de2e5592c5acf6df6f4856aae7370357", clue:"Undead threat.", bg:"midnightbg3.jpg"}
-]
-},
-{
-name:"The Hidden Riddle",
-music:STANDARD_MUSIC,
-puzzles:[
-{
-type:"multi",
-answers:[
-{label:"1", hash:"42c9cfc1a317a5a9946b33af0755233741b00b939fd33b42e768d33c25d42ad1"},
-{label:"2", hash:"d537bc9c04d322df18388944bb0f7da74969857d482b4bb6955b95cc10478489"},
-{label:"3", hash:"3ba8d02b16fd2a01c1a8ba1a1f036d7ce386ed953696fa57331c2ac48a80b255"},
-{label:"4", hash:"1b16b1df538ba12dc3f97edbb85caa7050d46c148134290feba80f8236c83db9"}
-],
-solved:[false,false,false,false],
-clue:"A locked riddle waits on the road.\nSubmit four answers as numbered commands.\nExample: 1 edam",
-bg:"riddlebg.png",
-mapLabel:"?"
-}
 ]
 }
 ];
@@ -1107,6 +1205,10 @@ startedAt=null;
 }
 
 function showNameStep(){
+document.querySelector("#login .box").classList.remove("result-mode");
+document.getElementById("login").style.background =
+"linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0.15)), url('login.png') center/cover";
+
 document.getElementById("landingStep").style.display="none";
 document.getElementById("resultStep").style.display="none";
 document.getElementById("nameStep").style.display="block";
@@ -1167,6 +1269,20 @@ return false;
 }
 }
 
+function resetRiddleInputs(){
+for(let i=0;i<4;i++){
+const input=document.getElementById("riddleInput"+i);
+const row=document.getElementById("riddleRow"+i);
+if(input){
+input.value="";
+input.disabled=false;
+}
+if(row){
+row.classList.remove("solved");
+}
+}
+}
+
 function resetMultiPuzzles(){
 zones.forEach(zone=>{
 zone.puzzles.forEach(puzzle=>{
@@ -1175,6 +1291,7 @@ puzzle.solved=[false,false,false,false];
 }
 });
 });
+resetRiddleInputs();
 }
 
 function resetProgress(){
@@ -1225,6 +1342,9 @@ document.getElementById("helpBox").style.display="none";
 document.getElementById("login").style.background =
 "linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0.15)), url('login.png') center/cover";
 document.getElementById("login").style.display="flex";
+document.querySelector("#login .box").classList.remove("result-mode");
+document.getElementById("login").style.background =
+"linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0.15)), url('login.png') center/cover";
 document.getElementById("landingStep").style.display="block";
 document.getElementById("nameStep").style.display="none";
 document.getElementById("securityStep").style.display="none";
@@ -1641,6 +1761,7 @@ return getGlobalQuestionIndex(z,p);
 }
 
 function renderMap(){
+
 const map=document.getElementById("map");
 map.innerHTML="";
 
@@ -1648,6 +1769,7 @@ const currentIndex=getCurrentGlobalQuestionIndex();
 let questionIndex=0;
 
 zones.forEach((zone, zoneIndex)=>{
+
 const worldNode=document.createElement("div");
 worldNode.className="node world";
 
@@ -1662,6 +1784,7 @@ worldNode.classList.add("current");
 map.appendChild(worldNode);
 
 zone.puzzles.forEach((puzzle)=>{
+
 const qNode=document.createElement("div");
 qNode.className="node";
 
@@ -1723,10 +1846,28 @@ const currentPuzzle=zones[z].puzzles[p];
 document.getElementById("clue").innerText=currentPuzzle.clue;
 
 if(currentPuzzle.type==="multi"){
+document.getElementById("standardInputArea").style.display="none";
+document.getElementById("riddleInputArea").style.display="grid";
+
+currentPuzzle.solved.forEach((solved,index)=>{
+const row=document.getElementById("riddleRow"+index);
+const input=document.getElementById("riddleInput"+index);
+if(row && input){
+row.classList.toggle("solved", solved);
+input.disabled=solved;
+if(solved && !input.value){
+input.value="✓";
+}
+}
+});
+
 const solvedCount=currentPuzzle.solved.filter(Boolean).length;
 document.getElementById("progress").innerText =
 `Chapter ${z+1}/${zones.length}: ${solvedCount}/4`;
 }else{
+document.getElementById("standardInputArea").style.display="flex";
+document.getElementById("riddleInputArea").style.display="none";
+
 document.getElementById("progress").innerText =
 `Chapter ${z+1}/${zones.length}: ${p+1}/${zones[z].puzzles.length}`;
 }
@@ -1758,6 +1899,65 @@ btn.innerText="Submit";
 },1000);
 }
 
+async function submitRiddleAnswer(index){
+const currentPuzzle=zones[z].puzzles[p];
+
+if(!currentPuzzle || currentPuzzle.type!=="multi") return;
+
+const input=document.getElementById("riddleInput"+index);
+const row=document.getElementById("riddleRow"+index);
+
+if(!input || currentPuzzle.solved[index]) return;
+
+const value=normalize(input.value);
+
+if(!value) return;
+
+const inputHash=await sha256(value);
+
+if(inputHash===currentPuzzle.answers[index].hash){
+currentPuzzle.solved[index]=true;
+input.disabled=true;
+input.value="✓";
+row.classList.add("solved");
+attempts=[];
+
+const solvedCount=currentPuzzle.solved.filter(Boolean).length;
+document.getElementById("progress").innerText =
+`Chapter ${z+1}/${zones.length}: ${solvedCount}/4`;
+
+if(currentPuzzle.solved.every(Boolean)){
+setTimeout(()=>{
+p++;
+
+if(p>=zones[z].puzzles.length){
+const oldWorld=z;
+z++;
+p=0;
+
+if(z<zones.length){
+saveGame();
+travelToNextWorld(oldWorld,z);
+return;
+}
+}
+
+render();
+},600);
+}
+
+saveGame();
+return;
+}
+
+attempts.push(`${index+1}: ${value}`);
+updateQuestLog();
+saveGame();
+
+row.classList.add("shake");
+setTimeout(()=>row.classList.remove("shake"),300);
+}
+
 async function submit(){
 if(locked) return;
 
@@ -1775,6 +1975,12 @@ return;
 
 if(normalize(value)==="veryendgame"){
 teleportToBossForTesting();
+return;
+}
+
+const currentPuzzle=zones[z].puzzles[p];
+
+if(currentPuzzle.type==="multi"){
 return;
 }
 
@@ -2718,6 +2924,8 @@ const user=users[currentUser] || {};
 const feats=result.feats || buildFeats(result);
 const score=result.score || calculateFinalScore(result);
 
+document.querySelector("#login .box").classList.add("result-mode");
+
 document.getElementById("login").style.background =
 `linear-gradient(rgba(0,0,0,0.20), rgba(0,0,0,0.78)), url('${user.highscoreBg}') center/cover`;
 
@@ -2746,7 +2954,6 @@ document.getElementById("resultText").innerHTML =
 `<div class="result-line">Your result could not be loaded.</div>`;
 }
 }
-
 function downloadScreenshot(){
 const target=document.getElementById("login");
 
@@ -2829,6 +3036,15 @@ if(e.key==="Enter") checkName();
 document.getElementById("securityAnswer").addEventListener("keydown", e=>{
 if(e.key==="Enter") checkSecurityAnswer();
 });
+
+for(let i=0;i<4;i++){
+const riddleInput=document.getElementById("riddleInput"+i);
+if(riddleInput){
+riddleInput.addEventListener("keydown", e=>{
+if(e.key==="Enter") submitRiddleAnswer(i);
+});
+}
+}
 
 document.getElementById("secretBossInput").addEventListener("keydown", e=>{
 if(e.key==="Enter") submitSecretBoss();
