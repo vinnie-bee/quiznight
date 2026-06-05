@@ -1338,6 +1338,7 @@ Correct answers open a parry window. Perfect parries deal more damage. Slightly 
 
 const STANDARD_MUSIC = "standardbgmusic.mp3";
 const BOSS_MUSIC = "bossfight.mp3";
+const CRIT_SOUND = "crit.mp3";
 const CREDITS_MUSIC = "credits.mp3";
 const KILL_MUSIC = "killboss.mp3";
 const TRAVEL_DURATION_MS = 15000;
@@ -2159,6 +2160,10 @@ t.play().catch(()=>{});
 fadeAudio(t,0.9,900);
 }
 
+function playCritSound(){
+playOneShot(CRIT_SOUND,0.95);
+}
+
 function playBossMusic(){
 const m=document.getElementById("music");
 
@@ -2500,10 +2505,15 @@ updateEasterEggHint();
 saveGame();
 }
 
-function startLockout(){
+function shouldApplyQuestionLockout(){
+return (zones[z].name==="Overwatch" && (p===0 || p===1)) ||
+(zones[z].name==="Midnight" && p===0);
+}
+
+function startLockout(durationSeconds=15){
 locked=true;
 
-let remaining=15;
+let remaining=durationSeconds;
 const btn=document.getElementById("submitBtn");
 
 btn.disabled=true;
@@ -2767,7 +2777,9 @@ saveGame();
 document.body.classList.add("shake");
 setTimeout(()=>document.body.classList.remove("shake"),300);
 
+if(shouldApplyQuestionLockout()){
 startLockout();
+}
 }
 }
 
@@ -2866,7 +2878,7 @@ updateEasterEggHint();
 const user=users[currentUser];
 
 document.getElementById("bossScreen").style.backgroundImage=
-`linear-gradient(rgba(0,0,0,0.50), rgba(0,0,0,0.88)), url('${user.bossBg}')`;
+`linear-gradient(rgba(0,0,0,0.05), rgba(0,0,0,0.35)), url('${user.bossBg}')`;
 
 document.getElementById("bossName").innerText=user.bossName;
 document.getElementById("bossMessage").innerHTML="";
@@ -3161,6 +3173,7 @@ element="Vine Whip";
 }
 
 unlockEasterEgg("boss-execute","Pokémon assist");
+playCritSound();
 
 const damage=20;
 bossHp=Math.max(1,bossHp-damage);
@@ -3293,6 +3306,7 @@ const next=bossMechanics[mechanicIndex+1];
 if(next && bossHp<=next.threshold){
 bossHp=next.threshold+8;
 }
+playCritSound();
 setBossFeedback("Critical class play! Foute is almost proud.");
 activeMechanic=null;
 mechanicIndex++;
@@ -3432,6 +3446,7 @@ const glancingMax=Number(qteArea.dataset.glancingMax || 0.70);
 if(progress>=perfectMin && progress<=perfectMax){
 damage=15;
 perfectParries++;
+playCritSound();
 message="Perfect parry! Massive counterattack!";
 }else if(progress>=goodMin && progress<=goodMax){
 damage=10;
@@ -3547,7 +3562,6 @@ healerCruelty:healerCruelty,
 completedAt:new Date().toLocaleString(),
 starter:chosenStarter,
 easterEggs:foundEasterEggs.slice(),
-triviaHistory:bossTriviaHistory.slice()
 };
 
 result.score=calculateFinalScore(result);
@@ -3757,7 +3771,7 @@ add("Illegal taunts", -((result.tauntPunishments || 0) * 3000), "minus");
 add("Healer incidents", -((result.healerCruelty || 0) * 7500), "minus");
 
 let total=items.reduce((sum,item)=>sum+item.value,0);
-total=Math.max(10000, Math.min(50000, total));
+total=Math.max(0, total);
 
 return {items:items,total:Math.round(total)};
 }
@@ -3858,7 +3872,6 @@ return `<div class="score-item ${cls}"><span>${escapeHtml(item.label)}</span><st
 `<div class="highscore-actions">`+
 
 
-`<button onclick="showTriviaReview()">Show boss answer review</button>`+
 `<button onclick="continueTriviaAfterScore()">Continue trivia</button>`+
 `<button onclick="restartAdventure()">just.. one... more... quest...</button>`+
 `</div>`+
@@ -3918,37 +3931,6 @@ panel.innerHTML="<strong>🥚 Easter eggs</strong><br>You found them all. Disgus
 panel.innerHTML=
 `<strong>🥚 Missed Easter Eggs (${missed.length}/${allIds.length})</strong><br><br>`+
 missed.map(id=>`<div class="review-item">○ ${escapeHtml(EASTER_EGG_LABELS[id])}</div>`).join("");
-}
-
-panel.style.display="block";
-}
-
-function showTriviaReview(){
-const raw=localStorage.getItem(resultKey());
-let result=null;
-
-try{
-result=raw ? JSON.parse(raw) : null;
-}catch(e){}
-
-const panel=document.getElementById("triviaReviewPanel");
-
-if(!panel) return;
-
-if(panel.style.display==="block"){
-panel.style.display="none";
-return;
-}
-
-const history=(result && result.triviaHistory) ? result.triviaHistory : bossTriviaHistory;
-
-if(!history || history.length===0){
-panel.innerHTML="<em>No boss trivia answers recorded.</em>";
-}else{
-panel.innerHTML=history.map(item=>{
-const ok=item.correct ? "✅" : "❌";
-return `<div class="review-item">${ok} <strong>${escapeHtml(item.question)}</strong><br>Your answer: ${escapeHtml(item.given || "-")}<br>Correct: ${escapeHtml(item.correctAnswer || "-")}</div>`;
-}).join("");
 }
 
 panel.style.display="block";
